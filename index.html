@@ -157,6 +157,20 @@
   .setup-wrap{max-width:420px;margin:60px auto;padding:0 18px;text-align:center;}
   .setup-wrap .card{text-align:left;}
 
+  /* Siparişler: canlı akış, bekleme sayacı */
+  .orders-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .live-dot{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
+  .live-dot::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--ok);animation:livepulse 2s infinite;}
+  .live-dot.off::before{background:var(--danger);animation:none;}
+  @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(143,185,150,.55);}70%{box-shadow:0 0 0 7px rgba(143,185,150,0);}100%{box-shadow:0 0 0 0 rgba(143,185,150,0);}}
+  .wait-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;margin-left:8px;font-family:var(--font-body);}
+  .wait-badge.wait-ok{background:var(--ok-soft);color:var(--ok);}
+  .wait-badge.wait-warn{background:var(--warn-soft);color:var(--warn);}
+  .wait-badge.wait-late{background:var(--danger-soft);color:var(--danger);}
+  .kv-row.order-fresh{border-color:var(--accent);animation:orderflash 1.2s ease 3;}
+  @keyframes orderflash{0%,100%{background:var(--bg-elev);}50%{background:var(--accent-soft);}}
+  .tab-count{background:var(--danger);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px;font-weight:700;}
+
   @media (max-width:640px){
     #admin-body{padding:14px;}
     .field-row{grid-template-columns:1fr;}
@@ -272,10 +286,112 @@ function pushOrder(order){
   if(!fbRef){ showToast('Bulut bağlantısı yok, sipariş kaydedilemedi (yine de WhatsApp mesajı gönderilecek)'); return; }
   fbRef.child('orders').child(order.id).set(order).catch(e=>console.error(e));
 }
+/* Firebase, siparişleri id anahtarlı bir nesne olarak döndürür (dizi değil).
+   Veritabanı yapısına dokunmadan, her iki biçimi de güvenle okuyan yardımcı: */
+function getOrders(){
+  const o = state.orders;
+  if(!o) return [];
+  return (Array.isArray(o) ? o : Object.values(o)).filter(Boolean);
+}
 function updateOrderStatus(id, status){
   if(!fbRef) return;
   fbRef.child('orders').child(id).child('status').set(status);
-  const o = state.orders.find(x=>x.id===id); if(o) o.status = status;
+  const o = getOrders().find(x=>x.id===id); if(o) o.status = status;
+}
+
+/* ============================= SİPARİŞ AKIŞI: CANLI DİNLEME · SES · BEKLEME SAYACI ============================= */
+let adminAuthed = false;          // sadece yönetici girişi yapılan cihazda ses/bildirim çalışır
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('qrmenu_sound_v1') !== 'off';
+let ordersListening = false;
+let ordersInitialDone = false;
+const freshOrderIds = new Set();
+
+/* -- Ses (Web Audio API, harici dosya yok) -- */
+function unlockAudio(){
+  try{
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      audioCtx = new AC();
+    }
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    // iOS/Safari: kullanıcı dokunuşu sırasında sessiz bir tampon çalarak kilidi aç
+    const buf = audioCtx.createBuffer(1,1,22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf; src.connect(audioCtx.destination); src.start(0);
+  }catch(e){}
+}
+function playTone(freq, start, dur, vol){
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, start);
+  g.gain.exponentialRampToValueAtTime(vol, start+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, start+dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(start); o.stop(start+dur+0.05);
+}
+function playOrderSound(force){
+  if(!soundEnabled && !force) return;
+  if(!audioCtx){ showToast('Ses için ekrana bir kez dokunun'); return; }
+  const go = ()=>{
+    const t = audioCtx.currentTime;
+    for(let i=0;i<3;i++){                       // iki tonlu zil, 3 tekrar
+      playTone(880,    t + i*0.6,        0.45, 0.35);
+      playTone(1318.5, t + i*0.6 + 0.18, 0.45, 0.30);
+    }
+  };
+  if(audioCtx.state === 'running') go();
+  else audioCtx.resume().then(()=>{ if(audioCtx.state==='running') go(); else showToast('Ses için ekrana bir kez dokunun'); }).catch(()=>{});
+}
+document.addEventListener('pointerdown', ()=>{ if(adminAuthed) unlockAudio(); }, {passive:true});
+
+/* -- Bekleme sayacı -- */
+function waitMinutes(iso){ return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime())/60000)); }
+function waitText(iso){
+  const mins = waitMinutes(iso);
+  if(mins < 1) return 'Az önce';
+  if(mins < 60) return mins + ' dk önce';
+  const h = Math.floor(mins/60), m = mins % 60;
+  if(h < 24) return h + ' sa' + (m ? ' ' + m + ' dk' : '') + ' önce';
+  return Math.floor(h/24) + ' gün önce';
+}
+function waitClass(iso){
+  const mins = waitMinutes(iso);
+  return mins >= 20 ? 'wait-late' : mins >= 10 ? 'wait-warn' : 'wait-ok';
+}
+function updateWaitBadges(){
+  document.querySelectorAll('.wait-badge[data-since]').forEach(el=>{
+    el.textContent = '⏱ ' + waitText(el.dataset.since);
+    el.className = 'wait-badge ' + waitClass(el.dataset.since);
+  });
+}
+setInterval(updateWaitBadges, 30000);           // her 30 saniyede bir kendini günceller
+
+/* -- Canlı dinleme: Firebase "orders" yolu -- */
+function startOrdersListener(){
+  if(ordersListening || !fbRef) return;
+  ordersListening = true;
+  const ref = fbRef.child('orders');
+  ref.on('child_added', snap=>{
+    if(!ordersInitialDone) return;              // açılıştaki mevcut siparişler için ses çalma
+    const o = snap.val(); if(!o) return;
+    if(!getOrders().some(x=>x.id===o.id)){      // state henüz güncellenmediyse yapıyı bozmadan ekle
+      if(!state.orders || Array.isArray(state.orders)) state.orders = {};
+      state.orders[o.id] = o;
+    }
+    freshOrderIds.add(o.id);
+    setTimeout(()=>{
+      freshOrderIds.delete(o.id);
+      const row = document.querySelector('[data-order-row="'+o.id+'"]');
+      if(row) row.classList.remove('order-fresh');
+    }, 4000);
+    playOrderSound();
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+    showToast('🛎 Yeni sipariş: ' + fmtMoney(o.total, state.settings.currency));
+    if(view === 'admin') render();              // sayfa yenilenmeden Siparişler sekmesine düşer
+  }, err=>{ ordersListening = false; showToast('Sipariş dinleme hatası: ' + err.message); });
+  ref.once('value').then(()=>{ ordersInitialDone = true; });
 }
 
 function renderSetupError(msg){
@@ -479,7 +595,10 @@ function openAdminLogin(){
   document.getElementById('pin-cancel').addEventListener('click', closeModal);
   const submit = ()=>{
     const val = document.getElementById('admin-pin').value.trim();
-    if(val === (state.settings.adminPin||'1234')){ closeModal(); view='admin'; adminTab='menu'; render(); }
+    if(val === (state.settings.adminPin||'1234')){
+      adminAuthed = true; unlockAudio(); startOrdersListener();   // giriş tıklaması = ses izni
+      closeModal(); view='admin'; adminTab='menu'; render();
+    }
     else showToast('PIN hatalı');
   };
   document.getElementById('pin-submit').addEventListener('click', submit);
@@ -494,7 +613,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
-          <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler</div>
+          <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
         </div>
         <button class="btn btn-sm" id="exit-admin">Müşteri Görünümüne Dön</button>
@@ -652,25 +771,40 @@ function openItemModal(existing){
 
 /* --- Admin: Orders --- */
 function renderAdminOrders(root){
-  const orders = [...state.orders].sort((a,b)=>b.createdAt.localeCompare(a.createdAt));
+  const orders = getOrders().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
   const statusLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', tamamlandi:'Tamamlandı', iptal:'İptal'};
   const statusClass = {yeni:'info', hazirlaniyor:'warn', tamamlandi:'ok', iptal:'danger'};
-  root.innerHTML = `<div class="card">
+  const isWaiting = o => o.status==='yeni' || o.status==='hazirlaniyor';
+  root.innerHTML = `
+  <div class="orders-toolbar">
+    <span class="live-dot ${fbRef?'':'off'}">${fbRef?'Canlı akış açık':'Bağlantı yok'}</span>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-sm" id="toggle-sound">${soundEnabled?'🔔 Ses: Açık':'🔕 Ses: Kapalı'}</button>
+      <button class="btn btn-sm" id="test-sound">Sesi Dene</button>
+    </div>
+  </div>
+  <div class="card">
     ${orders.length? `<div class="kv-list">${orders.map(o=>`
-      <div class="kv-row" style="align-items:flex-start;">
+      <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
-          <div><strong>${o.items.map(li=>`${li.qty}x ${escapeHtml(li.name)}`).join(', ')}</strong></div>
+          <div><strong>${(o.items||[]).map(li=>`${li.qty}x ${escapeHtml(li.name)}`).join(', ')}</strong></div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
-          <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}</div>
+          <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
         </div>
         <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
           ${Object.keys(statusLabel).map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
         </select>
-      </div>`).join('')}</div>` : `<div class="hint">Henüz sipariş yok.</div>`}
+      </div>`).join('')}</div>` : `<div class="hint">Henüz sipariş yok. Yeni siparişler buraya anında düşecek.</div>`}
   </div>`;
   root.querySelectorAll('[data-order-status]').forEach(sel=>sel.addEventListener('change', e=>{
     updateOrderStatus(sel.dataset.orderStatus, e.target.value); render();
   }));
+  root.querySelector('#toggle-sound').addEventListener('click',()=>{
+    soundEnabled = !soundEnabled;
+    localStorage.setItem('qrmenu_sound_v1', soundEnabled ? 'on' : 'off');
+    unlockAudio(); render();
+  });
+  root.querySelector('#test-sound').addEventListener('click',()=>{ unlockAudio(); playOrderSound(true); });
 }
 
 /* --- Admin: Settings --- */
