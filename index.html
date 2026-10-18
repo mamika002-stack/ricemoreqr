@@ -270,7 +270,9 @@ function initFirebase(){
         state = Object.assign(defaultData(), val);
         if(!state.categories) state.categories=[];
         if(!state.items) state.items=[];
-        if(!state.orders) state.orders=[];
+        // Firebase siparişleri id anahtarlı nesne döndürebilir; güvenle diziye çevir
+        state.orders = val.orders ? (Array.isArray(val.orders) ? val.orders : Object.values(val.orders)) : [];
+        state.orders = state.orders.filter(Boolean);
       } else {
         fbRef.set(state);
       }
@@ -280,7 +282,12 @@ function initFirebase(){
   }catch(e){ renderSetupError('Config geçersiz görünüyor: '+e.message); }
 }
 function saveState(){
-  if(fbRef && !suppressPush) fbRef.set(state).catch(e=>showToast('Kaydetme hatası: '+e.message));
+  if(fbRef && !suppressPush){
+    // orders dizi olarak tutulduğu için burada YAZILMAZ: siparişler 'orders/<id>' altında kalır,
+    // menü/ayar kaydı sipariş verisini ezmez veya yapısını bozmaz.
+    const copy = Object.assign({}, state); delete copy.orders;
+    fbRef.update(copy).catch(e=>showToast('Kaydetme hatası: '+e.message));
+  }
 }
 function pushOrder(order){
   if(!fbRef){ showToast('Bulut bağlantısı yok, sipariş kaydedilemedi (yine de WhatsApp mesajı gönderilecek)'); return; }
@@ -289,9 +296,7 @@ function pushOrder(order){
 /* Firebase, siparişleri id anahtarlı bir nesne olarak döndürür (dizi değil).
    Veritabanı yapısına dokunmadan, her iki biçimi de güvenle okuyan yardımcı: */
 function getOrders(){
-  const o = state.orders;
-  if(!o) return [];
-  return (Array.isArray(o) ? o : Object.values(o)).filter(Boolean);
+  return Object.values(state.orders || {}).filter(Boolean);
 }
 function updateOrderStatus(id, status){
   if(!fbRef) return;
@@ -377,8 +382,8 @@ function startOrdersListener(){
     if(!ordersInitialDone) return;              // açılıştaki mevcut siparişler için ses çalma
     const o = snap.val(); if(!o) return;
     if(!getOrders().some(x=>x.id===o.id)){      // state henüz güncellenmediyse yapıyı bozmadan ekle
-      if(!state.orders || Array.isArray(state.orders)) state.orders = {};
-      state.orders[o.id] = o;
+      if(!Array.isArray(state.orders)) state.orders = Object.values(state.orders || {});
+      state.orders.push(o);
     }
     freshOrderIds.add(o.id);
     setTimeout(()=>{
@@ -771,7 +776,7 @@ function openItemModal(existing){
 
 /* --- Admin: Orders --- */
 function renderAdminOrders(root){
-  const orders = getOrders().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  const orders = Object.values(state.orders || {}).filter(Boolean).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
   const statusLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', tamamlandi:'Tamamlandı', iptal:'İptal'};
   const statusClass = {yeni:'info', hazirlaniyor:'warn', tamamlandi:'ok', iptal:'danger'};
   const isWaiting = o => o.status==='yeni' || o.status==='hazirlaniyor';
