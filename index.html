@@ -567,6 +567,7 @@ function openCartModal(){
       </div>`).join('')}</div>
     <div class="cart-total-row"><span>Toplam</span><span class="num">${fmtMoney(cartTotal(), state.settings.currency)}</span></div>
     <div class="field" style="margin-top:14px;"><label>Adınız (opsiyonel)</label><input type="text" id="cart-name"></div>
+    <div class="field"><label>Teslimat Adresi</label><textarea id="cart-address" rows="2" placeholder="Mahalle, Sokak, Bina No, Daire No..."></textarea></div>
     <div class="field"><label>Sipariş Notu (opsiyonel)</label><textarea id="cart-note" rows="2" placeholder="Örn. Kat 3 resepsiyon, acısız olsun..."></textarea></div>
   `;
   const foot = `<button class="btn btn-ghost" id="cart-cancel">Kapat</button><button class="btn btn-primary" id="cart-send">Siparişi Onayla</button>`;
@@ -584,10 +585,11 @@ function sendOrder(){
   const btn = document.getElementById('cart-send'); if(btn) btn.disabled = true;   // çift tıklamayla mükerrer sipariş olmasın
   const name = document.getElementById('cart-name').value.trim();
   const note = document.getElementById('cart-note').value.trim();
+  const address = (document.getElementById('cart-address')?.value || '').trim();
   const total = cartTotal();
 
   const order = { id: uid('ord'), createdAt: new Date().toISOString(), items: lines.map(([id,c])=>({itemId:id,name:c.name,price:c.price,qty:c.qty})),
-    total, note, customerName: name, status:'yeni' };
+    total, customerName: name, address: address, note: note, status:'yeni' };
   if(!pushOrder(order)){ if(btn) btn.disabled = false; return; }   // bağlantı yoksa sepet korunur
 
   cart = {}; saveCart(); closeModal(); render();
@@ -795,7 +797,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div><strong>${(o.items||[]).map(li=>`${li.qty}x ${escapeHtml(li.name)}`).join(', ')}</strong></div>
-          <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
+          <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
         </div>
         <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
