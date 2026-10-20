@@ -128,6 +128,13 @@
   #toast-root{position:fixed;bottom:20px;right:20px;z-index:90;display:flex;flex-direction:column;gap:8px;}
   .toast{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent);padding:12px 16px;
     border-radius:8px;font-size:13.5px;box-shadow:var(--shadow);animation:toastin .18s ease;}
+  .toast.toast-success{display:flex;align-items:center;gap:10px;background:var(--ok-soft);background-color:#1E3A2B;border:1px solid var(--ok);
+    border-left:4px solid var(--ok);color:var(--text);font-weight:700;font-size:14.5px;padding:15px 20px;border-radius:12px;}
+  .toast.toast-success::before{content:'✓';display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;
+    border-radius:50%;background:var(--ok);color:#0E1F13;font-size:14px;font-weight:800;}
+  @media (max-width:640px){
+    #toast-root{left:16px;right:16px;bottom:84px;align-items:stretch;}
+  }
   @keyframes toastin{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
   /* Admin layout */
@@ -221,11 +228,11 @@ function uid(p){ return p+'_'+Date.now().toString(36)+Math.random().toString(36)
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function fmtMoney(n, cur){ return (Number(n)||0).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' ' + (cur||'₺'); }
 function fmtDateTime(iso){ const d = new Date(iso); return d.toLocaleString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
-function showToast(msg){
+function showToast(msg, type){
   const root = document.getElementById('toast-root');
-  const el = document.createElement('div'); el.className='toast'; el.textContent=msg;
+  const el = document.createElement('div'); el.className='toast'+(type?' toast-'+type:''); el.textContent=msg;
   root.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, 2600);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, type==='success' ? 4200 : 2600);
 }
 
 /* ============================= STATE ============================= */
@@ -290,8 +297,9 @@ function saveState(){
   }
 }
 function pushOrder(order){
-  if(!fbRef){ showToast('Bulut bağlantısı yok, sipariş kaydedilemedi (yine de WhatsApp mesajı gönderilecek)'); return; }
-  fbRef.child('orders').child(order.id).set(order).catch(e=>console.error(e));
+  if(!fbRef){ showToast('Bağlantı yok, sipariş iletilemedi. Lütfen internetinizi kontrol edip tekrar deneyin.'); return false; }
+  fbRef.child('orders').child(order.id).set(order).catch(e=>{ console.error(e); showToast('Sipariş iletilemedi: '+e.message); });
+  return true;
 }
 /* Firebase, siparişleri id anahtarlı bir nesne olarak döndürür (dizi değil).
    Veritabanı yapısına dokunmadan, her iki biçimi de güvenle okuyan yardımcı: */
@@ -561,7 +569,7 @@ function openCartModal(){
     <div class="field" style="margin-top:14px;"><label>Adınız (opsiyonel)</label><input type="text" id="cart-name"></div>
     <div class="field"><label>Sipariş Notu (opsiyonel)</label><textarea id="cart-note" rows="2" placeholder="Örn. Kat 3 resepsiyon, acısız olsun..."></textarea></div>
   `;
-  const foot = `<button class="btn btn-ghost" id="cart-cancel">Kapat</button><button class="btn btn-primary" id="cart-send">WhatsApp'tan Gönder</button>`;
+  const foot = `<button class="btn btn-ghost" id="cart-cancel">Kapat</button><button class="btn btn-primary" id="cart-send">Siparişi Onayla</button>`;
   openModal('Sepetiniz', body, foot);
   function rerenderCartModal(){ closeModal(); openCartModal(); }
   document.querySelectorAll('[data-c-inc]').forEach(b=>b.addEventListener('click',()=>{ addToCart(b.dataset.cInc); rerenderCartModal(); }));
@@ -571,25 +579,19 @@ function openCartModal(){
 }
 
 function sendOrder(){
-  if(!state.settings.whatsappNumber){ showToast('İşletme henüz WhatsApp numarasını ayarlamadı'); return; }
+  const lines = Object.entries(cart);
+  if(!lines.length){ showToast('Sepetiniz boş'); return; }
+  const btn = document.getElementById('cart-send'); if(btn) btn.disabled = true;   // çift tıklamayla mükerrer sipariş olmasın
   const name = document.getElementById('cart-name').value.trim();
   const note = document.getElementById('cart-note').value.trim();
-  const lines = Object.entries(cart);
   const total = cartTotal();
-  let text = `🛒 *Yeni Sipariş - ${state.settings.businessName}*\n\n`;
-  lines.forEach(([id,c])=>{ text += `${c.qty}x ${c.name} - ${fmtMoney(c.qty*c.price, state.settings.currency)}\n`; });
-  text += `\n*Toplam: ${fmtMoney(total, state.settings.currency)}*\n`;
-  if(name) text += `\nAd: ${name}`;
-  if(note) text += `\nNot: ${note}`;
 
   const order = { id: uid('ord'), createdAt: new Date().toISOString(), items: lines.map(([id,c])=>({itemId:id,name:c.name,price:c.price,qty:c.qty})),
     total, note, customerName: name, status:'yeni' };
-  pushOrder(order);
+  if(!pushOrder(order)){ if(btn) btn.disabled = false; return; }   // bağlantı yoksa sepet korunur
 
-  const url = `https://wa.me/${state.settings.whatsappNumber}?text=${encodeURIComponent(text)}`;
-  window.open(url, '_blank');
   cart = {}; saveCart(); closeModal(); render();
-  showToast('Sipariş WhatsApp\'a hazırlandı');
+  showToast('Siparişiniz Mutfak Paneline İletildi!', 'success');
 }
 
 /* ============================= ADMIN LOGIN ============================= */
