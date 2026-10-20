@@ -408,6 +408,9 @@
   .rg-st .sp{width:12px;height:12px;border-radius:50%;border:2px solid rgba(212,175,55,.25);border-top-color:var(--gold);animation:spin .9s linear infinite;}
   .rg-btn{border:1px solid rgba(212,175,55,.45);background:none;color:var(--gold-2);font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;}
   .region.outside{border-color:rgba(240,190,74,.45);}
+  .rg-btn{cursor:pointer;transition:background .2s;} .rg-btn:hover,.rg-btn:active{background:var(--gold-soft);}
+  .geo-steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:14px;line-height:1.5;color:var(--text-dim);}
+  .geo-steps b{color:var(--gold-2);}
 
   /* ============================= KAMPANYA POP-UP ============================= */
   .dialog.campaign{max-width:420px;text-align:center;background:radial-gradient(120% 70% at 50% 0%, rgba(212,175,55,.22), transparent 60%), rgba(15,17,21,.95);
@@ -967,9 +970,10 @@ function renderCustomerMenu(root){
 }
 
 function onMenuClick(e){
-  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],#hero-brand');
+  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand');
   if(!t) return;
-  if(t.hasAttribute('data-geo-retry')) return requestLocation();
+  if(t.hasAttribute('data-geo-retry')) return requestLocation(true);
+  if(t.hasAttribute('data-geo-help')) return openGeoHelp();
   if(t.id==='hero-brand') return registerSecretTap();
   if(t.dataset.bowl) return openBowlModal(t.dataset.bowl);
   if(t.dataset.cartAdd) return addToCart(t.dataset.cartAdd);
@@ -1241,28 +1245,79 @@ function distKm(lat1, lng1, lat2, lng2){
   return 2*R*Math.asin(Math.sqrt(a));
 }
 function fmtKm(k){ return k < 10 ? k.toFixed(1).replace('.',',') : Math.round(k).toString(); }
+const UA = navigator.userAgent || '';
+const IS_INAPP = /Instagram|FBAN|FBAV|FB_IAB/i.test(UA);
+const IS_IOS = /iPhone|iPad|iPod/i.test(UA) || (/Macintosh/.test(UA) && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/i.test(UA);
 function updateRegion(){
   const el = document.getElementById('region'); if(!el) return;
+  const km = geoKm!=null ? fmtKm(geoKm) : '–';
+  const retry = `<button type="button" class="rg-btn" data-geo-retry>Konumumu kontrol et</button>`;
+  const help = `<button type="button" class="rg-btn" data-geo-help>İzin nasıl açılır?</button>`;
   const st = {
     idle:'<span class="sp"></span>Konumunuz kontrol ediliyor…',
     checking:'<span class="sp"></span>Konumunuz kontrol ediliyor…',
-    inside:`✓ Konumunuz teslimat bölgemizde (${DELIVERY_AREA.name}'e yaklaşık ${geoKm!=null?fmtKm(geoKm):'–'} km).`,
-    outside:`⚠ Konumunuz teslimat bölgemizin dışında görünüyor (${DELIVERY_AREA.name}'e yaklaşık ${geoKm!=null?fmtKm(geoKm):'–'} km). Adresiniz Bergama Merkez'de değilse siparişinizi teslim edemeyiz.`,
-    denied:`Konum izni verilmedi. Lütfen adresinizin Bergama Merkez sınırları içinde olduğundan emin olun. <button type="button" class="rg-btn" data-geo-retry>Konumumu kontrol et</button>`,
+    inside:`✓ Konumunuz teslimat bölgemizde (${DELIVERY_AREA.name}'e yaklaşık ${km} km).`,
+    outside:`⚠ Konumunuz teslimat bölgemizin dışında görünüyor (${DELIVERY_AREA.name}'e yaklaşık ${km} km). Adresiniz Bergama Merkez'de değilse siparişinizi teslim edemeyiz. ${retry}`,
+    denied:`Konum izni verilmedi. Lütfen adresinizin Bergama Merkez sınırları içinde olduğundan emin olun. ${retry}`,
+    blocked:`Konum izni ${IS_INAPP ? 'Instagram tarayıcısında' : 'telefonunuzun ayarlarında'} kapalı, bu yüzden site tekrar soramıyor. ${help}${retry}`,
+    unavailable:`Konumunuz alınamadı. Telefonunuzun konum servisi kapalı olabilir. ${help}${retry}`,
+    timeout:`Konum bulunamadı (zaman aşımı). Açık bir alanda tekrar deneyin. ${retry}`,
     unsupported:'Cihazınız konum kontrolünü desteklemiyor. Lütfen adresinizin Bergama Merkez sınırları içinde olduğundan emin olun.'
   }[geoState];
   el.className = 'region glass ' + geoState;
   el.innerHTML = `<div class="rg-ico" aria-hidden="true">📍</div>
     <div class="rg-txt"><b>Teslimat Hizmetimiz Sadece Bergama Merkez Sınırları İçerisindedir.</b><span class="rg-st ${geoState}">${st}</span></div>`;
 }
-function requestLocation(){
+let geoTries = 0;
+function requestLocation(manual){
   if(!('geolocation' in navigator)){ geoState = 'unsupported'; updateRegion(); return; }
+  if(geoState==='checking' && geoTries>0 && !manual) return;
+  geoTries++;
   geoState = 'checking'; updateRegion();
+  const started = Date.now();
   navigator.geolocation.getCurrentPosition(pos=>{
     geoKm = distKm(pos.coords.latitude, pos.coords.longitude, DELIVERY_AREA.lat, DELIVERY_AREA.lng);
     geoState = geoKm <= DELIVERY_AREA.radiusKm ? 'inside' : 'outside';
     updateRegion();
-  }, ()=>{ geoState = 'denied'; updateRegion(); }, { enableHighAccuracy:false, timeout:12000, maximumAge:600000 });
+    if(manual) showToast(geoState==='inside' ? 'Konumunuz teslimat bölgemizde ✓' : 'Konumunuz Bergama Merkez dışında görünüyor', geoState==='inside' ? 'success' : '');
+  }, err=>{
+    const code = err && err.code;
+    if(code===1){
+      // izin daha önce reddedildiyse tarayıcı tekrar sormaz, anında hata döner
+      geoState = (manual || geoTries>1 || IS_INAPP || Date.now()-started < 600) ? 'blocked' : 'denied';
+    } else if(code===2) geoState = 'unavailable';
+    else if(code===3) geoState = 'timeout';
+    else geoState = 'denied';
+    updateRegion();
+    if(manual && (geoState==='blocked' || geoState==='unavailable')) openGeoHelp();
+  }, { enableHighAccuracy:false, timeout:12000, maximumAge:600000 });
+}
+function openGeoHelp(){
+  let steps;
+  if(IS_INAPP) steps = [
+    "Bu sayfayı Instagram'ın kendi tarayıcısında açtınız; Instagram konum izni vermeyebiliyor.",
+    "Sağ üstteki <b>⋯</b> (üç nokta) simgesine dokunun.",
+    IS_IOS ? "<b>Safari'de aç</b> (veya <b>Tarayıcıda aç</b>) seçeneğini seçin." : "<b>Chrome'da aç</b> (veya <b>Tarayıcıda aç</b>) seçeneğini seçin.",
+    "Açılan sayfada konum sorulunca <b>İzin Ver</b> deyin."];
+  else if(IS_IOS) steps = [
+    "Adres çubuğundaki <b>aA</b> simgesine dokunun → <b>Web Sitesi Ayarları</b> → <b>Konum</b> → <b>İzin Ver</b>.",
+    "Olmazsa iPhone <b>Ayarlar</b> → <b>Gizlilik ve Güvenlik</b> → <b>Konum Servisleri</b> açık olsun; aynı listede <b>Safari Web Siteleri</b> → <b>Uygulamayı Kullanırken</b> seçin.",
+    "Chrome kullanıyorsanız: <b>Ayarlar</b> → <b>Chrome</b> → <b>Konum</b> → <b>Uygulamayı Kullanırken</b>.",
+    "Sayfayı yenileyip <b>Konumumu kontrol et</b>'e dokunun."];
+  else if(IS_ANDROID) steps = [
+    "Telefonun üstten açılan menüsünde <b>Konum</b> (GPS) açık olsun.",
+    "Adres çubuğundaki <b>kilit / ayar</b> simgesine dokunun → <b>İzinler</b> → <b>Konum</b> → <b>İzin ver</b>.",
+    "Sayfayı yenileyip <b>Konumumu kontrol et</b>'e dokunun."];
+  else steps = [
+    "Adres çubuğundaki <b>kilit</b> simgesine tıklayın → <b>Konum</b> → <b>İzin ver</b>.",
+    "Sayfayı yenileyip <b>Konumumu kontrol et</b>'e tıklayın."];
+  const body = `<ol class="geo-steps">${steps.map(x=>`<li>${x}</li>`).join('')}</ol>
+    <p class="hint" style="margin-top:12px;">Konumunuz yalnızca bu telefonda Bergama Merkez'e uzaklığı hesaplamak için kullanılır, hiçbir yere kaydedilmez.</p>`;
+  const foot = `<button type="button" class="btn btn-ghost" id="gh-close">Kapat</button><button type="button" class="btn btn-primary" id="gh-retry">Tekrar Dene</button>`;
+  openModal('Konum İznini Açın', body, foot);
+  document.getElementById('gh-close').addEventListener('click', closeModal);
+  document.getElementById('gh-retry').addEventListener('click', ()=>{ closeModal(); setTimeout(()=>requestLocation(true), 250); });
 }
 
 /* ============================= KAMPANYA POP-UP =============================
