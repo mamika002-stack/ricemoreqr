@@ -397,6 +397,41 @@
   .adm-tag{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-dim);}
   .adm-tag.sos{background:var(--gold-soft);border-color:rgba(212,175,55,.45);color:var(--gold-2);}
 
+  /* ============================= BÖLGE BİLGİSİ ============================= */
+  .region{display:flex;gap:12px;align-items:flex-start;margin-top:12px;padding:13px 14px;border-radius:20px;animation:rise .6s .05s var(--ease) both;}
+  .rg-ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;
+    background:var(--gold-soft);border:1px solid rgba(212,175,55,.4);}
+  .rg-txt{min-width:0;display:flex;flex-direction:column;gap:5px;}
+  .rg-txt b{font-size:13.5px;line-height:1.4;font-weight:800;color:var(--text);}
+  .rg-st{font-size:12.3px;line-height:1.45;font-weight:600;color:var(--text-faint);display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .rg-st.inside{color:var(--ok);} .rg-st.outside{color:var(--warn);} .rg-st.denied,.rg-st.unsupported{color:var(--text-faint);}
+  .rg-st .sp{width:12px;height:12px;border-radius:50%;border:2px solid rgba(212,175,55,.25);border-top-color:var(--gold);animation:spin .9s linear infinite;}
+  .rg-btn{border:1px solid rgba(212,175,55,.45);background:none;color:var(--gold-2);font-size:11.5px;font-weight:800;padding:4px 10px;border-radius:99px;}
+  .region.outside{border-color:rgba(240,190,74,.45);}
+
+  /* ============================= KAMPANYA POP-UP ============================= */
+  .dialog.campaign{max-width:420px;text-align:center;background:radial-gradient(120% 70% at 50% 0%, rgba(212,175,55,.22), transparent 60%), rgba(15,17,21,.95);
+    border:1px solid rgba(212,175,55,.55);box-shadow:0 0 0 1px rgba(212,175,55,.15) inset, 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(212,175,55,.12);}
+  .dialog.campaign .dialog-head{background:none;justify-content:flex-end;padding-bottom:0;}
+  .dialog.campaign .dialog-head h3{position:absolute;left:0;right:0;top:22px;text-align:center;font-size:12px;font-family:var(--font-body);font-weight:800;letter-spacing:.24em;color:var(--gold);pointer-events:none;}
+  .dialog.campaign .dialog-foot{background:none;border-top:0;justify-content:center;flex-wrap:wrap;padding-top:4px;}
+  .cp-gift{width:86px;height:86px;margin:6px auto 14px;border-radius:26px;display:grid;place-items:center;font-size:44px;
+    background:linear-gradient(145deg,rgba(230,202,101,.3),rgba(184,134,11,.12));border:1px solid rgba(212,175,55,.5);
+    box-shadow:0 14px 34px rgba(212,175,55,.25);animation:giftin .7s var(--ease) both, breathe 2.6s 1s ease-in-out infinite;}
+  @keyframes giftin{from{opacity:0;transform:translateY(10px) scale(.8) rotate(-8deg);}to{opacity:1;transform:none;}}
+  .cp-title{font-family:var(--font-display);font-weight:600;font-size:26px;line-height:1.2;margin:0;
+    background:linear-gradient(180deg,#F3E2A0 10%,#D4AF37 60%,#B8860B 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .cp-text{margin:12px auto 4px;max-width:330px;font-size:15px;line-height:1.55;color:var(--text-dim);white-space:pre-line;}
+  .cp-rule{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0 4px;color:var(--gold);}
+  .cp-rule::before,.cp-rule::after{content:'';width:46px;height:1px;background:linear-gradient(90deg,transparent,var(--gold));}
+  .cp-rule::after{transform:scaleX(-1);}
+  .cp-rule i{width:5px;height:5px;transform:rotate(45deg);background:var(--gold);}
+
+  /* telefon */
+  .tel-link{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 12px;border-radius:99px;text-decoration:none;font-weight:800;font-size:13.5px;
+    background:var(--gold-soft);border:1px solid rgba(212,175,55,.5);color:var(--gold-2);font-variant-numeric:tabular-nums;}
+  .tel-link:hover{background:rgba(212,175,55,.24);}
+
   /* ============================= CANLI SİPARİŞ TAKİBİ ============================= */
   .track{text-align:center;padding-top:4px;}
   .track-visual{position:relative;width:104px;height:104px;margin:6px auto 16px;}
@@ -675,6 +710,7 @@ function initFirebase(){
           startTracking();
         }
         render();
+        if(first) setTimeout(startWelcomeFlow, 400);
       }, err=>{ renderSetupError('Bağlantı hatası: '+err.message); });
     });
   }catch(e){ renderSetupError('Config geçersiz görünüyor: '+e.message); }
@@ -907,6 +943,7 @@ function renderCustomerMenu(root){
     root.innerHTML = `
       <div class="c-wrap" id="c-wrap">
         <header class="hero glass" id="hero"></header>
+        <section class="region glass" id="region" role="status" aria-live="polite"></section>
         <div class="toolbar glass" id="toolbar">
           <label class="search">${ICONS.search}
             <input type="search" id="search-input" placeholder="Menüde ara…" autocomplete="off" enterkeyhint="search" aria-label="Menüde ara">
@@ -926,12 +963,13 @@ function renderCustomerMenu(root){
     root.querySelector('#dock').addEventListener('click', onDockClick);
   }
   if(selectedCategoryId && !state.categories.some(c=>c.id===selectedCategoryId)) selectedCategoryId = '';
-  updateHero(); updateChips(); updateList(); updateDock();
+  updateHero(); updateRegion(); updateChips(); updateList(); updateDock();
 }
 
 function onMenuClick(e){
-  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],#hero-brand');
+  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],#hero-brand');
   if(!t) return;
+  if(t.hasAttribute('data-geo-retry')) return requestLocation();
   if(t.id==='hero-brand') return registerSecretTap();
   if(t.dataset.bowl) return openBowlModal(t.dataset.bowl);
   if(t.dataset.cartAdd) return addToCart(t.dataset.cartAdd);
@@ -1193,6 +1231,89 @@ function addBowlToCart(){
   showToast(it.name + ' sepete eklendi', 'success');
 }
 
+/* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
+   Konum yalnızca bu cihazda uzaklık hesaplamak için kullanılır; hiçbir yere gönderilmez/kaydedilmez. */
+const DELIVERY_AREA = { name:'Bergama Merkez', lat:39.1214, lng:27.1799, radiusKm:5 };   // gerekirse buradan değiştirin
+let geoState = 'idle', geoKm = null;   // idle | checking | inside | outside | denied | unsupported
+function distKm(lat1, lng1, lat2, lng2){
+  const R = 6371, r = x => x*Math.PI/180, dLat = r(lat2-lat1), dLng = r(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function fmtKm(k){ return k < 10 ? k.toFixed(1).replace('.',',') : Math.round(k).toString(); }
+function updateRegion(){
+  const el = document.getElementById('region'); if(!el) return;
+  const st = {
+    idle:'<span class="sp"></span>Konumunuz kontrol ediliyor…',
+    checking:'<span class="sp"></span>Konumunuz kontrol ediliyor…',
+    inside:`✓ Konumunuz teslimat bölgemizde (${DELIVERY_AREA.name}'e yaklaşık ${geoKm!=null?fmtKm(geoKm):'–'} km).`,
+    outside:`⚠ Konumunuz teslimat bölgemizin dışında görünüyor (${DELIVERY_AREA.name}'e yaklaşık ${geoKm!=null?fmtKm(geoKm):'–'} km). Adresiniz Bergama Merkez'de değilse siparişinizi teslim edemeyiz.`,
+    denied:`Konum izni verilmedi. Lütfen adresinizin Bergama Merkez sınırları içinde olduğundan emin olun. <button type="button" class="rg-btn" data-geo-retry>Konumumu kontrol et</button>`,
+    unsupported:'Cihazınız konum kontrolünü desteklemiyor. Lütfen adresinizin Bergama Merkez sınırları içinde olduğundan emin olun.'
+  }[geoState];
+  el.className = 'region glass ' + geoState;
+  el.innerHTML = `<div class="rg-ico" aria-hidden="true">📍</div>
+    <div class="rg-txt"><b>Teslimat Hizmetimiz Sadece Bergama Merkez Sınırları İçerisindedir.</b><span class="rg-st ${geoState}">${st}</span></div>`;
+}
+function requestLocation(){
+  if(!('geolocation' in navigator)){ geoState = 'unsupported'; updateRegion(); return; }
+  geoState = 'checking'; updateRegion();
+  navigator.geolocation.getCurrentPosition(pos=>{
+    geoKm = distKm(pos.coords.latitude, pos.coords.longitude, DELIVERY_AREA.lat, DELIVERY_AREA.lng);
+    geoState = geoKm <= DELIVERY_AREA.radiusKm ? 'inside' : 'outside';
+    updateRegion();
+  }, ()=>{ geoState = 'denied'; updateRegion(); }, { enableHighAccuracy:false, timeout:12000, maximumAge:600000 });
+}
+
+/* ============================= KAMPANYA POP-UP =============================
+   Varsayılan metin buradan, güncel metin Yönetim Paneli → Ayarlar → Kampanya Pop-up'tan değiştirilir. */
+const CAMPAIGN_DEFAULT = {
+  enabled: true,
+  title: 'Sana Özel Kampanya',
+  text: "🎁 RiceMore'a Hoş Geldin! İlk Siparişine Özel Sürpriz İkramlar ve Günün Fırsatları Seni Bekliyor.",
+  button: 'Fırsatları İncele'
+};
+function campaign(){ return Object.assign({}, CAMPAIGN_DEFAULT, state.settings.campaign || {}); }
+function showCampaign(preview){
+  const c = campaign();
+  if(!preview){
+    if(!c.enabled || view!=='menu') return;
+    try{ if(sessionStorage.getItem('rm_campaign_seen')) return; }catch(e){}
+    if(document.getElementById('modal-overlay')){ setTimeout(()=>showCampaign(), 4000); return; }   // açık pencere varsa bekle
+    try{ sessionStorage.setItem('rm_campaign_seen','1'); }catch(e){}
+  }
+  const body = `<div class="cp-gift" aria-hidden="true">🎁</div>
+    <h2 class="cp-title">${escapeHtml(c.title)}</h2>
+    <p class="cp-text">${escapeHtml(c.text)}</p>
+    <div class="cp-rule" aria-hidden="true"><i></i></div>`;
+  const foot = `<button type="button" class="btn btn-ghost" id="cp-ok">Tamam</button><button type="button" class="btn btn-primary" id="cp-go" style="min-width:180px;min-height:48px;">${escapeHtml(c.button || 'Fırsatları İncele')}</button>`;
+  openModal('RICEMORE', body, foot, 'campaign');
+  document.getElementById('cp-ok').addEventListener('click', closeModal);
+  document.getElementById('cp-go').addEventListener('click', ()=>{
+    closeModal();
+    if(view==='menu'){ const m = document.getElementById('menu-list'); if(m) setTimeout(()=>window.scrollTo({top: m.offsetTop - 130, behavior:'smooth'}), 220); }
+  });
+}
+function startWelcomeFlow(){
+  if(view!=='menu') return;
+  requestLocation();                 // 1) konum izni + bölge bilgisi
+  setTimeout(()=>showCampaign(), 1800);   // 2) hemen ardından kampanya
+}
+
+/* ============================= TELEFON ============================= */
+function normPhone(v){
+  let d = String(v||'').replace(/\D/g,'');
+  if(d.startsWith('90') && d.length===12) d = '0' + d.slice(2);
+  if(d.length===10 && d[0]==='5') d = '0' + d;
+  return d;
+}
+function validPhone(v){ return /^05\d{9}$/.test(normPhone(v)); }
+function fmtPhone(v){
+  const d = normPhone(v).slice(0,11);
+  return [d.slice(0,4), d.slice(4,7), d.slice(7,9), d.slice(9,11)].filter(Boolean).join(' ');
+}
+function telHref(v){ const d = normPhone(v); return 'tel:+90' + d.slice(1); }
+
 /* ============================= SEPET ============================= */
 function openCartModal(){
   if(!cartCount()){ showToast('Sepetiniz boş — menüden ürün ekleyin'); return; }
@@ -1204,8 +1325,11 @@ function openCartModal(){
       <div class="total"><span>Toplam</span><span class="num" id="cart-total"></span></div>
     </div>
     ${st && !st.open? `<div class="notice">Şu an kapalıyız. Siparişiniz açılış saatinde (${st.openAt}) hazırlanmaya başlar.</div>`:''}
+    ${geoState==='outside'? `<div class="notice">📍 Konumunuz Bergama Merkez dışında görünüyor. Teslimatı yalnızca Bergama Merkez sınırları içinde yapabiliyoruz.</div>`:''}
     <div class="form-title">Teslimat Bilgileri</div>
     <div class="field"><label for="cart-name">Ad Soyad <em>*</em></label><input type="text" id="cart-name" autocomplete="name" value="${escapeHtml(cust.name||'')}" placeholder="Adınız ve soyadınız"></div>
+    <div class="field"><label for="cart-phone">Telefon Numaranız <em>(Zorunlu)</em></label><input type="tel" id="cart-phone" inputmode="tel" autocomplete="tel" maxlength="17" value="${escapeHtml(cust.phone? fmtPhone(cust.phone):'')}" placeholder="05XX XXX XX XX">
+      <div class="hint" id="phone-hint">Siparişinizle ilgili sizi arayabilmemiz için.</div></div>
     <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea></div>
     <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>`;
   const foot = `<button type="button" class="btn btn-primary btn-block btn-lg" id="cart-send"><span>Siparişi Onayla</span><span class="btn-sub num" id="cart-send-total"></span></button>`;
@@ -1216,7 +1340,15 @@ function openCartModal(){
     if(t.dataset.cInc) incLine(t.dataset.cInc); else decLine(t.dataset.cDec);
     renderCartLines();
   });
-  ['cart-name','cart-address'].forEach(id=>document.getElementById(id).addEventListener('input', e=>e.target.closest('.field').classList.remove('invalid')));
+  ['cart-name','cart-address','cart-phone'].forEach(id=>document.getElementById(id).addEventListener('input', e=>e.target.closest('.field').classList.remove('invalid')));
+  const ph = document.getElementById('cart-phone');
+  ph.addEventListener('input', ()=>{                    // yazarken 05XX XXX XX XX biçimine getir
+    let d = ph.value.replace(/\D/g,'');
+    if(d[0]==='9'){ if(d.length>=12) ph.value = fmtPhone(d); return; }   // +90 / 90 ile yazılıyorsa tamamlanınca çevir
+    if(d[0]==='5') d = '0' + d;                                          // başa 0 yazılmadıysa ekle
+    ph.value = d ? fmtPhone(d) : '';
+    if(validPhone(ph.value)){ const h = document.getElementById('phone-hint'); if(h){ h.textContent = 'Siparişinizle ilgili sizi arayabilmemiz için.'; h.style.color = ''; } }
+  });
   document.getElementById('cart-send').addEventListener('click', sendOrder);
 }
 function renderCartLines(){
@@ -1241,13 +1373,20 @@ function renderCartLines(){
 function sendOrder(){
   const lines = Object.entries(cart);
   if(!lines.length){ showToast('Sepetiniz boş'); return; }
-  const nameEl = document.getElementById('cart-name'), addrEl = document.getElementById('cart-address');
+  const nameEl = document.getElementById('cart-name'), addrEl = document.getElementById('cart-address'), phoneEl = document.getElementById('cart-phone');
   const name = nameEl.value.trim();
+  const phoneOk = validPhone(phoneEl.value), phone = phoneOk ? fmtPhone(phoneEl.value) : '';
   const address = (document.getElementById('cart-address')?.value || '').trim();
   const note = document.getElementById('cart-note').value.trim();
   let firstBad = null;
-  [[nameEl,name],[addrEl,address]].forEach(([el,v])=>{ el.closest('.field').classList.toggle('invalid', !v); if(!v && !firstBad) firstBad = el; });
-  if(firstBad){ firstBad.focus(); showToast('Lütfen ad soyad ve teslimat adresini girin'); return; }
+  [[nameEl,name],[phoneEl,phone],[addrEl,address]].forEach(([el,v])=>{ el.closest('.field').classList.toggle('invalid', !v); if(!v && !firstBad) firstBad = el; });
+  const ph = document.getElementById('phone-hint');
+  if(ph){ ph.textContent = phoneOk ? 'Siparişinizle ilgili sizi arayabilmemiz için.' : 'Geçerli bir cep telefonu girin: 05XX XXX XX XX (11 hane).'; ph.style.color = phoneOk ? '' : 'var(--danger)'; }
+  if(firstBad){
+    firstBad.focus();
+    showToast(firstBad===phoneEl ? (phoneEl.value.trim() ? 'Telefon numarası eksik veya hatalı. Örnek: 0536 123 45 67' : 'Lütfen telefon numaranızı girin') : 'Lütfen ad soyad, telefon ve teslimat adresini girin');
+    return;
+  }
 
   const removedNow = sanitizeCart();                 // son anda tükenen ürün/malzeme kontrolü
   if(removedNow.length){ showToast('Tükendi, sepetinizden çıkarıldı: ' + removedNow.join(', ')); renderCartLines(); refreshAllControls(); updateDock(); return; }
@@ -1263,13 +1402,14 @@ function sendOrder(){
     }),
     total,
     customerName: name,
+    phone: phone,
     address: address,
     note: note,
     status: 'yeni'
   };
   if(!pushOrder(order)){ if(btn) btn.disabled = false; return; }   // bağlantı yoksa sepet korunur
 
-  saveCustomer({name, address});
+  saveCustomer({name, address, phone});
   setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name });
   cart = {}; saveCart();
   refreshAllControls(); updateDock();
@@ -1631,6 +1771,7 @@ function renderAdminOrders(root){
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
             return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
+          ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
         </div>
         <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
@@ -1667,6 +1808,19 @@ function renderAdminSettings(root){
       <button class="btn btn-primary btn-sm" id="save-settings">Kaydet</button>
     </div>
     <div class="card">
+      <h3>Kampanya Pop-up</h3>
+      <div class="field"><label class="chk"><input type="checkbox" id="cp-enabled" ${campaign().enabled?'checked':''}> Site açılınca kampanya penceresini göster</label>
+        <div class="hint">Her müşteriye tarayıcı oturumu başına bir kez gösterilir.</div></div>
+      <div class="field"><label>Başlık</label><input type="text" id="cp-title" maxlength="60" value="${escapeHtml(campaign().title)}"></div>
+      <div class="field"><label>Metin</label><textarea id="cp-text" rows="3" maxlength="300">${escapeHtml(campaign().text)}</textarea></div>
+      <div class="field"><label>Buton yazısı</label><input type="text" id="cp-btn" maxlength="30" value="${escapeHtml(campaign().button)}"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="cp-save">Kampanyayı Kaydet</button>
+        <button class="btn btn-sm" id="cp-preview">Önizle</button>
+        <button class="btn btn-sm btn-ghost" id="cp-reset">Varsayılana Dön</button>
+      </div>
+    </div>
+    <div class="card">
       <h3>Yönetici PIN'ini Değiştir</h3>
       <div class="field-row">
         <div class="field"><label>Mevcut PIN</label><input type="password" id="s-pin-old"></div>
@@ -1685,6 +1839,18 @@ function renderAdminSettings(root){
     s.mapsUrl = /^https:\/\//i.test(maps) ? maps : '';
     s.currency = root.querySelector('#s-cur').value.trim() || '₺';
     saveState(); showToast('Ayarlar kaydedildi');
+  });
+  const readCampaign = ()=>({
+    enabled: root.querySelector('#cp-enabled').checked,
+    title: root.querySelector('#cp-title').value.trim() || CAMPAIGN_DEFAULT.title,
+    text: root.querySelector('#cp-text').value.trim() || CAMPAIGN_DEFAULT.text,
+    button: root.querySelector('#cp-btn').value.trim() || CAMPAIGN_DEFAULT.button
+  });
+  root.querySelector('#cp-save').addEventListener('click',()=>{ s.campaign = readCampaign(); saveState(); showToast('Kampanya kaydedildi'); });
+  root.querySelector('#cp-preview').addEventListener('click',()=>{ const keep = s.campaign; s.campaign = readCampaign(); showCampaign(true); s.campaign = keep; });
+  root.querySelector('#cp-reset').addEventListener('click',()=>{
+    root.querySelector('#cp-enabled').checked = true; root.querySelector('#cp-title').value = CAMPAIGN_DEFAULT.title;
+    root.querySelector('#cp-text').value = CAMPAIGN_DEFAULT.text; root.querySelector('#cp-btn').value = CAMPAIGN_DEFAULT.button;
   });
   root.querySelector('#save-pin').addEventListener('click',()=>{
     const oldPin = root.querySelector('#s-pin-old').value;
