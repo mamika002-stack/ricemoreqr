@@ -164,7 +164,7 @@
   .badge.populer{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);}
   .badge.sef{background:rgba(227,138,85,.95);color:#2A1206;}
   .sold{position:absolute;inset:0;z-index:3;display:grid;place-items:center;background:rgba(6,7,9,.66);-webkit-backdrop-filter:grayscale(1);backdrop-filter:grayscale(1);}
-  .item-media .sold span{padding:6px 14px;border-radius:99px;border:1px solid rgba(212,175,55,.6);background:rgba(11,12,14,.78);color:var(--gold-2);
+  .item-media .sold span,.dt-media .sold span{padding:6px 14px;border-radius:99px;border:1px solid rgba(212,175,55,.6);background:rgba(11,12,14,.78);color:var(--gold-2);
     font-size:11px;font-weight:800;letter-spacing:.2em;box-shadow:0 6px 18px rgba(0,0,0,.4);}
   .item.soldout .price{color:var(--text-faint);text-decoration:line-through;text-decoration-color:rgba(212,175,55,.5);}
   .item.soldout .item-body{opacity:.6;}
@@ -298,8 +298,8 @@
   .dialog-head::before{content:'';position:absolute;top:8px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:4px;background:rgba(255,255,255,.18);}
   .dialog-head h3{margin:0;font-family:var(--font-display);font-weight:600;font-size:21px;}
   .dialog-body{padding:6px 20px 18px;}
-  .dialog-foot{position:sticky;bottom:0;z-index:2;display:flex;justify-content:flex-end;gap:8px;padding:14px 20px calc(14px + var(--safe-b));
-    border-top:1px solid var(--glass-border);background:rgba(15,17,21,.95);}
+  .dialog-foot{position:sticky;bottom:0;z-index:6;display:flex;justify-content:flex-end;gap:8px;padding:14px 20px calc(14px + var(--safe-b));
+    border-top:1px solid var(--glass-border);background:#121418;}
   .overlay.closing{animation:fadeout .2s ease forwards;}
   .overlay.closing .dialog{animation:sheetdown .22s ease forwards;}
   @keyframes fadein{from{opacity:0;}} @keyframes fadeout{to{opacity:0;}}
@@ -396,6 +396,38 @@
   .adm-opts{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
   .adm-tag{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-dim);}
   .adm-tag.sos{background:var(--gold-soft);border-color:rgba(212,175,55,.45);color:var(--gold-2);}
+
+  /* ============================= ÜRÜN DETAY MODALI ============================= */
+  .item{cursor:pointer;}
+  .dialog.detail .dialog-head{position:absolute;left:0;right:0;top:0;background:none;padding:14px 14px 0;justify-content:flex-end;z-index:5;}
+  .dialog.detail .dialog-head h3{display:none;}
+  .dialog.detail .dialog-head::before{z-index:6;background:rgba(255,255,255,.5);}
+  .dialog.detail .dialog-head .icon-btn{background:rgba(11,12,14,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-color:rgba(212,175,55,.4);}
+  .dialog.detail .dialog-body{padding:0 0 6px;}
+  .dt-media{position:relative;width:100%;aspect-ratio:4/3;max-height:52vh;overflow:hidden;background:radial-gradient(circle at 35% 30%, rgba(212,175,55,.22), transparent 60%), linear-gradient(145deg,#1E2128,#181A20);}
+  .dt-media img{width:100%;height:100%;object-fit:cover;display:block;animation:dtzoom 1.2s var(--ease) both;}
+  @keyframes dtzoom{from{transform:scale(1.08);opacity:.4;}to{transform:none;opacity:1;}}
+  .dt-media .ph{position:absolute;inset:0;display:grid;place-items:center;color:rgba(212,175,55,.5);}
+  .dt-media .ph svg{width:30%;height:30%;}
+  .dt-media::after{content:'';position:absolute;left:0;right:0;bottom:0;height:45%;background:linear-gradient(transparent, rgba(15,17,21,.95));pointer-events:none;}
+  .dt-media .badge{top:16px;left:16px;font-size:11.5px;padding:5px 11px;}
+  .dt-media .sold{z-index:1;}
+  #dt-add[disabled]{background:rgba(255,255,255,.07);color:var(--text-faint);box-shadow:none;}
+  .dt-body{position:relative;margin-top:-34px;padding:0 20px 8px;z-index:4;}
+  .dt-name{font-family:var(--font-display);font-weight:600;font-size:27px;line-height:1.15;margin:0;letter-spacing:-.01em;}
+  .dt-price{display:inline-block;margin-top:8px;font-weight:800;font-size:22px;color:var(--gold-2);}
+  .dt-desc{margin:14px 0 0;font-size:14.5px;line-height:1.65;color:var(--text-dim);white-space:pre-line;}
+  .dt-desc.empty{color:var(--text-faint);font-style:italic;}
+  .dt-note{margin-top:14px;padding:11px 13px;border-radius:13px;background:var(--gold-soft);border:1px solid rgba(212,175,55,.35);font-size:12.8px;color:var(--gold-2);font-weight:600;line-height:1.45;}
+  .dt-note.off{background:var(--danger-soft);border-color:rgba(232,112,93,.4);color:var(--danger);}
+  .dt-foot{flex:1;display:flex;gap:10px;align-items:center;}
+  .dt-foot .stepper button{width:36px;height:40px;} .dt-foot .stepper .q{min-width:24px;}
+  .dt-foot .btn-lg{flex:1;}
+  /* yönetim: görsel kaldır */
+  .photo-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .btn-remove{color:var(--danger);border-color:rgba(232,112,93,.45);background:var(--danger-soft);}
+  .btn-remove:hover{border-color:var(--danger);}
+  .photo-empty{display:grid;place-items:center;height:120px;border-radius:13px;margin-bottom:10px;background:var(--bg-elev);border:1px dashed var(--glass-border);color:var(--text-faint);font-size:12.5px;}
 
   /* ============================= BÖLGE BİLGİSİ ============================= */
   .region{display:flex;gap:12px;align-items:flex-start;margin-top:12px;padding:13px 14px;border-radius:20px;animation:rise .6s .05s var(--ease) both;}
@@ -932,6 +964,7 @@ function render(){
   if(view==='admin'){ renderAdmin(root); }
   else { renderCustomerMenu(root); }
   if(document.getElementById('bowl-root')) renderBowl();        // açık Bowl ekranı anında güncellenir
+  if(document.getElementById('detail-root')) renderDetail();    // açık ürün detayı anında güncellenir
   if(document.getElementById('cart-lines')) renderCartLines();  // açık sepet anında güncellenir
 }
 
@@ -963,6 +996,7 @@ function renderCustomerMenu(root){
     input.addEventListener('input', e=>{ searchQuery = e.target.value; root.querySelector('#search-clear').hidden = !searchQuery; updateList(); });
     root.querySelector('#search-clear').addEventListener('click', ()=>{ searchQuery=''; input.value=''; root.querySelector('#search-clear').hidden = true; updateList(); input.focus(); });
     root.querySelector('#c-wrap').addEventListener('click', onMenuClick);
+    root.querySelector('#c-wrap').addEventListener('keydown', e=>{ if((e.key==='Enter'||e.key===' ') && e.target.dataset && e.target.dataset.detail){ e.preventDefault(); openDetailModal(e.target.dataset.detail); } });
     root.querySelector('#dock').addEventListener('click', onDockClick);
   }
   if(selectedCategoryId && !state.categories.some(c=>c.id===selectedCategoryId)) selectedCategoryId = '';
@@ -970,12 +1004,13 @@ function renderCustomerMenu(root){
 }
 
 function onMenuClick(e){
-  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand');
+  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand,[data-detail]');
   if(!t) return;
   if(t.hasAttribute('data-geo-retry')) return requestLocation(true);
   if(t.hasAttribute('data-geo-help')) return openGeoHelp();
   if(t.id==='hero-brand') return registerSecretTap();
   if(t.dataset.bowl) return openBowlModal(t.dataset.bowl);
+  if(t.dataset.detail && !e.target.closest('button')) return openDetailModal(t.dataset.detail);
   if(t.dataset.cartAdd) return addToCart(t.dataset.cartAdd);
   if(t.dataset.cartInc) return addToCart(t.dataset.cartInc);
   if(t.dataset.cartDec) return decFromCart(t.dataset.cartDec);
@@ -1054,7 +1089,7 @@ function ctlHtml(it){
   return `<button type="button" class="add-btn" data-cart-add="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} sepete ekle">${ICONS.plus}</button>`;
 }
 function itemCard(it, i){
-  return `<article class="item ${it.available===false?'soldout':''}" style="--i:${i}">
+  return `<article class="item ${it.available===false?'soldout':''}" style="--i:${i}" data-detail="${escapeHtml(it.id)}" tabindex="0" aria-label="${escapeHtml(it.name)} detayını aç">
     <div class="item-media">
       ${it.badge && BADGE_LABEL[it.badge]? `<span class="badge ${it.badge}">${BADGE_LABEL[it.badge]}</span>`:''}
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="${escapeHtml(it.name)}" loading="lazy" decoding="async" onload="this.classList.add('ok')">` : `<div class="ph">${ICONS.bowl}</div>`}
@@ -1144,14 +1179,73 @@ function decLine(key){
   saveCart(); updateItemControl(id); updateDock();
 }
 
+/* ============================= ÜRÜN DETAY MODALI ============================= */
+let detailSel = null;   // { itemId, qty }
+function openDetailModal(itemId){
+  const it = state.items.find(x=>x.id===itemId); if(!it) return;
+  detailSel = { itemId, qty:1 };
+  const foot = `<div class="dt-foot">
+      <div class="stepper" id="dt-stepper"><button type="button" data-dq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="dt-qty">1</span><button type="button" data-dq="+" aria-label="Arttır">${ICONS.plus}</button></div>
+      <button type="button" class="btn btn-primary btn-lg" id="dt-add"><span id="dt-add-label">Sepete Ekle</span><span class="btn-sub num" id="dt-total"></span></button>
+    </div>`;
+  openModal(escapeHtml(it.name), '<div id="detail-root"></div>', foot, 'detail');
+  document.querySelector('.dt-foot').addEventListener('click', e=>{
+    const q = e.target.closest('[data-dq]');
+    if(q){ detailSel.qty = Math.max(1, Math.min(20, detailSel.qty + (q.dataset.dq==='+'?1:-1))); renderDetailFoot(); return; }
+    if(e.target.closest('#dt-add')) detailAdd();
+  });
+  renderDetail();
+}
+function renderDetail(){
+  const root = document.getElementById('detail-root'); if(!root || !detailSel) return;
+  const it = state.items.find(x=>x.id===detailSel.itemId);
+  if(!it){ closeModal(); showToast('Bu ürün artık menüde yok'); return; }
+  const sold = it.available===false, bowl = isBowl(it);
+  root.innerHTML = `
+    <div class="dt-media">
+      ${it.badge && BADGE_LABEL[it.badge]? `<span class="badge ${it.badge}">${BADGE_LABEL[it.badge]}</span>`:''}
+      ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="${escapeHtml(it.name)}">` : `<div class="ph">${ICONS.bowl}</div>`}
+      ${sold? '<div class="sold"><span>TÜKENDİ</span></div>':''}
+    </div>
+    <div class="dt-body">
+      <h2 class="dt-name">${escapeHtml(it.name)}</h2>
+      <span class="dt-price num">${fmtPrice(it.price)}</span>
+      <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
+      ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
+            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tavuk çeşidini ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin.</div>` : ''}
+    </div>`;
+  renderDetailFoot();
+}
+function renderDetailFoot(){
+  const it = detailSel && state.items.find(x=>x.id===detailSel.itemId); if(!it) return;
+  const sold = it.available===false, bowl = isBowl(it);
+  const q = document.getElementById('dt-qty'); if(q) q.textContent = detailSel.qty;
+  const st = document.getElementById('dt-stepper'); if(st) st.style.display = sold ? 'none' : '';
+  const b = document.getElementById('dt-add'), l = document.getElementById('dt-add-label'), t = document.getElementById('dt-total');
+  if(b) b.disabled = sold;
+  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
+  if(t) t.textContent = sold ? '' : fmtPrice(it.price * detailSel.qty);
+}
+function detailAdd(){
+  const it = state.items.find(x=>x.id===detailSel.itemId);
+  if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
+  const qty = detailSel.qty;
+  if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
+  if(!cart[it.id]) cart[it.id] = { qty:0, price:it.price, name:it.name };
+  cart[it.id].qty += qty;
+  saveCart(); updateItemControl(it.id); updateDock(true);
+  closeModal(); detailSel = null;
+  showToast(`${qty} × ${it.name} sepete eklendi`, 'success');
+}
+
 /* ============================= KENDİ BOWL'UNU OLUŞTUR ============================= */
 let bowlSel = null;   // { itemId, chickenId, garnish:[ids], qty }
-function openBowlModal(itemId){
+function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  bowlSel = { itemId, chickenId:'', garnish:[], qty:1 };
+  bowlSel = { itemId, chickenId:'', garnish:[], qty: Math.max(1, Math.min(20, initQty||1)) };
   const foot = `<div class="bowl-foot">
-      <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">1</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
+      <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
     </div>`;
   openModal(escapeHtml(it.name), '<div id="bowl-root"></div>', foot);
@@ -1707,27 +1801,44 @@ function openItemModal(existing){
     <div class="field"><label class="chk"><input type="checkbox" id="it-bowl" ${isBowl(existing)?'checked':''}> Bowl seçim ekranı açılsın (tavuk sosu + garnitür)</label>
       <div class="hint">İşaretli ürünlerde müşteri "Seç" butonuyla Kendi Bowl'unu Oluştur ekranını açar.</div></div>
     <div class="field"><label>Fotoğraf</label>
-      ${existing&&existing.photoUrl? `<img class="photo-preview" id="it-photo-preview" src="${existing.photoUrl}">` : `<div id="it-photo-preview-wrap"></div>`}
+      <div id="it-photo-box"></div>
       <div class="photo-drop" id="it-photo-drop">Fotoğraf seçmek için tıklayın</div>
       <input type="file" id="it-photo-input" accept="image/*" style="display:none;">
+      <input type="text" id="it-photo-url" placeholder="veya görsel bağlantısı yapıştırın (https://...)" style="margin-top:8px;" value="${existing && /^https:\/\//i.test(existing.photoUrl||'') ? escapeHtml(existing.photoUrl) : ''}">
+      <div class="photo-actions"><button type="button" class="btn btn-sm btn-remove" id="it-photo-remove">${ICONS.trash} Görseli Sil / Kaldır</button></div>
+      <div class="hint" id="it-photo-hint"></div>
     </div>
   `;
   const foot = `<button class="btn btn-ghost" id="it-cancel">Vazgeç</button><button class="btn btn-primary" id="it-save">${existing?'Güncelle':'Kaydet'}</button>`;
   openModal(existing?'Ürünü Düzenle':'Yeni Ürün', body, foot);
-  let photoData = existing? existing.photoUrl : null;
+  let photoData = existing && existing.photoUrl ? existing.photoUrl : null;
+  const hadPhoto = !!photoData;
+  const showPhoto = ()=>{
+    const box = document.getElementById('it-photo-box'); if(!box) return;
+    box.innerHTML = photoData ? `<img class="photo-preview" id="it-photo-preview" src="${escapeHtml(photoData)}" alt="">` : `<div class="photo-empty">Görsel yok — menüde varsayılan simge gösterilir</div>`;
+    document.getElementById('it-photo-remove').style.display = photoData ? '' : 'none';
+    document.getElementById('it-photo-drop').textContent = photoData ? 'Fotoğrafı değiştirmek için tıklayın' : 'Fotoğraf seçmek için tıklayın';
+    document.getElementById('it-photo-hint').textContent = (!photoData && hadPhoto) ? 'Görsel kaldırıldı. Kalıcı olması için "Güncelle"ye basın.' : '';
+  };
+  showPhoto();
   document.getElementById('it-photo-drop').addEventListener('click',()=>document.getElementById('it-photo-input').click());
   document.getElementById('it-photo-input').addEventListener('change', async e=>{
     const file = e.target.files[0]; if(!file) return;
     document.getElementById('it-photo-drop').textContent = 'Yükleniyor...';
-    try{
-      photoData = await resizeImageFile(file, 900);
-      document.getElementById('it-photo-drop').textContent = 'Fotoğraf seçmek için tıklayın (değiştirmek için tekrar tıklayın)';
-      const wrap = document.getElementById('it-photo-preview-wrap') || document.getElementById('it-photo-preview');
-      if(wrap){
-        const img = document.createElement('img'); img.className='photo-preview'; img.id='it-photo-preview'; img.src=photoData;
-        wrap.replaceWith ? wrap.replaceWith(img) : null;
-      }
-    }catch(err){ showToast('Fotoğraf işlenemedi'); }
+    try{ photoData = await resizeImageFile(file, 900); document.getElementById('it-photo-url').value = ''; showPhoto(); }
+    catch(err){ showToast('Fotoğraf işlenemedi'); showPhoto(); }
+  });
+  document.getElementById('it-photo-url').addEventListener('change', e=>{
+    const v = e.target.value.trim();
+    if(!v) return;
+    if(!/^https:\/\//i.test(v)){ showToast('Bağlantı https:// ile başlamalı'); return; }
+    photoData = v; showPhoto();
+  });
+  document.getElementById('it-photo-remove').addEventListener('click', ()=>{
+    photoData = null;
+    document.getElementById('it-photo-input').value = '';
+    document.getElementById('it-photo-url').value = '';
+    showPhoto();
   });
   document.getElementById('it-cancel').addEventListener('click', closeModal);
   document.getElementById('it-save').addEventListener('click',()=>{
