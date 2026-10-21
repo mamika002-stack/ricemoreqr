@@ -367,31 +367,45 @@
   .opt-sold{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.04em;background:var(--danger-soft);color:var(--danger);white-space:nowrap;}
   .opt-empty{grid-column:1/-1;font-size:12.5px;color:var(--text-faint);padding:6px 2px;}
   .bowl-foot{flex:1;display:flex;gap:10px;align-items:center;}
-  /* canlı kase görseli */
-  .bowl-stage{position:sticky;top:62px;z-index:3;margin:0 -20px;padding:4px 20px 12px;background:#14161B;
-    border-bottom:1px solid rgba(212,175,55,.18);box-shadow:0 14px 18px -10px rgba(0,0,0,.6);}
+  /* mini seçim göstergesi */
   .dialog.bowl-dlg{background:#14161B;}
   .dialog.bowl-dlg .dialog-head{background:#14161B;}
-  .bv{display:block;width:min(248px, 64vw);height:auto;margin:0 auto;overflow:visible;
-    filter:drop-shadow(0 18px 30px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(212,175,55,.12));}
-  .bv-empty{font-family:var(--font-display);font-style:italic;font-size:15px;fill:rgba(230,202,101,.55);transition:opacity .4s;}
-  .bv-guides circle{fill:none;stroke:rgba(212,175,55,.32);stroke-width:1.3;stroke-dasharray:4 5;transition:opacity .4s;}
-  .bv-guides circle.on{opacity:0;}
-  .bv-l{transform-box:fill-box;transform-origin:center;}
-  .bv-l.in{animation:bvIn .65s var(--ease) both;}
-  .bv-l.out{animation:bvOut .4s ease forwards;}
-  @keyframes bvIn{0%{opacity:0;transform:scale(.55) translateY(-10px);filter:brightness(1.9) drop-shadow(0 0 10px rgba(255,226,150,.95));}
-                  55%{opacity:1;transform:scale(1.04);filter:brightness(1.3) drop-shadow(0 0 8px rgba(255,226,150,.6));}
-                  100%{opacity:1;transform:none;filter:none;}}
-  @keyframes bvOut{to{opacity:0;transform:scale(.7);filter:blur(2px) brightness(1.4);}}
-  #bv-base .bv-l.in{animation-name:bvBaseIn;animation-duration:.8s;}
-  @keyframes bvBaseIn{0%{opacity:0;transform:scale(.9);filter:brightness(1.6);}100%{opacity:1;transform:none;filter:none;}}
-  .bv-spark{fill:none;stroke:#F3E2A0;stroke-width:2.2;transform-box:fill-box;transform-origin:center;animation:bvSpark .75s ease-out forwards;pointer-events:none;}
-  @keyframes bvSpark{from{opacity:.95;transform:scale(.35);}to{opacity:0;transform:scale(1.5);}}
-  .bv-caption{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;font-weight:700;color:var(--text-faint);text-align:center;}
-  .bv-caption span{max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .bv-caption span.ok{color:var(--gold-2);}
-  .bv-caption i{width:4px;height:4px;border-radius:50%;background:rgba(212,175,55,.5);}
+  .sel-bar{position:sticky;top:62px;z-index:3;margin:0 -20px 4px;padding:4px 20px 14px;background:#14161B;
+    box-shadow:0 14px 18px -12px rgba(0,0,0,.65);}
+  .sb-box{position:relative;padding:12px 13px 12px;border-radius:18px;border:1px solid rgba(212,175,55,.5);
+    background:linear-gradient(135deg, rgba(212,175,55,.12), rgba(212,175,55,.03) 55%, rgba(212,175,55,.08));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 0 24px rgba(212,175,55,.08);}
+  .sb-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;}
+  .sb-title{font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--gold);}
+  .sb-price{font-size:12.5px;font-weight:800;color:var(--gold-2);}
+  .sb-pills{display:flex;flex-wrap:wrap;gap:6px;min-height:30px;align-items:center;}
+  .sb-empty{font-family:var(--font-display);font-style:italic;font-size:13.5px;color:var(--text-faint);}
+  .sb-pill{position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:6px;max-width:100%;height:30px;padding:0 11px 0 7px;border-radius:99px;
+    font-size:12px;font-weight:700;white-space:nowrap;color:var(--gold-2);border:1px solid rgba(212,175,55,.5);background:rgba(212,175,55,.12);cursor:pointer;
+    font-family:inherit;}
+  .sb-pill .dot{flex:none;width:16px;height:16px;border-radius:50%;box-shadow:inset 0 -2px 3px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.4);}
+  .sb-pill .lbl{overflow:hidden;text-overflow:ellipsis;}
+  .sb-pill .x{flex:none;width:16px;height:16px;margin-right:-4px;border-radius:50%;display:grid;place-items:center;font-size:11px;line-height:1;background:rgba(0,0,0,.25);color:var(--text-dim);}
+  .sb-pill.base{color:var(--text);border-color:rgba(230,202,101,.4);background:rgba(255,255,255,.07);}
+  .sb-pill.pro{color:var(--gold-ink);border-color:transparent;background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));box-shadow:0 4px 12px rgba(212,175,55,.3);}
+  .sb-pill::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);pointer-events:none;}
+  .sb-pill.in{animation:pillIn .5s var(--ease) both;}
+  .sb-pill.in::after{animation:pillShine .9s .12s ease both;}
+  .sb-pill.out{animation:pillOut .32s ease forwards;pointer-events:none;}
+  @keyframes pillIn{0%{opacity:0;transform:scale(.55) translateY(6px);}60%{opacity:1;transform:scale(1.07);}100%{opacity:1;transform:none;}}
+  @keyframes pillShine{to{transform:translateX(120%);}}
+  @keyframes pillOut{0%{opacity:1;transform:none;max-width:220px;}100%{opacity:0;transform:scale(.6);max-width:0;padding-left:0;padding-right:0;margin-right:-6px;border-width:0;}}
+  .sb-prog{display:flex;align-items:center;gap:10px;margin-top:11px;padding-top:10px;border-top:1px dashed rgba(212,175,55,.28);}
+  .sb-prog .t{flex:none;font-size:12px;font-weight:700;color:var(--text-dim);}
+  .sb-prog .t b{color:var(--gold-2);font-variant-numeric:tabular-nums;display:inline-block;}
+  .sb-prog .t b.bump{animation:bump .4s var(--ease);}
+  .sb-segs{flex:1;display:flex;gap:4px;}
+  .sb-segs i{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;}
+  .sb-segs i::after{content:'';position:absolute;inset:0;border-radius:4px;background:linear-gradient(90deg,var(--gold),var(--gold-2));transform:scaleX(0);transform-origin:left;transition:transform .45s var(--ease);}
+  .sb-segs i.on::after{transform:scaleX(1);box-shadow:0 0 8px rgba(212,175,55,.6);}
+  .sb-segs.full i::after{background:linear-gradient(90deg,#8FD3A4,var(--ok));}
+  .sb-prog .done{flex:none;font-size:11px;font-weight:800;color:var(--ok);opacity:0;transition:opacity .3s;}
+  .sb-prog .done.on{opacity:1;}
   .bowl-desc{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;text-align:center;}
   .opt-sub{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--gold);margin:12px 2px 8px;}
   .opt-sub:first-of-type{margin-top:2px;}
@@ -1258,7 +1272,7 @@ function renderDetail(){
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
       ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
-            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, proteinini (tavuk veya tavuk köftesi) ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin; kasen gözünün önünde hazırlanır.</div>` : ''}
+            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, proteinini (tavuk veya tavuk köftesi) ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin.</div>` : ''}
     </div>`;
   renderDetailFoot();
 }
@@ -1286,22 +1300,25 @@ function detailAdd(){
 
 /* ============================= KENDİ BOWL'UNU OLUŞTUR =============================
    0) Taban (zorunlu)  1) Protein: tavuk çeşidi VEYA tavuk köftesi (zorunlu)  2) Garnitür (en fazla N)
-   Seçimler canlı kase görselinde katman katman belirir. */
-let bowlSel = null;   // { itemId, baseId, pGroup, pId, garnish:[ids], slots:{id:index}, qty }
-let bowlVis = null;   // kasede şu an çizili katmanların anahtarları
+   Üstteki mini seçim göstergesinde seçilenler rozet olarak belirir. */
+let bowlSel = null;   // { itemId, baseId, pGroup, pId, garnish:[ids], qty }
 const PROTEIN_GROUPS = [['chicken','Tavuk Çeşitleri'],['meatball','Tavuk Köftesi']];
 
 function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  bowlSel = { itemId, baseId:'', pGroup:'', pId:'', garnish:[], slots:{}, qty: Math.max(1, Math.min(20, initQty||1)) };
-  bowlVis = { base:'', pro:'', g:[] };
+  bowlSel = { itemId, baseId:'', pGroup:'', pId:'', garnish:[], qty: Math.max(1, Math.min(20, initQty||1)) };
+  sbLastN = -1;
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
     </div>`;
   openModal(escapeHtml(it.name), `<div id="bowl-root">
-      <div class="bowl-stage">${bowlSvgShell()}<div class="bv-caption" id="bv-caption"></div></div>
+      <div class="sel-bar"><div class="sb-box">
+        <div class="sb-top"><span class="sb-title">SEÇİMİN</span><span class="sb-price num">${fmtPrice(it.price)}</span></div>
+        <div class="sb-pills" id="sb-pills"><span class="sb-empty" id="sb-empty">Seçtiğin malzemeler burada belirecek</span></div>
+        <div class="sb-prog"><span class="t">Seçilen Garnitür: <b id="sb-n">0/${state.options.maxGarnish||4}</b></span><span class="sb-segs" id="sb-segs"></span><span class="done" id="sb-done">✓ Tamam</span></div>
+      </div></div>
       <div id="bowl-steps"></div>
     </div>`, foot, 'bowl-dlg');
   const root = document.getElementById('bowl-steps');
@@ -1314,11 +1331,16 @@ function openBowlModal(itemId, initQty){
       if(inp.checked){
         if(bowlSel.garnish.length >= max){ inp.checked = false; showToast('En fazla '+max+' garnitür seçebilirsiniz'); return; }
         bowlSel.garnish.push(inp.value);
-        const used = Object.values(bowlSel.slots); let k = 0; while(used.includes(k)) k++;
-        bowlSel.slots[inp.value] = k;               // kasede sabit bir çeyrek ata
-      } else { bowlSel.garnish = bowlSel.garnish.filter(x=>x!==inp.value); delete bowlSel.slots[inp.value]; }
+      } else bowlSel.garnish = bowlSel.garnish.filter(x=>x!==inp.value);
     }
     renderBowl();
+  });
+  document.getElementById('sb-pills').addEventListener('click', e=>{
+    const p = e.target.closest('.sb-pill'); if(!p || !bowlSel) return;
+    if(p.dataset.rm){ bowlSel.garnish = bowlSel.garnish.filter(x=>x!==p.dataset.rm); renderBowl(); return; }
+    const step = document.querySelectorAll('#bowl-steps .opt-step')[Number(p.dataset.go)||0];
+    const dlg = step && step.closest('.dialog');
+    if(step && dlg) dlg.scrollTo({ top: step.offsetTop - 220, behavior:'smooth' });
   });
   document.querySelector('.bowl-foot').addEventListener('click', e=>{
     const q = e.target.closest('[data-bq]');
@@ -1340,7 +1362,7 @@ function renderBowl(){
   const lost = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
   if(lost.length){
     showToast(lost.map(g=>g?g.name:'Bir garnitür').join(', ')+' az önce tükendi');
-    bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); const ok = g && g.available!==false; if(!ok) delete bowlSel.slots[id]; return ok; });
+    bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); return g && g.available!==false; });
   }
 
   const opts = state.options, max = opts.maxGarnish||4, nG = bowlSel.garnish.length;
@@ -1358,23 +1380,23 @@ function renderBowl(){
   root.innerHTML = `
     ${it.description? `<p class="bowl-desc">${escapeHtml(it.description)}</p>`:''}
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Kasenin en alt katmanı · tek seçim</small></div>
+      <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Tek seçim</small></div>
         <span class="opt-badge ${bowlSel.baseId?'ok':'req'}">${bowlSel.baseId?'✓ Seçildi':'Zorunlu'}</span></div>
       <div class="opt-grid" role="radiogroup">${grid(opts.base, o=>tile('radio','bowl-base',o.id,o,bowlSel.baseId===o.id,'base'), 'Henüz taban eklenmemiş.')}</div>
     </div>
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">1</span><div><h4>Protein Çeşidinizi Seçin</h4><small>Kasenin ortasına yerleşir · tek seçim</small></div>
+      <div class="opt-title"><span class="opt-num">1</span><div><h4>Protein Çeşidinizi Seçin</h4><small>Tavuk veya tavuk köftesi · tek seçim</small></div>
         <span class="opt-badge ${hasP?'ok':'req'}">${hasP?'✓ Seçildi':'Zorunlu'}</span></div>
       ${PROTEIN_GROUPS.map(([g,label])=>`
         <div class="opt-sub">${label}</div>
         <div class="opt-grid" role="radiogroup">${grid(opts[g]||[], o=>tile('radio','bowl-protein',g+':'+o.id,o,bowlSel.pGroup===g && bowlSel.pId===o.id, g), 'Henüz eklenmemiş.')}</div>`).join('')}
     </div>
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>En fazla ${max} adet · proteinin etrafına dizilir</small></div>
+      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>En fazla ${max} adet · isteğe bağlı</small></div>
         <span class="opt-badge ${nG? 'ok':''}">${nG}/${max}</span></div>
       <div class="opt-grid">${grid(opts.garnish, o=>tile('check','bowl-garnish',o.id,o,bowlSel.garnish.includes(o.id),'garnish'), 'Henüz garnitür eklenmemiş.')}</div>
     </div>`;
-  updateBowlVisual();
+  updateSelBar();
   renderBowlFoot();
 }
 function renderBowlFoot(){
@@ -1403,13 +1425,7 @@ function addBowlToCart(){
   showToast(it.name + ' sepete eklendi', 'success');
 }
 
-/* ----------------------------- KASE GÖRSELİ (SVG) -----------------------------
-   300×300 tuval · merkez (150,150) · yiyecek alanı r=120
-   Katmanlar: taban (alt) → garnitür çeyrekleri → protein (orta, en üst) → ışık/gölge */
-const BV_SLOTS = [[97,97],[203,97],[97,203],[203,203],[150,58],[242,150],[150,242],[58,150]];  // sol-üst, sağ-üst, sol-alt, sağ-alt (+ yedek)
-function bvRand(seed){ let h = 2166136261; for(const ch of String(seed)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  return ()=>{ h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t>>>15), t | 1); t ^= t + Math.imul(t ^ (t>>>7), t | 61); return ((t ^ (t>>>14)) >>> 0) / 4294967296; }; }
-const f1 = n => n.toFixed(1);
+/* ----------------------------- MİNİ SEÇİM GÖSTERGESİ ----------------------------- */
 function baseKind(name){ const n = trLower(name); if(/makarna|penne|pasta|spagetti/.test(n)) return 'pasta'; if(/yeşil|salata|akdeniz|marul|roka/.test(n)) return 'greens'; if(/bulgur/.test(n)) return 'bulgur'; return 'rice'; }
 function garnishKind(name){ const n = trLower(name);
   if(/mısır/.test(n)) return 'corn'; if(/jalap/.test(n)) return 'jalapeno'; if(/turşu/.test(n)) return 'pickle';
@@ -1417,14 +1433,14 @@ function garnishKind(name){ const n = trLower(name);
   if(/zeytin/.test(n)) return 'olive'; if(/nohut/.test(n)) return 'chickpea'; if(/mantar/.test(n)) return 'mushroom';
   if(/havuç/.test(n)) return 'carrot'; if(/biber/.test(n)) return 'pepper'; if(/soğan/.test(n)) return 'onion'; return 'generic'; }
 function sauceOf(name){ const n = trLower(name);
-  if(/bbq|barbekü/.test(n)) return {a:'#8E3A1E', b:'#4A170A', pool:'#5a1d0d'};
-  if(/köri|curry/.test(n)) return {a:'#E8A93A', b:'#A8621A', pool:'#b8721e'};
-  if(/sweet/.test(n)) return {a:'#F07A3A', b:'#B83A16', pool:'#c4481e', seeds:true};
-  if(/hot|acı/.test(n)) return {a:'#D42A1A', b:'#7A0E08', pool:'#8e1309', flakes:true};
-  if(/soya|teriyaki/.test(n)) return {a:'#7A4A22', b:'#2E1608', pool:'#3a1d0b', sesame:true};
-  if(/mantar/.test(n)) return {a:'#EAD7B4', b:'#B99A6A', pool:'#d9c39a', cream:true, mush:true};
-  if(/krema/.test(n)) return {a:'#F1E2C2', b:'#C8A877', pool:'#e2cfa6', cream:true};
-  return {a:'#E2A65A', b:'#9A5A22', pool:'#7a4a22', grill:true};   // ızgara / marine
+  if(/bbq|barbekü/.test(n)) return {a:'#8E3A1E', b:'#4A170A'};
+  if(/köri|curry/.test(n)) return {a:'#E8A93A', b:'#A8621A'};
+  if(/sweet/.test(n)) return {a:'#F07A3A', b:'#B83A16'};
+  if(/hot|acı/.test(n)) return {a:'#D42A1A', b:'#7A0E08'};
+  if(/soya|teriyaki/.test(n)) return {a:'#7A4A22', b:'#2E1608'};
+  if(/mantar/.test(n)) return {a:'#EAD7B4', b:'#B99A6A'};
+  if(/krema/.test(n)) return {a:'#F1E2C2', b:'#C8A877'};
+  return {a:'#E2A65A', b:'#9A5A22'};
 }
 function swatchOf(kind, name){
   if(kind==='base'){ const k = baseKind(name); return k==='pasta' ? 'radial-gradient(circle at 35% 30%,#F8E3A6,#C99238)' : k==='greens' ? 'radial-gradient(circle at 35% 30%,#9BD06A,#2F6B28)' : k==='bulgur' ? 'radial-gradient(circle at 35% 30%,#E9C88A,#A57A3A)' : 'radial-gradient(circle at 35% 30%,#FFFDF5,#D9C9A3)'; }
@@ -1433,180 +1449,42 @@ function swatchOf(kind, name){
   const c = {corn:['#FFE27A','#D9A21C'],jalapeno:['#7FC25A','#2F6B22'],pickle:['#B9C45A','#5E6B1E'],peas:['#A8DA70','#3F7F22'],tomato:['#FF7A5E','#A81F14'],cucumber:['#E4F2C2','#4C8A3A'],olive:['#5A4652','#120C10'],chickpea:['#F2D79C','#B08A4A'],mushroom:['#EEDDC0','#9A7A52'],carrot:['#FFB15E','#D2601A'],pepper:['#FF6B4A','#2F8A3A'],onion:['#F3D4EE','#9A4A8A']}[garnishKind(name)] || ['#D4AF37','#8C6A1C'];
   return `radial-gradient(circle at 35% 30%,${c[0]},${c[1]})`;
 }
-let bvGradN = 0;
-function sphereGrad(defs, light, mid, dark){ const id = 'bvs' + (++bvGradN);
-  defs.insertAdjacentHTML('beforeend', `<radialGradient id="${id}" cx="34%" cy="30%" r="75%"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></radialGradient>`);
-  return `url(#${id})`; }
-function bowlSvgShell(){
-  return `<svg class="bv" id="bv" viewBox="0 0 300 300" role="img" aria-label="Bowl önizlemesi">
-    <defs id="bv-defs">
-      <linearGradient id="bv-rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7E7A8"/><stop offset=".3" stop-color="#D4AF37"/><stop offset=".62" stop-color="#7E5E16"/><stop offset=".85" stop-color="#E6CA65"/><stop offset="1" stop-color="#B8860B"/></linearGradient>
-      <radialGradient id="bv-body" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#34363E"/><stop offset=".7" stop-color="#16171B"/><stop offset="1" stop-color="#08090B"/></radialGradient>
-      <radialGradient id="bv-well" cx="50%" cy="46%" r="55%"><stop offset="0" stop-color="#22242A"/><stop offset=".85" stop-color="#0E0F12"/><stop offset="1" stop-color="#040405"/></radialGradient>
-      <radialGradient id="bv-vig" cx="50%" cy="48%" r="52%"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".62"/></radialGradient>
-      <radialGradient id="bv-grain" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#FFFFFA"/><stop offset=".6" stop-color="#F3EAD4"/><stop offset="1" stop-color="#CDBD98"/></radialGradient>
-      <linearGradient id="bv-penne" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBE6A8"/><stop offset=".5" stop-color="#E7BF62"/><stop offset="1" stop-color="#B78530"/></linearGradient>
-      <linearGradient id="bv-leaf1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A6D873"/><stop offset="1" stop-color="#3B7A2C"/></linearGradient>
-      <linearGradient id="bv-leaf2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FB04C"/><stop offset="1" stop-color="#1F5320"/></linearGradient>
-      <linearGradient id="bv-leaf3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9E89A"/><stop offset="1" stop-color="#6E9E3E"/></linearGradient>
-      <linearGradient id="bv-leaf4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B0486E"/><stop offset="1" stop-color="#4A1530"/></linearGradient>
-      <filter id="bv-sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.6" flood-color="#000" flood-opacity=".55"/></filter>
-      <filter id="bv-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
-      <clipPath id="bv-clip"><circle cx="150" cy="150" r="120"/></clipPath>
-    </defs>
-    <ellipse cx="150" cy="160" rx="140" ry="136" fill="#000" opacity=".55" filter="url(#bv-soft)"/>
-    <circle cx="150" cy="150" r="146" fill="url(#bv-body)"/>
-    <circle cx="150" cy="150" r="135" fill="none" stroke="url(#bv-rim)" stroke-width="9"/>
-    <circle cx="150" cy="150" r="130" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1.2"/>
-    <circle cx="150" cy="150" r="125" fill="url(#bv-well)"/>
-    <g clip-path="url(#bv-clip)">
-      <g id="bv-base"></g>
-      <g id="bv-guides" class="bv-guides">
-        <circle cx="150" cy="150" r="40"/>${BV_SLOTS.slice(0,4).map(([x,y])=>`<circle cx="${x}" cy="${y}" r="26"/>`).join('')}
-      </g>
-      <g id="bv-gar"></g>
-      <g id="bv-pro"></g>
-      <circle cx="150" cy="150" r="121" fill="url(#bv-vig)" pointer-events="none"/>
-    </g>
-    <path d="M52 92 A112 112 0 0 1 140 30" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="3.5" stroke-linecap="round"/>
-    <path d="M232 228 A112 112 0 0 1 196 258" fill="none" stroke="#F3E2A0" stroke-opacity=".18" stroke-width="2.5" stroke-linecap="round"/>
-    <text id="bv-empty" x="150" y="156" text-anchor="middle" class="bv-empty">Tabanını seç</text>
-  </svg>`;
-}
-/* ---- katman çizimleri ---- */
-function drawBase(kind, seed, defs){
-  const r = bvRand('b'+seed); let s = '';
-  const disc = (max)=>{ const a = r()*6.2832, d = Math.sqrt(r())*max; return [150+Math.cos(a)*d, 150+Math.sin(a)*d]; };
-  if(kind==='pasta'){
-    s += `<circle cx="150" cy="150" r="122" fill="#D8AE5C"/>`;
-    for(let i=0;i<78;i++){ const [x,y] = disc(118), rot = r()*180, w = 21+r()*5;
-      s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)})" filter="url(#bv-sh)"><rect x="${f1(-w/2)}" y="-4.6" width="${f1(w)}" height="9.2" rx="3" fill="url(#bv-penne)"/><ellipse cx="${f1(w/2-1)}" cy="0" rx="1.6" ry="3.4" fill="#8E6420" opacity=".55"/><path d="M${f1(-w/2+3)} -3.2v6.4M${f1(-w/2+6.5)} -3.2v6.4M${f1(w/2-6.5)} -3.2v6.4M${f1(w/2-3)} -3.2v6.4" stroke="#A97A2A" stroke-opacity=".55" stroke-width=".8"/><ellipse cx="${f1(-w/4)}" cy="-1.6" rx="${f1(w/4)}" ry="1" fill="#fff" opacity=".35"/></g>`; }
-    for(let i=0;i<34;i++){ const [x,y] = disc(116); s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.9+r()*1.1)}" fill="${r()<.6?'#2F6B28':'#4E9A38'}"/>`; }
-    s += `<ellipse cx="128" cy="118" rx="70" ry="44" fill="#FFF3C0" opacity=".12"/>`;
-  } else if(kind==='greens'){
-    s += `<circle cx="150" cy="150" r="122" fill="#24461F"/>`;
-    for(let i=0;i<78;i++){ const [x,y] = disc(118), sc = .9+r()*1.1, rot = r()*360, g = r(), fill = g<.08?'url(#bv-leaf4)':g<.45?'url(#bv-leaf1)':g<.8?'url(#bv-leaf2)':'url(#bv-leaf3)';
-      s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)}) scale(${f1(sc)})" filter="url(#bv-sh)"><path d="M0 -11C8 -7 8 7 0 11C-8 7 -8 -7 0 -11Z" fill="${fill}"/><path d="M0 -10V10" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/></g>`; }
-    for(let i=0;i<14;i++){ const [x,y] = disc(108); s += `<rect x="${f1(x)}" y="${f1(y)}" width="7" height="7" rx="1.5" fill="#F6F2E6" transform="rotate(${f1(r()*90)} ${f1(x+3.5)} ${f1(y+3.5)})" filter="url(#bv-sh)"/>`; }   // beyaz peynir küpleri
-  } else {
-    const bulgur = kind==='bulgur';
-    s += `<circle cx="150" cy="150" r="122" fill="${bulgur?'#B98A48':'#E9DDC2'}"/>`;
-    const grain = bulgur ? sphereGrad(defs,'#F3D9A0','#D2A562','#9A6A2E') : 'url(#bv-grain)';
-    for(let i=0;i<360;i++){ const [x,y] = disc(119), rot = r()*180;
-      s += `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${bulgur?2.2:3.5}" ry="${bulgur?2:1.55}" fill="${grain}" transform="rotate(${f1(rot)} ${f1(x)} ${f1(y)})"/>`; }
-    if(!bulgur) s += `<ellipse cx="132" cy="122" rx="64" ry="40" fill="#FFE08A" opacity=".14"/>`;   // tereyağı parlaklığı
-  }
-  return s;
-}
-function drawProtein(group, name, seed, defs){
-  const r = bvRand('p'+seed); let s = '';
-  if(group==='meatball'){
-    const special = /sos|özel/i.test(name);
-    const g = sphereGrad(defs, '#E6AE7A', '#A4592C', '#4A2210');
-    s += `<circle cx="150" cy="152" r="46" fill="${special?'#6E1E0E':'#5A3A1C'}" opacity=".55" filter="url(#bv-soft)"/>`;
-    const balls = [[132,134,19],[168,134,19],[132,170,19],[168,170,19],[150,152,21]];
-    balls.forEach(([x,y,rr],i)=>{
-      s += `<g filter="url(#bv-sh)"><circle cx="${x}" cy="${y}" r="${rr}" fill="${g}"/>`;
-      for(let k=0;k<9;k++){ const a=r()*6.28, d=r()*rr*.75; s += `<circle cx="${f1(x+Math.cos(a)*d)}" cy="${f1(y+Math.sin(a)*d)}" r="${f1(.8+r()*1.3)}" fill="#3A1A0A" opacity=".45"/>`; }
-      s += `<ellipse cx="${f1(x-rr*.32)}" cy="${f1(y-rr*.38)}" rx="${f1(rr*.38)}" ry="${f1(rr*.22)}" fill="#fff" opacity=".38" transform="rotate(-30 ${f1(x-rr*.32)} ${f1(y-rr*.38)})"/></g>`;
-    });
-    if(special) s += `<path d="M118 140 C132 128 144 156 156 140 S178 150 186 138" fill="none" stroke="#B0301A" stroke-width="4" stroke-linecap="round" opacity=".9"/><path d="M120 166 C134 156 146 178 160 164 S176 172 184 162" fill="none" stroke="#C8401E" stroke-width="3" stroke-linecap="round" opacity=".85"/>`;
-    for(let k=0;k<16;k++){ const a=r()*6.28, d=r()*34; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="1.1" fill="#4E9A38"/>`; }   // maydanoz
-    return s;
-  }
-  const sc = sauceOf(name), g = `bvc${++bvGradN}`;
-  defs.insertAdjacentHTML('beforeend', `<linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${sc.a}"/><stop offset="1" stop-color="${sc.b}"/></linearGradient>`);
-  s += `<circle cx="150" cy="152" r="46" fill="${sc.pool}" opacity="${sc.cream?.75:.45}" filter="url(#bv-soft)"/>`;
-  const pcs = 8;
-  for(let i=0;i<pcs;i++){
-    const a = (i-1)/(pcs-1)*6.2832 + r()*.35, d = i===0 ? 0 : 24 + r()*9, x = 150+Math.cos(a)*d, y = 152+Math.sin(a)*d, w = 17+r()*7, h = 12+r()*5, rot = r()*180;
-    s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)})" filter="url(#bv-sh)"><rect x="${f1(-w/2)}" y="${f1(-h/2)}" width="${f1(w)}" height="${f1(h)}" rx="5.5" fill="url(#${g})"/>`;
-    if(sc.grill) s += `<path d="M${f1(-w/2+4)} ${f1(-h/2+1)}L${f1(-w/2+1)} ${f1(h/2-1)}M${f1(-1)} ${f1(-h/2+1)}L${f1(-4)} ${f1(h/2-1)}M${f1(w/2-2)} ${f1(-h/2+1)}L${f1(w/2-5)} ${f1(h/2-1)}" stroke="#4A2610" stroke-width="2" stroke-linecap="round" opacity=".75"/>`;
-    s += `<rect x="${f1(-w/2+1.5)}" y="${f1(-h/2+1.2)}" width="${f1(w-3)}" height="${f1(h*.42)}" rx="4" fill="#fff" opacity=".13"/><ellipse cx="${f1(-w*.15)}" cy="${f1(-h*.2)}" rx="${f1(w*.28)}" ry="${f1(h*.16)}" fill="#fff" opacity="${sc.cream?.3:.5}"/></g>`;
-  }
-  if(sc.mush) for(let i=0;i<5;i++){ const a=r()*6.28, d=10+r()*26, x=150+Math.cos(a)*d, y=152+Math.sin(a)*d;
-    s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(r()*360)})" filter="url(#bv-sh)"><path d="M-8 2 A8 7 0 0 1 8 2 L3 2 L3 7 L-3 7 L-3 2 Z" fill="#CDB38A"/><path d="M-7 1.5 A7 6 0 0 1 7 1.5" fill="none" stroke="#7A5A34" stroke-width="1.2"/></g>`; }
-  if(sc.sesame) for(let i=0;i<22;i++){ const a=r()*6.28, d=r()*36; s += `<ellipse cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" rx="1.5" ry=".8" fill="#F6EED8" transform="rotate(${f1(r()*180)} ${f1(150+Math.cos(a)*d)} ${f1(152+Math.sin(a)*d)})"/>`; }
-  if(sc.seeds || sc.flakes) for(let i=0;i<18;i++){ const a=r()*6.28, d=r()*36; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="${sc.flakes?1.3:.9}" fill="${sc.flakes?'#5A0A04':'#FFD3A0'}"/>`; }
-  for(let k=0;k<10;k++){ const a=r()*6.28, d=r()*34; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="1.1" fill="#3F8A2E"/>`; }   // taze ot
-  return s;
-}
-function drawGarnish(kind, cx, cy, R, seed, defs){
-  const r = bvRand('g'+seed+kind); let s = '';
-  const spots = (n, rr)=>{ const out=[]; const off = r()*6.28; for(let i=0;i<n;i++){ const d = R*Math.sqrt((i+.5)/n)*.92, a = i*2.39996 + off; out.push([cx+Math.cos(a)*d + (r()-.5)*1.5, cy+Math.sin(a)*d + (r()-.5)*1.5]); } return out; };
-  const shine = (x,y,rr)=>`<ellipse cx="${f1(x-rr*.3)}" cy="${f1(y-rr*.35)}" rx="${f1(rr*.38)}" ry="${f1(rr*.22)}" fill="#fff" opacity=".5" transform="rotate(-30 ${f1(x-rr*.3)} ${f1(y-rr*.35)})"/>`;
-  const balls = (n, rr, l, m, d)=>{ const g = sphereGrad(defs,l,m,d); return spots(n, rr).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="${rr}" fill="${g}"/>${shine(x,y,rr)}</g>`).join(''); };
-  s += `<circle cx="${cx}" cy="${cy}" r="${R+3}" fill="#000" opacity=".22" filter="url(#bv-soft)"/>`;
-  switch(kind){
-    case 'corn': { const g = sphereGrad(defs,'#FFF2A8','#FFD23C','#C88A10');
-      s += spots(26,0).map(([x,y])=>`<rect x="${f1(x-2.9)}" y="${f1(y-3.3)}" width="5.8" height="6.6" rx="2.2" fill="${g}" filter="url(#bv-sh)" transform="rotate(${f1(r()*60-30)} ${f1(x)} ${f1(y)})"/>`).join(''); break; }
-    case 'peas': s += balls(17, 4.4, '#D2F59A', '#7DC04A', '#2F6B1E'); break;
-    case 'chickpea': s += balls(13, 5.3, '#FFF0C8', '#E2BE7A', '#9A7238'); break;
-    case 'tomato': { const g = sphereGrad(defs,'#FF9A80','#E8432F','#8E140C');
-      s += spots(4,11).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="11" fill="${g}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="7.4" fill="#F47058"/><path d="M${f1(x)} ${f1(y-6.5)}V${f1(y+6.5)}M${f1(x-6.5)} ${f1(y)}H${f1(x+6.5)}" stroke="#C92E1E" stroke-width="1.4"/>${[[-3,-3],[3,-3],[-3,3],[3,3]].map(([a,b])=>`<ellipse cx="${f1(x+a)}" cy="${f1(y+b)}" rx="1.4" ry="2" fill="#FFE3A0" opacity=".85"/>`).join('')}${shine(x,y,11)}</g>`).join(''); break; }
-    case 'olive': { const g = sphereGrad(defs,'#7A6470','#2A1E26','#07050A');
-      s += spots(8,6.5).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="6.6" fill="${g}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.4" fill="#4A2E3A"/>${shine(x,y,6.6)}</g>`).join(''); break; }
-    case 'jalapeno':
-      s += spots(6,9).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="9" fill="#2F7A22"/><circle cx="${f1(x)}" cy="${f1(y)}" r="6.2" fill="#C6E29A"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.6" fill="#E8F2C8"/>${[0,2.1,4.2].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*3.8)}" cy="${f1(y+Math.sin(a)*3.8)}" rx="1.3" ry=".8" fill="#FFF8D8"/>`).join('')}</g>`).join(''); break;
-    case 'pickle':
-      s += spots(5,10).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="10.5" fill="#5E6B1E"/><circle cx="${f1(x)}" cy="${f1(y)}" r="8.6" fill="#A9B44A"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.2" fill="#C9D27A" opacity=".8"/>${[0,1.57,3.14,4.71].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*4.6)}" cy="${f1(y+Math.sin(a)*4.6)}" rx="1.5" ry=".9" fill="#E8EDB0"/>`).join('')}${shine(x,y,10)}</g>`).join(''); break;
-    case 'cucumber':
-      s += spots(5,10).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="10.8" fill="#2F6B28"/><circle cx="${f1(x)}" cy="${f1(y)}" r="9" fill="#DDEFB8"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.6" fill="#C2E09A"/>${[0,1.26,2.51,3.77,5.03].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*3.2)}" cy="${f1(y+Math.sin(a)*3.2)}" rx="1.1" ry=".7" fill="#F6FAE6"/>`).join('')}${shine(x,y,10)}</g>`).join(''); break;
-    case 'mushroom':
-      s += spots(5,9).map(([x,y])=>`<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(r()*360)})" filter="url(#bv-sh)"><path d="M-9 2 A9 8 0 0 1 9 2 L3.5 2 L3.5 8 L-3.5 8 L-3.5 2 Z" fill="#D8C29A"/><path d="M-8 1.5 A8 7 0 0 1 8 1.5" fill="none" stroke="#7A5A34" stroke-width="1.3"/></g>`).join(''); break;
-    case 'carrot':
-      s += spots(9,0).map(([x,y])=>`<rect x="${f1(x-7)}" y="${f1(y-1.6)}" width="14" height="3.2" rx="1.6" fill="#F28A2E" filter="url(#bv-sh)" transform="rotate(${f1(r()*180)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
-    case 'pepper':
-      s += spots(8,0).map(([x,y],i)=>`<rect x="${f1(x-6.5)}" y="${f1(y-2.4)}" width="13" height="4.8" rx="2.2" fill="${['#E8432F','#F2B21E','#3F8A2E'][i%3]}" filter="url(#bv-sh)" transform="rotate(${f1(r()*180)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
-    case 'onion':
-      s += spots(7,0).map(([x,y])=>`<path d="M${f1(x-8)} ${f1(y)} A8 6 0 0 1 ${f1(x+8)} ${f1(y)}" fill="none" stroke="#D8A0CE" stroke-width="2.4" stroke-linecap="round" filter="url(#bv-sh)" transform="rotate(${f1(r()*360)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
-    default: { const h = Math.floor(r()*360); s += balls(12, 4.8, `hsl(${h} 70% 75%)`, `hsl(${h} 60% 50%)`, `hsl(${h} 60% 25%)`); }
-  }
-  return s;
-}
-/* katmanı değiştir: eskisi ışıltıyla kaybolur, yenisi ışıltıyla belirir */
-function bvSwap(parent, key, html, cx, cy, rr){
-  const old = parent.querySelector(`[data-k]:not(.out)${key? `:not([data-k="${CSS.escape(key)}"])`:''}`);
-  if(key && parent.querySelector(`[data-k="${CSS.escape(key)}"]:not(.out)`)) return;   // zaten çizili
-  if(old){ old.classList.add('out'); setTimeout(()=>old.remove(), 420); }
-  if(!key) return;
-  parent.insertAdjacentHTML('beforeend', `<g class="bv-l in" data-k="${escapeHtml(key)}">${html}</g>
-    <circle class="bv-spark" cx="${cx}" cy="${cy}" r="${rr}"/>`);
-  const sp = parent.lastElementChild; setTimeout(()=>sp && sp.remove(), 800);
-}
-function updateBowlVisual(){
-  const svg = document.getElementById('bv'); if(!svg || !bowlSel) return;
-  const defs = document.getElementById('bv-defs');
-  // taban
+let sbLastN = -1;
+function updateSelBar(){
+  const box = document.getElementById('sb-pills'); if(!box || !bowlSel) return;
+  const want = [];
   const bs = optById('base', bowlSel.baseId);
-  const bKey = bs ? 'b:'+bs.id : '';
-  if(bKey !== bowlVis.base){ bvSwap(document.getElementById('bv-base'), bKey, bs ? drawBase(baseKind(bs.name), bs.id, defs) : '', 150, 150, 118); bowlVis.base = bKey; }
-  // protein (ortada)
+  if(bs) want.push({ k:'b:'+bs.id, cls:'base', t:bs.name, sw:swatchOf('base', bs.name), go:0 });
   const pr = selProtein();
-  const pKey = pr ? 'p:'+bowlSel.pGroup+':'+pr.id : '';
-  if(pKey !== bowlVis.pro){ bvSwap(document.getElementById('bv-pro'), pKey, pr ? drawProtein(bowlSel.pGroup, pr.name, pr.id, defs) : '', 150, 152, 44); bowlVis.pro = pKey; }
-  // garnitürler: her biri kendi çeyreğinde
-  const gar = document.getElementById('bv-gar');
-  const want = {};
-  bowlSel.garnish.forEach(id=>{ const g = optById('garnish', id); const k = bowlSel.slots[id]; if(g && k!=null) want[k] = { key:'g:'+id+':'+k, g }; });
-  for(let k=0;k<BV_SLOTS.length;k++){
-    let slot = gar.querySelector(`[data-slot="${k}"]`);
-    if(!slot){ gar.insertAdjacentHTML('beforeend', `<g data-slot="${k}"></g>`); slot = gar.querySelector(`[data-slot="${k}"]`); }
-    const w = want[k], key = w ? w.key : '';
-    if(key !== (bowlVis.g[k]||'')){
-      const [x,y] = BV_SLOTS[k], R = k<4 ? 27 : 18;
-      bvSwap(slot, key, w ? drawGarnish(garnishKind(w.g.name), x, y, R, w.g.id, defs) : '', x, y, R+4);
-      bowlVis.g[k] = key;
-    }
+  if(pr) want.push({ k:'p:'+bowlSel.pGroup+':'+pr.id, cls:'pro', t:pr.name, sw:swatchOf(bowlSel.pGroup, pr.name), go:1 });
+  bowlSel.garnish.forEach(id=>{ const g = optById('garnish', id); if(g) want.push({ k:'g:'+id, cls:'gar', t:g.name, sw:swatchOf('garnish', g.name), rm:id }); });
+  const keys = new Set(want.map(w=>w.k));
+  const live = k => box.querySelector(`.sb-pill[data-k="${CSS.escape(k)}"]:not(.out)`);
+  // kaldırılanlar yumuşakça kaybolsun
+  box.querySelectorAll('.sb-pill:not(.out)').forEach(el=>{ if(!keys.has(el.dataset.k)){ el.classList.remove('in'); el.classList.add('out'); setTimeout(()=>el.remove(), 340); } });
+  // yeniler sıradaki yerine parıltıyla eklensin (taban → protein → garnitürler)
+  want.forEach((w,i)=>{
+    if(live(w.k)) return;
+    const el = document.createElement('button');
+    el.type = 'button'; el.className = 'sb-pill in ' + w.cls; el.dataset.k = w.k;
+    if(w.rm) el.dataset.rm = w.rm; else el.dataset.go = w.go;
+    el.setAttribute('aria-label', w.rm ? w.t + ' garnitürünü çıkar' : w.t);
+    el.innerHTML = `<span class="dot" style="background:${w.sw}"></span><span class="lbl">${escapeHtml(w.t)}</span>${w.rm? '<span class="x" aria-hidden="true">×</span>':''}`;
+    const next = want.slice(i+1).map(x=>live(x.k)).find(Boolean);
+    if(next) box.insertBefore(el, next); else box.appendChild(el);
+  });
+  document.getElementById('sb-empty').hidden = want.length > 0;
+  // garnitür sayacı
+  const max = state.options.maxGarnish||4, n = bowlSel.garnish.length;
+  const nEl = document.getElementById('sb-n'); if(nEl){ nEl.textContent = n + '/' + max; if(n !== sbLastN && sbLastN !== -1){ nEl.classList.remove('bump'); void nEl.offsetWidth; nEl.classList.add('bump'); } }
+  sbLastN = n;
+  const segs = document.getElementById('sb-segs');
+  if(segs){
+    if(segs.children.length !== max) segs.innerHTML = Array.from({length:max}, ()=>'<i></i>').join('');
+    [...segs.children].forEach((x,i)=>x.classList.toggle('on', i<n));
+    segs.classList.toggle('full', n>=max);
   }
-  // kılavuz çemberler ve boş durum
-  const guides = document.getElementById('bv-guides').children;
-  guides[0].classList.toggle('on', !!pr);
-  for(let k=0;k<4;k++) guides[k+1].classList.toggle('on', !!want[k]);
-  document.getElementById('bv-empty').style.opacity = bs ? 0 : 1;
-  // altyazı
-  const cap = document.getElementById('bv-caption');
-  if(cap) cap.innerHTML = `<span class="${bs?'ok':''}">${bs? escapeHtml(bs.name) : 'Taban —'}</span><i></i><span class="${pr?'ok':''}">${pr? escapeHtml(pr.name) : 'Protein —'}</span><i></i><span class="${bowlSel.garnish.length?'ok':''}">${bowlSel.garnish.length}/${state.options.maxGarnish||4} garnitür</span>`;
+  const d = document.getElementById('sb-done'); if(d) d.classList.toggle('on', n>=max);
 }
 
 /* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
@@ -2172,10 +2050,10 @@ function renderAdminStock(root){
           ${sw(it.available!==false, `data-stock-item="${escapeHtml(it.id)}"`)}
         </div>`; }).join('') || '<div class="hint">Henüz ürün yok. Menü sekmesinden ekleyin.</div>'}</div>
     </div>
-    ${optCard('base','Taban Çeşitleri (Bowl · 0. Adım)','Kasenin alt katmanı. Müşteri tek bir taban seçer.')}
+    ${optCard('base','Taban Çeşitleri (Bowl · 0. Adım)','Müşteri tek bir taban seçer.')}
     ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım · Protein)','Protein adımında tavuk köftesiyle birlikte listelenir; müşteri tek protein seçer.')}
-    ${optCard('meatball','Tavuk Köftesi (Bowl · 1. Adım · Protein)','Seçilince kasenin ortasında köfte görseli belirir.')}
-    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir; kasede proteinin etrafına dizilir.')}`;
+    ${optCard('meatball','Tavuk Köftesi (Bowl · 1. Adım · Protein)','Protein adımında tavuk çeşitleriyle birlikte listelenir.')}
+    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir.')}`;
 
   root.querySelectorAll('[data-stock-item]').forEach(b=>b.addEventListener('click',()=>{
     const it = state.items.find(x=>x.id===b.dataset.stockItem); if(!it) return;
