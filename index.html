@@ -367,6 +367,37 @@
   .opt-sold{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.04em;background:var(--danger-soft);color:var(--danger);white-space:nowrap;}
   .opt-empty{grid-column:1/-1;font-size:12.5px;color:var(--text-faint);padding:6px 2px;}
   .bowl-foot{flex:1;display:flex;gap:10px;align-items:center;}
+  /* canlı kase görseli */
+  .bowl-stage{position:sticky;top:62px;z-index:3;margin:0 -20px;padding:4px 20px 12px;background:#14161B;
+    border-bottom:1px solid rgba(212,175,55,.18);box-shadow:0 14px 18px -10px rgba(0,0,0,.6);}
+  .dialog.bowl-dlg{background:#14161B;}
+  .dialog.bowl-dlg .dialog-head{background:#14161B;}
+  .bv{display:block;width:min(248px, 64vw);height:auto;margin:0 auto;overflow:visible;
+    filter:drop-shadow(0 18px 30px rgba(0,0,0,.55)) drop-shadow(0 0 22px rgba(212,175,55,.12));}
+  .bv-empty{font-family:var(--font-display);font-style:italic;font-size:15px;fill:rgba(230,202,101,.55);transition:opacity .4s;}
+  .bv-guides circle{fill:none;stroke:rgba(212,175,55,.32);stroke-width:1.3;stroke-dasharray:4 5;transition:opacity .4s;}
+  .bv-guides circle.on{opacity:0;}
+  .bv-l{transform-box:fill-box;transform-origin:center;}
+  .bv-l.in{animation:bvIn .65s var(--ease) both;}
+  .bv-l.out{animation:bvOut .4s ease forwards;}
+  @keyframes bvIn{0%{opacity:0;transform:scale(.55) translateY(-10px);filter:brightness(1.9) drop-shadow(0 0 10px rgba(255,226,150,.95));}
+                  55%{opacity:1;transform:scale(1.04);filter:brightness(1.3) drop-shadow(0 0 8px rgba(255,226,150,.6));}
+                  100%{opacity:1;transform:none;filter:none;}}
+  @keyframes bvOut{to{opacity:0;transform:scale(.7);filter:blur(2px) brightness(1.4);}}
+  #bv-base .bv-l.in{animation-name:bvBaseIn;animation-duration:.8s;}
+  @keyframes bvBaseIn{0%{opacity:0;transform:scale(.9);filter:brightness(1.6);}100%{opacity:1;transform:none;filter:none;}}
+  .bv-spark{fill:none;stroke:#F3E2A0;stroke-width:2.2;transform-box:fill-box;transform-origin:center;animation:bvSpark .75s ease-out forwards;pointer-events:none;}
+  @keyframes bvSpark{from{opacity:.95;transform:scale(.35);}to{opacity:0;transform:scale(1.5);}}
+  .bv-caption{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;font-weight:700;color:var(--text-faint);text-align:center;}
+  .bv-caption span{max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bv-caption span.ok{color:var(--gold-2);}
+  .bv-caption i{width:4px;height:4px;border-radius:50%;background:rgba(212,175,55,.5);}
+  .bowl-desc{margin:4px 0 0;font-size:13px;color:var(--text-dim);line-height:1.5;text-align:center;}
+  .opt-sub{font-size:11.5px;font-weight:800;letter-spacing:.08em;color:var(--gold);margin:12px 2px 8px;}
+  .opt-sub:first-of-type{margin-top:2px;}
+  .opt-sw{flex:none;width:18px;height:18px;border-radius:50%;box-shadow:inset 0 -2px 3px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.4);}
+  .opt.sold .opt-sw{filter:grayscale(1);opacity:.6;}
+  .adm-tag.base{background:rgba(255,255,255,.08);border-color:rgba(230,202,101,.35);color:var(--text);}
   .bowl-foot .stepper button{width:36px;height:40px;} .bowl-foot .stepper .q{min-width:24px;}
   .bowl-foot .btn-lg{flex:1;}
   @media (max-width:360px){ .opt-grid{grid-template-columns:1fr;} }
@@ -651,23 +682,30 @@ function defaultData(){
 /* Bowl malzemeleri — Firebase: qrmenu_data/options */
 const DEFAULT_CHICKEN = ['BBQ Soslu Tavuk','Sweet Chili Soslu','Hot Chili Soslu','Köri Soslu','Soya Soslu','Kremalı Çeşnili','Kremalı Mantarlı','Marineli Izgara'];
 const DEFAULT_GARNISH = ['Mısır','Salatalık Turşusu','Jalapeno Turşusu','Bezelye','Cherry Domates','Salatalık','Siyah Zeytin','Haşlanmış Nohut'];
+const DEFAULT_BASE = ['Tereyağlı Pilav','İtalyan Makarna','Taze Yeşillik / Akdeniz Salata'];
+const DEFAULT_MEATBALL = ['Izgara Tavuk Köftesi','Özel Soslu Tavuk Köftesi'];
+const OPT_PREFIX = { base:'bs', chicken:'ch', meatball:'kf', garnish:'gr' };
+const mkOpts = (p, list) => list.map((name,i)=>({ id: p+'_'+(i+1), name, available:true }));
 function defaultOptions(){
-  const mk = (p, list) => list.map((name,i)=>({ id: p+'_'+(i+1), name, available:true }));
-  return { maxGarnish:4, chicken: mk('ch', DEFAULT_CHICKEN), garnish: mk('gr', DEFAULT_GARNISH) };
+  return { maxGarnish:4, base: mkOpts('bs', DEFAULT_BASE), chicken: mkOpts('ch', DEFAULT_CHICKEN), meatball: mkOpts('kf', DEFAULT_MEATBALL), garnish: mkOpts('gr', DEFAULT_GARNISH) };
 }
 function normOptions(v){
   if(!v) return defaultOptions();
-  return { maxGarnish: Math.max(1, Math.min(8, Number(v.maxGarnish)||4)), chicken: toList(v.chicken), garnish: toList(v.garnish) };
+  return { maxGarnish: Math.max(1, Math.min(8, Number(v.maxGarnish)||4)),
+    base: v.base ? toList(v.base) : mkOpts('bs', DEFAULT_BASE),                // eski veritabanında yoksa varsayılan
+    chicken: toList(v.chicken),
+    meatball: v.meatball ? toList(v.meatball) : mkOpts('kf', DEFAULT_MEATBALL),
+    garnish: toList(v.garnish) };
 }
 function optById(group, id){ return ((state.options||{})[group]||[]).find(o=>o.id===id); }
 function isBowl(it){ if(!it) return false; if(typeof it.isBowl==='boolean') return it.isBowl; return /bowl/i.test(it.name||''); }
 function optsText(o){
   if(!o) return '';
-  const g = toList(o.garnish);
-  return [o.chicken? 'Sos: '+o.chicken : '', g.length? 'Garnitür: '+g.join(', ') : ''].filter(Boolean).join(' · ');
+  const g = toList(o.garnish), p = o.protein || o.chicken;
+  return [o.base? 'Taban: '+o.base : '', p? (o.base? 'Protein: ' : 'Sos: ')+p : '', g.length? 'Garnitür: '+g.join(', ') : ''].filter(Boolean).join(' · ');
 }
 /* Sepet satır anahtarı: aynı Bowl farklı seçimlerle ayrı satır olur */
-function lineKey(itemId, o){ return o ? itemId+'|'+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',') : itemId; }
+function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|'+(o.proteinGroup||'chicken')+':' : '')+(o.proteinId||o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',') : itemId; }
 function lineItemId(key, c){ return (c && c.itemId) || String(key).split('|')[0]; }
 function qtyInCart(itemId){ return Object.entries(cart).reduce((s,[k,c])=> s + (lineItemId(k,c)===itemId ? c.qty : 0), 0); }
 let state = defaultData();
@@ -718,7 +756,7 @@ function initFirebase(){
   try{
     const app = firebase.apps.length? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
     fbRef = app.database().ref(DB_PATH);
-    const loaded = {}; let settingsMissing = false, optionsMissing = false;
+    const loaded = {}; let settingsMissing = false, optionsMissing = false, optionsUpgrade = false;
     PUBLIC_KEYS.forEach(k=>{
       fbRef.child(k).on('value', snap=>{
         const v = snap.val();
@@ -727,6 +765,7 @@ function initFirebase(){
           state.settings = Object.assign(defaultData().settings, v||{});
         } else if(k==='options'){
           if(!v && !loaded.options) optionsMissing = true;
+          if(v && !loaded.options && (!v.base || !v.meatball)) optionsUpgrade = true;
           state.options = normOptions(v);
         } else {
           state[k] = toList(v);
@@ -742,6 +781,10 @@ function initFirebase(){
         if(first){
           if(settingsMissing) saveState();        // boş veritabanı: varsayılanları yaz
           else if(optionsMissing) fbRef.child('options').set(state.options);   // Bowl malzemelerini ilk kez oluştur
+          else if(optionsUpgrade){                                                 // yeni adımlar: taban + tavuk köftesi
+            const up = {}; if(state.options.base) up.base = state.options.base; if(state.options.meatball) up.meatball = state.options.meatball;
+            fbRef.child('options').update(up);
+          }
           startTracking();
         }
         render();
@@ -779,10 +822,13 @@ function sanitizeCart(){
     const c = cart[key], it = state.items.find(x=>x.id===lineItemId(key,c));
     if(!it || it.available===false){ removed.push(c.name); delete cart[key]; changed = true; return; }
     if(c.options){
-      const ch = optById('chicken', c.options.chickenId);
-      const badG = (c.options.garnishIds||[]).map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
-      if(!ch || ch.available===false || badG.length){
-        removed.push(c.name + ' (' + [(!ch||ch.available===false)? c.options.chicken : '', ...badG.map(g=>g? g.name : 'malzeme')].filter(Boolean).join(', ') + ')');
+      const o = c.options;
+      const ch = optById(o.proteinGroup || 'chicken', o.proteinId || o.chickenId);
+      const bs = o.baseId ? optById('base', o.baseId) : true;
+      const badG = (o.garnishIds||[]).map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
+      const badB = !bs || bs.available===false, badP = !ch || ch.available===false;
+      if(badB || badP || badG.length){
+        removed.push(c.name + ' (' + [badB? o.base : '', badP? (o.protein || o.chicken) : '', ...badG.map(g=>g? g.name : 'malzeme')].filter(Boolean).join(', ') + ')');
         delete cart[key]; changed = true; return;
       }
     }
@@ -1098,7 +1144,7 @@ function itemCard(it, i){
     <div class="item-body">
       <h3 class="item-name">${escapeHtml(it.name)}</h3>
       ${it.description? `<p class="item-desc">${escapeHtml(it.description)}</p>`:''}
-      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Sosunu & garnitürünü seç</span>`:''}
+      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, proteinini ve garnitürünü seç</span>`:''}
       <div class="item-foot">
         <span class="price">${fmtPrice(it.price)}</span>
         <div data-ctl="${escapeHtml(it.id)}">${ctlHtml(it)}</div>
@@ -1212,7 +1258,7 @@ function renderDetail(){
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
       ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
-            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tavuk çeşidini ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin.</div>` : ''}
+            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, proteinini (tavuk veya tavuk köftesi) ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin; kasen gözünün önünde hazırlanır.</div>` : ''}
     </div>`;
   renderDetailFoot();
 }
@@ -1238,27 +1284,39 @@ function detailAdd(){
   showToast(`${qty} × ${it.name} sepete eklendi`, 'success');
 }
 
-/* ============================= KENDİ BOWL'UNU OLUŞTUR ============================= */
-let bowlSel = null;   // { itemId, chickenId, garnish:[ids], qty }
+/* ============================= KENDİ BOWL'UNU OLUŞTUR =============================
+   0) Taban (zorunlu)  1) Protein: tavuk çeşidi VEYA tavuk köftesi (zorunlu)  2) Garnitür (en fazla N)
+   Seçimler canlı kase görselinde katman katman belirir. */
+let bowlSel = null;   // { itemId, baseId, pGroup, pId, garnish:[ids], slots:{id:index}, qty }
+let bowlVis = null;   // kasede şu an çizili katmanların anahtarları
+const PROTEIN_GROUPS = [['chicken','Tavuk Çeşitleri'],['meatball','Tavuk Köftesi']];
+
 function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  bowlSel = { itemId, chickenId:'', garnish:[], qty: Math.max(1, Math.min(20, initQty||1)) };
+  bowlSel = { itemId, baseId:'', pGroup:'', pId:'', garnish:[], slots:{}, qty: Math.max(1, Math.min(20, initQty||1)) };
+  bowlVis = { base:'', pro:'', g:[] };
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
     </div>`;
-  openModal(escapeHtml(it.name), '<div id="bowl-root"></div>', foot);
-  const root = document.getElementById('bowl-root');
+  openModal(escapeHtml(it.name), `<div id="bowl-root">
+      <div class="bowl-stage">${bowlSvgShell()}<div class="bv-caption" id="bv-caption"></div></div>
+      <div id="bowl-steps"></div>
+    </div>`, foot, 'bowl-dlg');
+  const root = document.getElementById('bowl-steps');
   root.addEventListener('change', e=>{
     const inp = e.target; if(!bowlSel || !inp.name) return;
-    if(inp.name==='bowl-chicken'){ bowlSel.chickenId = inp.value; }
+    if(inp.name==='bowl-base'){ bowlSel.baseId = inp.value; }
+    else if(inp.name==='bowl-protein'){ const [g,id] = inp.value.split(':'); bowlSel.pGroup = g; bowlSel.pId = id; }
     else if(inp.name==='bowl-garnish'){
       const max = state.options.maxGarnish||4;
       if(inp.checked){
         if(bowlSel.garnish.length >= max){ inp.checked = false; showToast('En fazla '+max+' garnitür seçebilirsiniz'); return; }
         bowlSel.garnish.push(inp.value);
-      } else bowlSel.garnish = bowlSel.garnish.filter(x=>x!==inp.value);
+        const used = Object.values(bowlSel.slots); let k = 0; while(used.includes(k)) k++;
+        bowlSel.slots[inp.value] = k;               // kasede sabit bir çeyrek ata
+      } else { bowlSel.garnish = bowlSel.garnish.filter(x=>x!==inp.value); delete bowlSel.slots[inp.value]; }
     }
     renderBowl();
   });
@@ -1269,64 +1327,286 @@ function openBowlModal(itemId, initQty){
   });
   renderBowl();
 }
+function selProtein(){ return bowlSel && bowlSel.pId ? optById(bowlSel.pGroup, bowlSel.pId) : null; }
 function renderBowl(){
-  const root = document.getElementById('bowl-root'); if(!root || !bowlSel) return;
+  const root = document.getElementById('bowl-steps'); if(!root || !bowlSel) return;
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün az önce tükendi'); return; }
   // canlı stok: seçili malzeme tükendiyse seçimi kaldır
-  const ch = optById('chicken', bowlSel.chickenId);
-  if(bowlSel.chickenId && (!ch || ch.available===false)){ showToast((ch?ch.name:'Seçtiğiniz sos')+' az önce tükendi, lütfen başka bir çeşit seçin'); bowlSel.chickenId=''; }
+  const bs = optById('base', bowlSel.baseId);
+  if(bowlSel.baseId && (!bs || bs.available===false)){ showToast((bs?bs.name:'Seçtiğiniz taban')+' az önce tükendi, lütfen başka bir taban seçin'); bowlSel.baseId=''; }
+  const pr = selProtein();
+  if(bowlSel.pId && (!pr || pr.available===false)){ showToast((pr?pr.name:'Seçtiğiniz protein')+' az önce tükendi, lütfen başka bir çeşit seçin'); bowlSel.pId=''; bowlSel.pGroup=''; }
   const lost = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
-  if(lost.length){ showToast(lost.map(g=>g?g.name:'Bir garnitür').join(', ')+' az önce tükendi'); bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); return g && g.available!==false; }); }
+  if(lost.length){
+    showToast(lost.map(g=>g?g.name:'Bir garnitür').join(', ')+' az önce tükendi');
+    bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); const ok = g && g.available!==false; if(!ok) delete bowlSel.slots[id]; return ok; });
+  }
 
   const opts = state.options, max = opts.maxGarnish||4, nG = bowlSel.garnish.length;
-  const tile = (type, group, o)=>{
+  const tile = (type, name, value, o, sel, kind)=>{
     const sold = o.available===false;
-    const sel = type==='radio' ? bowlSel.chickenId===o.id : bowlSel.garnish.includes(o.id);
     const limit = type==='check' && !sel && !sold && nG>=max;
-    return `<label class="opt ${type} ${sel?'sel':''} ${sold?'sold':''} ${limit?'limit':''}">
-      <input type="${type==='radio'?'radio':'checkbox'}" name="${group}" value="${escapeHtml(o.id)}" ${sel?'checked':''} ${(sold||limit)?'disabled':''}>
-      <span class="opt-mark"></span><span class="opt-name">${escapeHtml(o.name)}</span>
+    return `<label class="opt ${type==='check'?'check':'radio'} ${sel?'sel':''} ${sold?'sold':''} ${limit?'limit':''}">
+      <input type="${type==='check'?'checkbox':'radio'}" name="${name}" value="${escapeHtml(value)}" ${sel?'checked':''} ${(sold||limit)?'disabled':''}>
+      <span class="opt-mark"></span><span class="opt-sw" style="background:${swatchOf(kind, o.name)}"></span><span class="opt-name">${escapeHtml(o.name)}</span>
       ${sold? '<span class="opt-sold">Tükendi</span>':''}
     </label>`;
   };
+  const grid = (list, render, empty)=> list.length ? list.map(render).join('') : `<div class="opt-empty">${empty}</div>`;
+  const hasP = !!bowlSel.pId;
   root.innerHTML = `
-    <div class="bowl-hero">
-      ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="ph">${ICONS.bowl}</div>`}
-      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`:'<p>Kendi Bowl\'unu oluştur: önce tavuğunu, sonra garnitürlerini seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
+    ${it.description? `<p class="bowl-desc">${escapeHtml(it.description)}</p>`:''}
+    <div class="opt-step">
+      <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Kasenin en alt katmanı · tek seçim</small></div>
+        <span class="opt-badge ${bowlSel.baseId?'ok':'req'}">${bowlSel.baseId?'✓ Seçildi':'Zorunlu'}</span></div>
+      <div class="opt-grid" role="radiogroup">${grid(opts.base, o=>tile('radio','bowl-base',o.id,o,bowlSel.baseId===o.id,'base'), 'Henüz taban eklenmemiş.')}</div>
     </div>
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">1</span><div><h4>Tavuk Çeşidini Seçin</h4><small>Tek seçim</small></div>
-        <span class="opt-badge ${bowlSel.chickenId?'ok':'req'}">${bowlSel.chickenId?'✓ Seçildi':'Zorunlu'}</span></div>
-      <div class="opt-grid" role="radiogroup">${opts.chicken.length? opts.chicken.map(o=>tile('radio','bowl-chicken',o)).join('') : '<div class="opt-empty">Henüz tavuk çeşidi eklenmemiş.</div>'}</div>
+      <div class="opt-title"><span class="opt-num">1</span><div><h4>Protein Çeşidinizi Seçin</h4><small>Kasenin ortasına yerleşir · tek seçim</small></div>
+        <span class="opt-badge ${hasP?'ok':'req'}">${hasP?'✓ Seçildi':'Zorunlu'}</span></div>
+      ${PROTEIN_GROUPS.map(([g,label])=>`
+        <div class="opt-sub">${label}</div>
+        <div class="opt-grid" role="radiogroup">${grid(opts[g]||[], o=>tile('radio','bowl-protein',g+':'+o.id,o,bowlSel.pGroup===g && bowlSel.pId===o.id, g), 'Henüz eklenmemiş.')}</div>`).join('')}
     </div>
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>En fazla ${max} adet · isteğe bağlı</small></div>
+      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>En fazla ${max} adet · proteinin etrafına dizilir</small></div>
         <span class="opt-badge ${nG? 'ok':''}">${nG}/${max}</span></div>
-      <div class="opt-grid">${opts.garnish.length? opts.garnish.map(o=>tile('check','bowl-garnish',o)).join('') : '<div class="opt-empty">Henüz garnitür eklenmemiş.</div>'}</div>
+      <div class="opt-grid">${grid(opts.garnish, o=>tile('check','bowl-garnish',o.id,o,bowlSel.garnish.includes(o.id),'garnish'), 'Henüz garnitür eklenmemiş.')}</div>
     </div>`;
+  updateBowlVisual();
   renderBowlFoot();
 }
 function renderBowlFoot(){
   const it = bowlSel && state.items.find(x=>x.id===bowlSel.itemId); if(!it) return;
   const q = document.getElementById('bowl-qty'); if(q) q.textContent = bowlSel.qty;
   const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice(it.price * bowlSel.qty);
-  const b = document.getElementById('bowl-add'); if(b) b.disabled = !bowlSel.chickenId;
-  const l = document.getElementById('bowl-add-label'); if(l) l.textContent = bowlSel.chickenId ? 'Sepete Ekle' : 'Önce tavuk seçin';
+  const ready = bowlSel.baseId && bowlSel.pId;
+  const b = document.getElementById('bowl-add'); if(b) b.disabled = !ready;
+  const l = document.getElementById('bowl-add-label');
+  if(l) l.textContent = ready ? 'Sepete Ekle' : !bowlSel.baseId ? 'Önce tabanını seç' : 'Şimdi proteinini seç';
 }
 function addBowlToCart(){
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
-  const ch = optById('chicken', bowlSel.chickenId);
-  if(!ch || ch.available===false){ showToast('Lütfen bir tavuk çeşidi seçin'); return; }
+  const bs = optById('base', bowlSel.baseId), pr = selProtein();
+  if(!bs || bs.available===false){ showToast('Lütfen bir taban seçin'); return; }
+  if(!pr || pr.available===false){ showToast('Lütfen bir protein çeşidi seçin'); return; }
   const gs = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
-  const options = { chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name) };
+  const options = { baseId: bs.id, base: bs.name, proteinGroup: bowlSel.pGroup, proteinId: pr.id, protein: pr.name,
+                    chickenId: pr.id, chicken: pr.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name) };
   const key = lineKey(it.id, options);
   if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price, name: it.name, options };
   cart[key].qty += bowlSel.qty;
   saveCart(); updateItemControl(it.id); updateDock(true);
   closeModal(); bowlSel = null;
   showToast(it.name + ' sepete eklendi', 'success');
+}
+
+/* ----------------------------- KASE GÖRSELİ (SVG) -----------------------------
+   300×300 tuval · merkez (150,150) · yiyecek alanı r=120
+   Katmanlar: taban (alt) → garnitür çeyrekleri → protein (orta, en üst) → ışık/gölge */
+const BV_SLOTS = [[97,97],[203,97],[97,203],[203,203],[150,58],[242,150],[150,242],[58,150]];  // sol-üst, sağ-üst, sol-alt, sağ-alt (+ yedek)
+function bvRand(seed){ let h = 2166136261; for(const ch of String(seed)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return ()=>{ h += 0x6D2B79F5; let t = h; t = Math.imul(t ^ (t>>>15), t | 1); t ^= t + Math.imul(t ^ (t>>>7), t | 61); return ((t ^ (t>>>14)) >>> 0) / 4294967296; }; }
+const f1 = n => n.toFixed(1);
+function baseKind(name){ const n = trLower(name); if(/makarna|penne|pasta|spagetti/.test(n)) return 'pasta'; if(/yeşil|salata|akdeniz|marul|roka/.test(n)) return 'greens'; if(/bulgur/.test(n)) return 'bulgur'; return 'rice'; }
+function garnishKind(name){ const n = trLower(name);
+  if(/mısır/.test(n)) return 'corn'; if(/jalap/.test(n)) return 'jalapeno'; if(/turşu/.test(n)) return 'pickle';
+  if(/bezelye/.test(n)) return 'peas'; if(/domates/.test(n)) return 'tomato'; if(/salatalık|hıyar/.test(n)) return 'cucumber';
+  if(/zeytin/.test(n)) return 'olive'; if(/nohut/.test(n)) return 'chickpea'; if(/mantar/.test(n)) return 'mushroom';
+  if(/havuç/.test(n)) return 'carrot'; if(/biber/.test(n)) return 'pepper'; if(/soğan/.test(n)) return 'onion'; return 'generic'; }
+function sauceOf(name){ const n = trLower(name);
+  if(/bbq|barbekü/.test(n)) return {a:'#8E3A1E', b:'#4A170A', pool:'#5a1d0d'};
+  if(/köri|curry/.test(n)) return {a:'#E8A93A', b:'#A8621A', pool:'#b8721e'};
+  if(/sweet/.test(n)) return {a:'#F07A3A', b:'#B83A16', pool:'#c4481e', seeds:true};
+  if(/hot|acı/.test(n)) return {a:'#D42A1A', b:'#7A0E08', pool:'#8e1309', flakes:true};
+  if(/soya|teriyaki/.test(n)) return {a:'#7A4A22', b:'#2E1608', pool:'#3a1d0b', sesame:true};
+  if(/mantar/.test(n)) return {a:'#EAD7B4', b:'#B99A6A', pool:'#d9c39a', cream:true, mush:true};
+  if(/krema/.test(n)) return {a:'#F1E2C2', b:'#C8A877', pool:'#e2cfa6', cream:true};
+  return {a:'#E2A65A', b:'#9A5A22', pool:'#7a4a22', grill:true};   // ızgara / marine
+}
+function swatchOf(kind, name){
+  if(kind==='base'){ const k = baseKind(name); return k==='pasta' ? 'radial-gradient(circle at 35% 30%,#F8E3A6,#C99238)' : k==='greens' ? 'radial-gradient(circle at 35% 30%,#9BD06A,#2F6B28)' : k==='bulgur' ? 'radial-gradient(circle at 35% 30%,#E9C88A,#A57A3A)' : 'radial-gradient(circle at 35% 30%,#FFFDF5,#D9C9A3)'; }
+  if(kind==='meatball') return 'radial-gradient(circle at 35% 30%,#E0A472,#6E3518)';
+  if(kind==='chicken'){ const s = sauceOf(name); return `radial-gradient(circle at 35% 30%,${s.a},${s.b})`; }
+  const c = {corn:['#FFE27A','#D9A21C'],jalapeno:['#7FC25A','#2F6B22'],pickle:['#B9C45A','#5E6B1E'],peas:['#A8DA70','#3F7F22'],tomato:['#FF7A5E','#A81F14'],cucumber:['#E4F2C2','#4C8A3A'],olive:['#5A4652','#120C10'],chickpea:['#F2D79C','#B08A4A'],mushroom:['#EEDDC0','#9A7A52'],carrot:['#FFB15E','#D2601A'],pepper:['#FF6B4A','#2F8A3A'],onion:['#F3D4EE','#9A4A8A']}[garnishKind(name)] || ['#D4AF37','#8C6A1C'];
+  return `radial-gradient(circle at 35% 30%,${c[0]},${c[1]})`;
+}
+let bvGradN = 0;
+function sphereGrad(defs, light, mid, dark){ const id = 'bvs' + (++bvGradN);
+  defs.insertAdjacentHTML('beforeend', `<radialGradient id="${id}" cx="34%" cy="30%" r="75%"><stop offset="0" stop-color="${light}"/><stop offset=".55" stop-color="${mid}"/><stop offset="1" stop-color="${dark}"/></radialGradient>`);
+  return `url(#${id})`; }
+function bowlSvgShell(){
+  return `<svg class="bv" id="bv" viewBox="0 0 300 300" role="img" aria-label="Bowl önizlemesi">
+    <defs id="bv-defs">
+      <linearGradient id="bv-rim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F7E7A8"/><stop offset=".3" stop-color="#D4AF37"/><stop offset=".62" stop-color="#7E5E16"/><stop offset=".85" stop-color="#E6CA65"/><stop offset="1" stop-color="#B8860B"/></linearGradient>
+      <radialGradient id="bv-body" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#34363E"/><stop offset=".7" stop-color="#16171B"/><stop offset="1" stop-color="#08090B"/></radialGradient>
+      <radialGradient id="bv-well" cx="50%" cy="46%" r="55%"><stop offset="0" stop-color="#22242A"/><stop offset=".85" stop-color="#0E0F12"/><stop offset="1" stop-color="#040405"/></radialGradient>
+      <radialGradient id="bv-vig" cx="50%" cy="48%" r="52%"><stop offset=".62" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".62"/></radialGradient>
+      <radialGradient id="bv-grain" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#FFFFFA"/><stop offset=".6" stop-color="#F3EAD4"/><stop offset="1" stop-color="#CDBD98"/></radialGradient>
+      <linearGradient id="bv-penne" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FBE6A8"/><stop offset=".5" stop-color="#E7BF62"/><stop offset="1" stop-color="#B78530"/></linearGradient>
+      <linearGradient id="bv-leaf1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#A6D873"/><stop offset="1" stop-color="#3B7A2C"/></linearGradient>
+      <linearGradient id="bv-leaf2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6FB04C"/><stop offset="1" stop-color="#1F5320"/></linearGradient>
+      <linearGradient id="bv-leaf3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9E89A"/><stop offset="1" stop-color="#6E9E3E"/></linearGradient>
+      <linearGradient id="bv-leaf4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B0486E"/><stop offset="1" stop-color="#4A1530"/></linearGradient>
+      <filter id="bv-sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.6" flood-color="#000" flood-opacity=".55"/></filter>
+      <filter id="bv-soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+      <clipPath id="bv-clip"><circle cx="150" cy="150" r="120"/></clipPath>
+    </defs>
+    <ellipse cx="150" cy="160" rx="140" ry="136" fill="#000" opacity=".55" filter="url(#bv-soft)"/>
+    <circle cx="150" cy="150" r="146" fill="url(#bv-body)"/>
+    <circle cx="150" cy="150" r="135" fill="none" stroke="url(#bv-rim)" stroke-width="9"/>
+    <circle cx="150" cy="150" r="130" fill="none" stroke="#fff" stroke-opacity=".08" stroke-width="1.2"/>
+    <circle cx="150" cy="150" r="125" fill="url(#bv-well)"/>
+    <g clip-path="url(#bv-clip)">
+      <g id="bv-base"></g>
+      <g id="bv-guides" class="bv-guides">
+        <circle cx="150" cy="150" r="40"/>${BV_SLOTS.slice(0,4).map(([x,y])=>`<circle cx="${x}" cy="${y}" r="26"/>`).join('')}
+      </g>
+      <g id="bv-gar"></g>
+      <g id="bv-pro"></g>
+      <circle cx="150" cy="150" r="121" fill="url(#bv-vig)" pointer-events="none"/>
+    </g>
+    <path d="M52 92 A112 112 0 0 1 140 30" fill="none" stroke="#fff" stroke-opacity=".22" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M232 228 A112 112 0 0 1 196 258" fill="none" stroke="#F3E2A0" stroke-opacity=".18" stroke-width="2.5" stroke-linecap="round"/>
+    <text id="bv-empty" x="150" y="156" text-anchor="middle" class="bv-empty">Tabanını seç</text>
+  </svg>`;
+}
+/* ---- katman çizimleri ---- */
+function drawBase(kind, seed, defs){
+  const r = bvRand('b'+seed); let s = '';
+  const disc = (max)=>{ const a = r()*6.2832, d = Math.sqrt(r())*max; return [150+Math.cos(a)*d, 150+Math.sin(a)*d]; };
+  if(kind==='pasta'){
+    s += `<circle cx="150" cy="150" r="122" fill="#D8AE5C"/>`;
+    for(let i=0;i<78;i++){ const [x,y] = disc(118), rot = r()*180, w = 21+r()*5;
+      s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)})" filter="url(#bv-sh)"><rect x="${f1(-w/2)}" y="-4.6" width="${f1(w)}" height="9.2" rx="3" fill="url(#bv-penne)"/><ellipse cx="${f1(w/2-1)}" cy="0" rx="1.6" ry="3.4" fill="#8E6420" opacity=".55"/><path d="M${f1(-w/2+3)} -3.2v6.4M${f1(-w/2+6.5)} -3.2v6.4M${f1(w/2-6.5)} -3.2v6.4M${f1(w/2-3)} -3.2v6.4" stroke="#A97A2A" stroke-opacity=".55" stroke-width=".8"/><ellipse cx="${f1(-w/4)}" cy="-1.6" rx="${f1(w/4)}" ry="1" fill="#fff" opacity=".35"/></g>`; }
+    for(let i=0;i<34;i++){ const [x,y] = disc(116); s += `<circle cx="${f1(x)}" cy="${f1(y)}" r="${f1(.9+r()*1.1)}" fill="${r()<.6?'#2F6B28':'#4E9A38'}"/>`; }
+    s += `<ellipse cx="128" cy="118" rx="70" ry="44" fill="#FFF3C0" opacity=".12"/>`;
+  } else if(kind==='greens'){
+    s += `<circle cx="150" cy="150" r="122" fill="#24461F"/>`;
+    for(let i=0;i<78;i++){ const [x,y] = disc(118), sc = .9+r()*1.1, rot = r()*360, g = r(), fill = g<.08?'url(#bv-leaf4)':g<.45?'url(#bv-leaf1)':g<.8?'url(#bv-leaf2)':'url(#bv-leaf3)';
+      s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)}) scale(${f1(sc)})" filter="url(#bv-sh)"><path d="M0 -11C8 -7 8 7 0 11C-8 7 -8 -7 0 -11Z" fill="${fill}"/><path d="M0 -10V10" stroke="#fff" stroke-opacity=".28" stroke-width=".7"/></g>`; }
+    for(let i=0;i<14;i++){ const [x,y] = disc(108); s += `<rect x="${f1(x)}" y="${f1(y)}" width="7" height="7" rx="1.5" fill="#F6F2E6" transform="rotate(${f1(r()*90)} ${f1(x+3.5)} ${f1(y+3.5)})" filter="url(#bv-sh)"/>`; }   // beyaz peynir küpleri
+  } else {
+    const bulgur = kind==='bulgur';
+    s += `<circle cx="150" cy="150" r="122" fill="${bulgur?'#B98A48':'#E9DDC2'}"/>`;
+    const grain = bulgur ? sphereGrad(defs,'#F3D9A0','#D2A562','#9A6A2E') : 'url(#bv-grain)';
+    for(let i=0;i<360;i++){ const [x,y] = disc(119), rot = r()*180;
+      s += `<ellipse cx="${f1(x)}" cy="${f1(y)}" rx="${bulgur?2.2:3.5}" ry="${bulgur?2:1.55}" fill="${grain}" transform="rotate(${f1(rot)} ${f1(x)} ${f1(y)})"/>`; }
+    if(!bulgur) s += `<ellipse cx="132" cy="122" rx="64" ry="40" fill="#FFE08A" opacity=".14"/>`;   // tereyağı parlaklığı
+  }
+  return s;
+}
+function drawProtein(group, name, seed, defs){
+  const r = bvRand('p'+seed); let s = '';
+  if(group==='meatball'){
+    const special = /sos|özel/i.test(name);
+    const g = sphereGrad(defs, '#E6AE7A', '#A4592C', '#4A2210');
+    s += `<circle cx="150" cy="152" r="46" fill="${special?'#6E1E0E':'#5A3A1C'}" opacity=".55" filter="url(#bv-soft)"/>`;
+    const balls = [[132,134,19],[168,134,19],[132,170,19],[168,170,19],[150,152,21]];
+    balls.forEach(([x,y,rr],i)=>{
+      s += `<g filter="url(#bv-sh)"><circle cx="${x}" cy="${y}" r="${rr}" fill="${g}"/>`;
+      for(let k=0;k<9;k++){ const a=r()*6.28, d=r()*rr*.75; s += `<circle cx="${f1(x+Math.cos(a)*d)}" cy="${f1(y+Math.sin(a)*d)}" r="${f1(.8+r()*1.3)}" fill="#3A1A0A" opacity=".45"/>`; }
+      s += `<ellipse cx="${f1(x-rr*.32)}" cy="${f1(y-rr*.38)}" rx="${f1(rr*.38)}" ry="${f1(rr*.22)}" fill="#fff" opacity=".38" transform="rotate(-30 ${f1(x-rr*.32)} ${f1(y-rr*.38)})"/></g>`;
+    });
+    if(special) s += `<path d="M118 140 C132 128 144 156 156 140 S178 150 186 138" fill="none" stroke="#B0301A" stroke-width="4" stroke-linecap="round" opacity=".9"/><path d="M120 166 C134 156 146 178 160 164 S176 172 184 162" fill="none" stroke="#C8401E" stroke-width="3" stroke-linecap="round" opacity=".85"/>`;
+    for(let k=0;k<16;k++){ const a=r()*6.28, d=r()*34; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="1.1" fill="#4E9A38"/>`; }   // maydanoz
+    return s;
+  }
+  const sc = sauceOf(name), g = `bvc${++bvGradN}`;
+  defs.insertAdjacentHTML('beforeend', `<linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${sc.a}"/><stop offset="1" stop-color="${sc.b}"/></linearGradient>`);
+  s += `<circle cx="150" cy="152" r="46" fill="${sc.pool}" opacity="${sc.cream?.75:.45}" filter="url(#bv-soft)"/>`;
+  const pcs = 8;
+  for(let i=0;i<pcs;i++){
+    const a = (i-1)/(pcs-1)*6.2832 + r()*.35, d = i===0 ? 0 : 24 + r()*9, x = 150+Math.cos(a)*d, y = 152+Math.sin(a)*d, w = 17+r()*7, h = 12+r()*5, rot = r()*180;
+    s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(rot)})" filter="url(#bv-sh)"><rect x="${f1(-w/2)}" y="${f1(-h/2)}" width="${f1(w)}" height="${f1(h)}" rx="5.5" fill="url(#${g})"/>`;
+    if(sc.grill) s += `<path d="M${f1(-w/2+4)} ${f1(-h/2+1)}L${f1(-w/2+1)} ${f1(h/2-1)}M${f1(-1)} ${f1(-h/2+1)}L${f1(-4)} ${f1(h/2-1)}M${f1(w/2-2)} ${f1(-h/2+1)}L${f1(w/2-5)} ${f1(h/2-1)}" stroke="#4A2610" stroke-width="2" stroke-linecap="round" opacity=".75"/>`;
+    s += `<rect x="${f1(-w/2+1.5)}" y="${f1(-h/2+1.2)}" width="${f1(w-3)}" height="${f1(h*.42)}" rx="4" fill="#fff" opacity=".13"/><ellipse cx="${f1(-w*.15)}" cy="${f1(-h*.2)}" rx="${f1(w*.28)}" ry="${f1(h*.16)}" fill="#fff" opacity="${sc.cream?.3:.5}"/></g>`;
+  }
+  if(sc.mush) for(let i=0;i<5;i++){ const a=r()*6.28, d=10+r()*26, x=150+Math.cos(a)*d, y=152+Math.sin(a)*d;
+    s += `<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(r()*360)})" filter="url(#bv-sh)"><path d="M-8 2 A8 7 0 0 1 8 2 L3 2 L3 7 L-3 7 L-3 2 Z" fill="#CDB38A"/><path d="M-7 1.5 A7 6 0 0 1 7 1.5" fill="none" stroke="#7A5A34" stroke-width="1.2"/></g>`; }
+  if(sc.sesame) for(let i=0;i<22;i++){ const a=r()*6.28, d=r()*36; s += `<ellipse cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" rx="1.5" ry=".8" fill="#F6EED8" transform="rotate(${f1(r()*180)} ${f1(150+Math.cos(a)*d)} ${f1(152+Math.sin(a)*d)})"/>`; }
+  if(sc.seeds || sc.flakes) for(let i=0;i<18;i++){ const a=r()*6.28, d=r()*36; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="${sc.flakes?1.3:.9}" fill="${sc.flakes?'#5A0A04':'#FFD3A0'}"/>`; }
+  for(let k=0;k<10;k++){ const a=r()*6.28, d=r()*34; s += `<circle cx="${f1(150+Math.cos(a)*d)}" cy="${f1(152+Math.sin(a)*d)}" r="1.1" fill="#3F8A2E"/>`; }   // taze ot
+  return s;
+}
+function drawGarnish(kind, cx, cy, R, seed, defs){
+  const r = bvRand('g'+seed+kind); let s = '';
+  const spots = (n, rr)=>{ const out=[]; const off = r()*6.28; for(let i=0;i<n;i++){ const d = R*Math.sqrt((i+.5)/n)*.92, a = i*2.39996 + off; out.push([cx+Math.cos(a)*d + (r()-.5)*1.5, cy+Math.sin(a)*d + (r()-.5)*1.5]); } return out; };
+  const shine = (x,y,rr)=>`<ellipse cx="${f1(x-rr*.3)}" cy="${f1(y-rr*.35)}" rx="${f1(rr*.38)}" ry="${f1(rr*.22)}" fill="#fff" opacity=".5" transform="rotate(-30 ${f1(x-rr*.3)} ${f1(y-rr*.35)})"/>`;
+  const balls = (n, rr, l, m, d)=>{ const g = sphereGrad(defs,l,m,d); return spots(n, rr).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="${rr}" fill="${g}"/>${shine(x,y,rr)}</g>`).join(''); };
+  s += `<circle cx="${cx}" cy="${cy}" r="${R+3}" fill="#000" opacity=".22" filter="url(#bv-soft)"/>`;
+  switch(kind){
+    case 'corn': { const g = sphereGrad(defs,'#FFF2A8','#FFD23C','#C88A10');
+      s += spots(26,0).map(([x,y])=>`<rect x="${f1(x-2.9)}" y="${f1(y-3.3)}" width="5.8" height="6.6" rx="2.2" fill="${g}" filter="url(#bv-sh)" transform="rotate(${f1(r()*60-30)} ${f1(x)} ${f1(y)})"/>`).join(''); break; }
+    case 'peas': s += balls(17, 4.4, '#D2F59A', '#7DC04A', '#2F6B1E'); break;
+    case 'chickpea': s += balls(13, 5.3, '#FFF0C8', '#E2BE7A', '#9A7238'); break;
+    case 'tomato': { const g = sphereGrad(defs,'#FF9A80','#E8432F','#8E140C');
+      s += spots(4,11).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="11" fill="${g}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="7.4" fill="#F47058"/><path d="M${f1(x)} ${f1(y-6.5)}V${f1(y+6.5)}M${f1(x-6.5)} ${f1(y)}H${f1(x+6.5)}" stroke="#C92E1E" stroke-width="1.4"/>${[[-3,-3],[3,-3],[-3,3],[3,3]].map(([a,b])=>`<ellipse cx="${f1(x+a)}" cy="${f1(y+b)}" rx="1.4" ry="2" fill="#FFE3A0" opacity=".85"/>`).join('')}${shine(x,y,11)}</g>`).join(''); break; }
+    case 'olive': { const g = sphereGrad(defs,'#7A6470','#2A1E26','#07050A');
+      s += spots(8,6.5).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="6.6" fill="${g}"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.4" fill="#4A2E3A"/>${shine(x,y,6.6)}</g>`).join(''); break; }
+    case 'jalapeno':
+      s += spots(6,9).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="9" fill="#2F7A22"/><circle cx="${f1(x)}" cy="${f1(y)}" r="6.2" fill="#C6E29A"/><circle cx="${f1(x)}" cy="${f1(y)}" r="2.6" fill="#E8F2C8"/>${[0,2.1,4.2].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*3.8)}" cy="${f1(y+Math.sin(a)*3.8)}" rx="1.3" ry=".8" fill="#FFF8D8"/>`).join('')}</g>`).join(''); break;
+    case 'pickle':
+      s += spots(5,10).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="10.5" fill="#5E6B1E"/><circle cx="${f1(x)}" cy="${f1(y)}" r="8.6" fill="#A9B44A"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.2" fill="#C9D27A" opacity=".8"/>${[0,1.57,3.14,4.71].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*4.6)}" cy="${f1(y+Math.sin(a)*4.6)}" rx="1.5" ry=".9" fill="#E8EDB0"/>`).join('')}${shine(x,y,10)}</g>`).join(''); break;
+    case 'cucumber':
+      s += spots(5,10).map(([x,y])=>`<g filter="url(#bv-sh)"><circle cx="${f1(x)}" cy="${f1(y)}" r="10.8" fill="#2F6B28"/><circle cx="${f1(x)}" cy="${f1(y)}" r="9" fill="#DDEFB8"/><circle cx="${f1(x)}" cy="${f1(y)}" r="4.6" fill="#C2E09A"/>${[0,1.26,2.51,3.77,5.03].map(a=>`<ellipse cx="${f1(x+Math.cos(a)*3.2)}" cy="${f1(y+Math.sin(a)*3.2)}" rx="1.1" ry=".7" fill="#F6FAE6"/>`).join('')}${shine(x,y,10)}</g>`).join(''); break;
+    case 'mushroom':
+      s += spots(5,9).map(([x,y])=>`<g transform="translate(${f1(x)} ${f1(y)}) rotate(${f1(r()*360)})" filter="url(#bv-sh)"><path d="M-9 2 A9 8 0 0 1 9 2 L3.5 2 L3.5 8 L-3.5 8 L-3.5 2 Z" fill="#D8C29A"/><path d="M-8 1.5 A8 7 0 0 1 8 1.5" fill="none" stroke="#7A5A34" stroke-width="1.3"/></g>`).join(''); break;
+    case 'carrot':
+      s += spots(9,0).map(([x,y])=>`<rect x="${f1(x-7)}" y="${f1(y-1.6)}" width="14" height="3.2" rx="1.6" fill="#F28A2E" filter="url(#bv-sh)" transform="rotate(${f1(r()*180)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
+    case 'pepper':
+      s += spots(8,0).map(([x,y],i)=>`<rect x="${f1(x-6.5)}" y="${f1(y-2.4)}" width="13" height="4.8" rx="2.2" fill="${['#E8432F','#F2B21E','#3F8A2E'][i%3]}" filter="url(#bv-sh)" transform="rotate(${f1(r()*180)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
+    case 'onion':
+      s += spots(7,0).map(([x,y])=>`<path d="M${f1(x-8)} ${f1(y)} A8 6 0 0 1 ${f1(x+8)} ${f1(y)}" fill="none" stroke="#D8A0CE" stroke-width="2.4" stroke-linecap="round" filter="url(#bv-sh)" transform="rotate(${f1(r()*360)} ${f1(x)} ${f1(y)})"/>`).join(''); break;
+    default: { const h = Math.floor(r()*360); s += balls(12, 4.8, `hsl(${h} 70% 75%)`, `hsl(${h} 60% 50%)`, `hsl(${h} 60% 25%)`); }
+  }
+  return s;
+}
+/* katmanı değiştir: eskisi ışıltıyla kaybolur, yenisi ışıltıyla belirir */
+function bvSwap(parent, key, html, cx, cy, rr){
+  const old = parent.querySelector(`[data-k]:not(.out)${key? `:not([data-k="${CSS.escape(key)}"])`:''}`);
+  if(key && parent.querySelector(`[data-k="${CSS.escape(key)}"]:not(.out)`)) return;   // zaten çizili
+  if(old){ old.classList.add('out'); setTimeout(()=>old.remove(), 420); }
+  if(!key) return;
+  parent.insertAdjacentHTML('beforeend', `<g class="bv-l in" data-k="${escapeHtml(key)}">${html}</g>
+    <circle class="bv-spark" cx="${cx}" cy="${cy}" r="${rr}"/>`);
+  const sp = parent.lastElementChild; setTimeout(()=>sp && sp.remove(), 800);
+}
+function updateBowlVisual(){
+  const svg = document.getElementById('bv'); if(!svg || !bowlSel) return;
+  const defs = document.getElementById('bv-defs');
+  // taban
+  const bs = optById('base', bowlSel.baseId);
+  const bKey = bs ? 'b:'+bs.id : '';
+  if(bKey !== bowlVis.base){ bvSwap(document.getElementById('bv-base'), bKey, bs ? drawBase(baseKind(bs.name), bs.id, defs) : '', 150, 150, 118); bowlVis.base = bKey; }
+  // protein (ortada)
+  const pr = selProtein();
+  const pKey = pr ? 'p:'+bowlSel.pGroup+':'+pr.id : '';
+  if(pKey !== bowlVis.pro){ bvSwap(document.getElementById('bv-pro'), pKey, pr ? drawProtein(bowlSel.pGroup, pr.name, pr.id, defs) : '', 150, 152, 44); bowlVis.pro = pKey; }
+  // garnitürler: her biri kendi çeyreğinde
+  const gar = document.getElementById('bv-gar');
+  const want = {};
+  bowlSel.garnish.forEach(id=>{ const g = optById('garnish', id); const k = bowlSel.slots[id]; if(g && k!=null) want[k] = { key:'g:'+id+':'+k, g }; });
+  for(let k=0;k<BV_SLOTS.length;k++){
+    let slot = gar.querySelector(`[data-slot="${k}"]`);
+    if(!slot){ gar.insertAdjacentHTML('beforeend', `<g data-slot="${k}"></g>`); slot = gar.querySelector(`[data-slot="${k}"]`); }
+    const w = want[k], key = w ? w.key : '';
+    if(key !== (bowlVis.g[k]||'')){
+      const [x,y] = BV_SLOTS[k], R = k<4 ? 27 : 18;
+      bvSwap(slot, key, w ? drawGarnish(garnishKind(w.g.name), x, y, R, w.g.id, defs) : '', x, y, R+4);
+      bowlVis.g[k] = key;
+    }
+  }
+  // kılavuz çemberler ve boş durum
+  const guides = document.getElementById('bv-guides').children;
+  guides[0].classList.toggle('on', !!pr);
+  for(let k=0;k<4;k++) guides[k+1].classList.toggle('on', !!want[k]);
+  document.getElementById('bv-empty').style.opacity = bs ? 0 : 1;
+  // altyazı
+  const cap = document.getElementById('bv-caption');
+  if(cap) cap.innerHTML = `<span class="${bs?'ok':''}">${bs? escapeHtml(bs.name) : 'Taban —'}</span><i></i><span class="${pr?'ok':''}">${pr? escapeHtml(pr.name) : 'Protein —'}</span><i></i><span class="${bowlSel.garnish.length?'ok':''}">${bowlSel.garnish.length}/${state.options.maxGarnish||4} garnitür</span>`;
 }
 
 /* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
@@ -1546,7 +1826,12 @@ function sendOrder(){
     createdAt: new Date().toISOString(),
     items: Object.entries(cart).map(([key,c])=>{
       const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
-      if(c.options) li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
+      if(c.options){
+        const o = c.options;
+        li.options = { chicken: o.protein || o.chicken, garnish: o.garnish || [] };
+        if(o.base) li.options.base = o.base;
+        if(o.protein){ li.options.protein = o.protein; li.options.proteinType = o.proteinGroup==='meatball' ? 'Tavuk Köftesi' : 'Tavuk'; }
+      }
       return li;
     }),
     total,
@@ -1680,7 +1965,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
-          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.chicken||[]),...(state.options.garnish||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
+          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.meatball||[]),...(state.options.garnish||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
         </div>
@@ -1874,7 +2159,7 @@ function renderAdminStock(root){
           ${sw(o.available!==false, `data-stock-opt="${group}:${escapeHtml(o.id)}"`)}
           <button type="button" class="icon-btn" data-opt-del="${group}:${escapeHtml(o.id)}" title="Sil">${ICONS.trash}</button>
         </div>`).join('') || '<div class="hint">Henüz eklenmemiş.</div>'}</div>
-      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${group==='chicken'?'tavuk çeşidi':'garnitür'} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
+      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${({base:'taban',chicken:'tavuk çeşidi',meatball:'köfte çeşidi',garnish:'garnitür'})[group]} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
       ${group==='garnish'? `<div class="stock-add" style="align-items:center;"><span class="hint" style="flex:1;margin:0;">Müşteri en fazla kaç garnitür seçebilsin?</span><input type="number" id="max-garnish" min="1" max="8" value="${opts.maxGarnish||4}" style="flex:none;width:80px;text-align:center;"></div>`:''}
     </div>`;
   root.innerHTML = `
@@ -1887,8 +2172,10 @@ function renderAdminStock(root){
           ${sw(it.available!==false, `data-stock-item="${escapeHtml(it.id)}"`)}
         </div>`; }).join('') || '<div class="hint">Henüz ürün yok. Menü sekmesinden ekleyin.</div>'}</div>
     </div>
-    ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım)','Müşteri tek bir çeşit seçer.')}
-    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir.')}`;
+    ${optCard('base','Taban Çeşitleri (Bowl · 0. Adım)','Kasenin alt katmanı. Müşteri tek bir taban seçer.')}
+    ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım · Protein)','Protein adımında tavuk köftesiyle birlikte listelenir; müşteri tek protein seçer.')}
+    ${optCard('meatball','Tavuk Köftesi (Bowl · 1. Adım · Protein)','Seçilince kasenin ortasında köfte görseli belirir.')}
+    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir; kasede proteinin etrafına dizilir.')}`;
 
   root.querySelectorAll('[data-stock-item]').forEach(b=>b.addEventListener('click',()=>{
     const it = state.items.find(x=>x.id===b.dataset.stockItem); if(!it) return;
@@ -1910,7 +2197,8 @@ function renderAdminStock(root){
   root.querySelectorAll('[data-opt-add]').forEach(b=>b.addEventListener('click',()=>{
     const g = b.dataset.optAdd, inp = root.querySelector('#add-'+g), name = inp.value.trim();
     if(!name){ showToast('Bir ad yazın'); inp.focus(); return; }
-    state.options[g].push({ id: uid(g==='chicken'?'ch':'gr'), name, available:true }); saveOptionsNow(); render();
+    if(!state.options[g]) state.options[g] = [];
+    state.options[g].push({ id: uid(OPT_PREFIX[g]||'op'), name, available:true }); saveOptionsNow(); render();
   }));
   const mg = root.querySelector('#max-garnish');
   if(mg) mg.addEventListener('change',()=>{ state.options.maxGarnish = Math.max(1, Math.min(8, parseInt(mg.value,10)||4)); saveOptionsNow(); showToast('Garnitür sınırı: '+state.options.maxGarnish); });
@@ -1935,7 +2223,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${{pasta:'🍝',greens:'🥗'}[baseKind(op.base)]||'🍚'} ${escapeHtml(op.base)}</span>`:''}${(op.protein||op.chicken)? `<span class="adm-tag sos">${op.proteinType==='Tavuk Köftesi'?'🟤':'🍗'} ${escapeHtml(op.protein||op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
