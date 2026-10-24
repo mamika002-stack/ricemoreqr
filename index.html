@@ -366,6 +366,12 @@
   .opt.limit{opacity:.45;cursor:not-allowed;}
   .opt.sold{cursor:not-allowed;opacity:.5;background:rgba(5,6,8,.25);border-style:dashed;}
   .opt.sold .opt-name{text-decoration:line-through;text-decoration-color:var(--danger);color:var(--text-faint);}
+  .opt-extra{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:800;background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.4);white-space:nowrap;}
+  .opt.sel .opt-extra{background:var(--gold);color:#1A1405;border-color:var(--gold);}
+  .bowl-sum{margin:6px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);font-size:13px;}
+  .bowl-sum .bs-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;color:var(--text-dim);}
+  .bowl-sum .bs-row.x{color:var(--gold-2);font-weight:700;}
+  .bowl-sum .bs-row.t{border-top:1px solid var(--glass-border);margin-top:6px;padding-top:8px;color:var(--text);font-weight:800;font-size:14px;}
   .opt-sold{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:800;letter-spacing:.04em;background:var(--danger-soft);color:var(--danger);white-space:nowrap;}
   .opt-empty{grid-column:1/-1;font-size:12.5px;color:var(--text-faint);padding:6px 2px;}
   .bowl-foot{flex:1;display:flex;gap:10px;align-items:center;}
@@ -398,6 +404,8 @@
   .adm-opts{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
   .adm-tag{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-dim);}
   .adm-tag.base{background:rgba(255,255,255,.08);border-color:rgba(230,202,101,.45);color:var(--text);}
+  .adm-tag.meze{background:rgba(255,255,255,.08);border-color:rgba(230,202,101,.35);color:var(--text);}
+  .adm-tag.extra{background:var(--gold);border-color:var(--gold);color:#1A1405;}
   .adm-tag.sos{background:var(--gold-soft);border-color:rgba(212,175,55,.45);color:var(--gold-2);}
 
   /* ============================= ÜRÜN DETAY MODALI ============================= */
@@ -667,16 +675,32 @@ function defaultData(){
 const DEFAULT_CHICKEN = ['BBQ Soslu Tavuk','Sweet Chili Soslu','Hot Chili Soslu','Köri Soslu','Soya Soslu','Kremalı Çeşnili','Kremalı Mantarlı','Marineli Izgara'];
 const DEFAULT_GARNISH = ['Mısır','Salatalık Turşusu','Jalapeno Turşusu','Bezelye','Cherry Domates','Salatalık','Siyah Zeytin','Haşlanmış Nohut'];
 const DEFAULT_BASE = ['Tereyağlı Pilav','İtalyan Makarna','Taze Yeşillik / Akdeniz Salata'];
-const OPT_PREFIX = { base:'bs', chicken:'ch', garnish:'gr' };
+const DEFAULT_MEZE = ['Haydari','Şakşuka','Atom','Humus'];
+const OPT_PREFIX = { base:'bs', chicken:'ch', garnish:'gr', meze:'mz' };
+const PRICE_DEFAULTS = { freeGarnish:3, extraGarnishPrice:10, freeMeze:1, extraMezePrice:15 };
 const mkOpts = (p, list) => list.map((name,i)=>({ id: p+'_'+(i+1), name, available:true }));
 function defaultOptions(){
-  return { maxGarnish:4, base: mkOpts('bs', DEFAULT_BASE), chicken: mkOpts('ch', DEFAULT_CHICKEN), garnish: mkOpts('gr', DEFAULT_GARNISH) };
+  return Object.assign({ maxGarnish:6, base: mkOpts('bs', DEFAULT_BASE), chicken: mkOpts('ch', DEFAULT_CHICKEN), garnish: mkOpts('gr', DEFAULT_GARNISH), meze: mkOpts('mz', DEFAULT_MEZE) }, PRICE_DEFAULTS);
 }
 function normOptions(v){
   if(!v) return defaultOptions();
   return { maxGarnish: Math.max(1, Math.min(8, Number(v.maxGarnish)||4)),
     base: v.base ? toList(v.base) : mkOpts('bs', DEFAULT_BASE),   // eski veritabanında yoksa varsayılan tabanlar
-    chicken: toList(v.chicken), garnish: toList(v.garnish) };
+    chicken: toList(v.chicken), garnish: toList(v.garnish),
+    // meze listesi: hiç kurulmamış eski veritabanında varsayılanlar; yönetici hepsini sildiyse boş kalır
+    meze: v.meze ? toList(v.meze) : (v.extraMezePrice!=null ? [] : mkOpts('mz', DEFAULT_MEZE)),
+    freeGarnish: numOr(v.freeGarnish, PRICE_DEFAULTS.freeGarnish), extraGarnishPrice: numOr(v.extraGarnishPrice, PRICE_DEFAULTS.extraGarnishPrice),
+    freeMeze: numOr(v.freeMeze, PRICE_DEFAULTS.freeMeze), extraMezePrice: numOr(v.extraMezePrice, PRICE_DEFAULTS.extraMezePrice) };
+}
+function numOr(x, d){ const n = Number(x); return (x===undefined || x===null || x==='' || !isFinite(n) || n<0) ? d : n; }
+/* Dinamik ekstra ücret: ücretsiz kotayı aşan her garnitür / meze için ek tutar */
+function bowlExtras(nG, nM){
+  const o = state.options || {};
+  const paidG = Math.max(0, nG - numOr(o.freeGarnish, PRICE_DEFAULTS.freeGarnish));
+  const paidM = Math.max(0, nM - numOr(o.freeMeze, PRICE_DEFAULTS.freeMeze));
+  const extraGarnish = paidG * numOr(o.extraGarnishPrice, PRICE_DEFAULTS.extraGarnishPrice);
+  const extraMeze = paidM * numOr(o.extraMezePrice, PRICE_DEFAULTS.extraMezePrice);
+  return { paidG, paidM, extraGarnish, extraMeze, extra: extraGarnish + extraMeze };
 }
 function baseIcon(name){ const n = trLower(name); return /makarna|penne|pasta/.test(n) ? '🍝' : /yeşil|salata|akdeniz/.test(n) ? '🥗' : '🍚'; }
 function optById(group, id){ return ((state.options||{})[group]||[]).find(o=>o.id===id); }
@@ -684,10 +708,13 @@ function isBowl(it){ if(!it) return false; if(typeof it.isBowl==='boolean') retu
 function optsText(o){
   if(!o) return '';
   const g = toList(o.garnish);
-  return [o.base? baseIcon(o.base)+' Taban: '+o.base : '', o.chicken? 'Sos: '+o.chicken : '', g.length? 'Garnitür: '+g.join(', ') : ''].filter(Boolean).join(' · ');
+  const m = toList(o.meze), xg = Number(o.extraGarnish)||0, xm = Number(o.extraMeze)||0;
+  return [o.base? baseIcon(o.base)+' Taban: '+o.base : '', o.chicken? 'Sos: '+o.chicken : '',
+    g.length? 'Garnitür: '+g.join(', ')+(xg? ' (+'+fmtPrice(xg)+' Ekstra)' : '') : '',
+    m.length? '🧆 Meze: '+m.join(', ')+(xm? ' (+'+fmtPrice(xm)+' Ekstra)' : '') : ''].filter(Boolean).join(' · ');
 }
 /* Sepet satır anahtarı: aynı Bowl farklı seçimlerle ayrı satır olur */
-function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',') : itemId; }
+function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',')+((o.mezeIds||[]).length? '|'+o.mezeIds.slice().sort().join(',') : '') : itemId; }
 function lineItemId(key, c){ return (c && c.itemId) || String(key).split('|')[0]; }
 function qtyInCart(itemId){ return Object.entries(cart).reduce((s,[k,c])=> s + (lineItemId(k,c)===itemId ? c.qty : 0), 0); }
 let state = defaultData();
@@ -738,7 +765,7 @@ function initFirebase(){
   try{
     const app = firebase.apps.length? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
     fbRef = app.database().ref(DB_PATH);
-    const loaded = {}; let settingsMissing = false, optionsMissing = false, baseMissing = false;
+    const loaded = {}; let settingsMissing = false, optionsMissing = false, baseMissing = false, mezeMissing = false;
     PUBLIC_KEYS.forEach(k=>{
       fbRef.child(k).on('value', snap=>{
         const v = snap.val();
@@ -748,6 +775,7 @@ function initFirebase(){
         } else if(k==='options'){
           if(!v && !loaded.options) optionsMissing = true;
           if(v && !loaded.options && !v.base) baseMissing = true;
+          if(v && !loaded.options && v.extraMezePrice==null) mezeMissing = true;
           state.options = normOptions(v);
         } else {
           state[k] = toList(v);
@@ -763,7 +791,13 @@ function initFirebase(){
         if(first){
           if(settingsMissing) saveState();        // boş veritabanı: varsayılanları yaz
           else if(optionsMissing) fbRef.child('options').set(state.options);   // Bowl malzemelerini ilk kez oluştur
-          else if(baseMissing) fbRef.child('options').child('base').set(state.options.base);   // Taban çeşitlerini ilk kez ekle
+          else {
+            if(baseMissing) fbRef.child('options').child('base').set(state.options.base);   // Taban çeşitlerini ilk kez ekle
+            if(mezeMissing){   // Meze çeşitleri + ekstra ücretleri ilk kez ekle (garnitür sınırı ücretli seçime yer açsın)
+              const o = state.options; if(o.maxGarnish <= o.freeGarnish + 1) o.maxGarnish = 6;
+              fbRef.child('options').update({ meze:o.meze, maxGarnish:o.maxGarnish, freeGarnish:o.freeGarnish, extraGarnishPrice:o.extraGarnishPrice, freeMeze:o.freeMeze, extraMezePrice:o.extraMezePrice });
+            }
+          }
           startTracking();
         }
         render();
@@ -804,12 +838,19 @@ function sanitizeCart(){
       const ch = optById('chicken', c.options.chickenId);
       const bs = c.options.baseId ? optById('base', c.options.baseId) : true, badB = !bs || bs.available===false;
       const badG = (c.options.garnishIds||[]).map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
-      if(badB || !ch || ch.available===false || badG.length){
-        removed.push(c.name + ' (' + [badB? c.options.base : '', (!ch||ch.available===false)? c.options.chicken : '', ...badG.map(g=>g? g.name : 'malzeme')].filter(Boolean).join(', ') + ')');
+      const badM = (c.options.mezeIds||[]).map(id=>optById('meze', id)).filter(g=>!g || g.available===false);
+      if(badB || !ch || ch.available===false || badG.length || badM.length){
+        removed.push(c.name + ' (' + [badB? c.options.base : '', (!ch||ch.available===false)? c.options.chicken : '', ...badG.map(g=>g? g.name : 'malzeme'), ...badM.map(g=>g? g.name : 'meze')].filter(Boolean).join(', ') + ')');
         delete cart[key]; changed = true; return;
       }
+      // ekstra ücretler güncel fiyatlarla yeniden hesaplanır (yönetici ücreti değiştirirse sepet de güncellenir)
+      const x = bowlExtras((c.options.garnishIds||[]).length, (c.options.mezeIds||[]).length);
+      if(c.options.extra!==x.extra || c.options.extraGarnish!==x.extraGarnish || c.options.extraMeze!==x.extraMeze){
+        c.options.extraGarnish = x.extraGarnish; c.options.extraMeze = x.extraMeze; c.options.extra = x.extra; changed = true;
+      }
     }
-    if(c.price!==it.price || c.name!==it.name){ c.price = it.price; c.name = it.name; changed = true; }
+    const unit = it.price + (c.options ? (Number(c.options.extra)||0) : 0);
+    if(c.price!==unit || c.name!==it.name){ c.price = unit; c.name = it.name; changed = true; }
   });
   if(changed) saveCart();
   return removed;
@@ -1122,7 +1163,7 @@ function itemCard(it, i){
     <div class="item-body">
       <h3 class="item-name">${escapeHtml(it.name)}</h3>
       ${it.description? `<p class="item-desc">${escapeHtml(it.description)}</p>`:''}
-      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, sosunu & garnitürünü seç</span>`:''}
+      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, sosunu, garnitürünü & mezeni seç</span>`:''}
       <div class="item-foot">
         <span class="price">${fmtPrice(it.price)}</span>
         <div data-ctl="${escapeHtml(it.id)}">${ctlHtml(it)}</div>
@@ -1236,7 +1277,7 @@ function renderDetail(){
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
       ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
-            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini ve en fazla ${state.options.maxGarnish||4} garnitürünü seçeceksin.</div>` : ''}
+            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz) ve mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) seçeceksin.</div>` : ''}
     </div>`;
   renderDetailFoot();
 }
@@ -1267,7 +1308,7 @@ let bowlSel = null;   // { itemId, baseId, chickenId, garnish:[ids], qty }
 function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], qty: Math.max(1, Math.min(20, initQty||1)) };
+  bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], meze:[], qty: Math.max(1, Math.min(20, initQty||1)) };
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
@@ -1284,6 +1325,10 @@ function openBowlModal(itemId, initQty){
         if(bowlSel.garnish.length >= max){ inp.checked = false; showToast('En fazla '+max+' garnitür seçebilirsiniz'); return; }
         bowlSel.garnish.push(inp.value);
       } else bowlSel.garnish = bowlSel.garnish.filter(x=>x!==inp.value);
+    }
+    else if(inp.name==='bowl-meze'){
+      if(inp.checked){ if(!bowlSel.meze.includes(inp.value)) bowlSel.meze.push(inp.value); }
+      else bowlSel.meze = bowlSel.meze.filter(x=>x!==inp.value);
     }
     renderBowl();
   });
@@ -1305,22 +1350,36 @@ function renderBowl(){
   if(bowlSel.chickenId && (!ch || ch.available===false)){ showToast((ch?ch.name:'Seçtiğiniz sos')+' az önce tükendi, lütfen başka bir çeşit seçin'); bowlSel.chickenId=''; }
   const lost = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
   if(lost.length){ showToast(lost.map(g=>g?g.name:'Bir garnitür').join(', ')+' az önce tükendi'); bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); return g && g.available!==false; }); }
+  const lostM = bowlSel.meze.map(id=>optById('meze', id)).filter(g=>!g || g.available===false);
+  if(lostM.length){ showToast(lostM.map(g=>g?g.name:'Bir meze').join(', ')+' az önce tükendi'); bowlSel.meze = bowlSel.meze.filter(id=>{ const g=optById('meze',id); return g && g.available!==false; }); }
 
-  const opts = state.options, max = opts.maxGarnish||4, nG = bowlSel.garnish.length;
+  const opts = state.options, max = opts.maxGarnish||4, nG = bowlSel.garnish.length, nM = bowlSel.meze.length;
+  const freeG = numOr(opts.freeGarnish, 3), freeM = numOr(opts.freeMeze, 1);
+  const pG = numOr(opts.extraGarnishPrice, 10), pM = numOr(opts.extraMezePrice, 15);
+  const x = bowlExtras(nG, nM);
   const tile = (type, group, o)=>{
     const sold = o.available===false;
-    const sel = group==='bowl-base' ? bowlSel.baseId===o.id : type==='radio' ? bowlSel.chickenId===o.id : bowlSel.garnish.includes(o.id);
-    const limit = type==='check' && !sel && !sold && nG>=max;
+    const list = group==='bowl-meze' ? bowlSel.meze : bowlSel.garnish;
+    const sel = group==='bowl-base' ? bowlSel.baseId===o.id : type==='radio' ? bowlSel.chickenId===o.id : list.includes(o.id);
+    const limit = group==='bowl-garnish' && !sel && !sold && nG>=max;
+    // ücretsiz kota dolduysa: seçili ücretli olanlarda ve yeni seçilecek olanlarda ek ücret rozeti
+    let extra = '';
+    if(type==='check' && !sold && !limit){
+      const free = group==='bowl-meze' ? freeM : freeG, price = group==='bowl-meze' ? pM : pG;
+      const paid = sel ? list.indexOf(o.id) >= free : list.length >= free;
+      if(paid && price>0) extra = `<span class="opt-extra">+${fmtPrice(price)}</span>`;
+    }
     return `<label class="opt ${type} ${sel?'sel':''} ${sold?'sold':''} ${limit?'limit':''}">
       <input type="${type==='radio'?'radio':'checkbox'}" name="${group}" value="${escapeHtml(o.id)}" ${sel?'checked':''} ${(sold||limit)?'disabled':''}>
       <span class="opt-mark"></span><span class="opt-name">${escapeHtml(o.name)}</span>
-      ${sold? '<span class="opt-sold">Tükendi</span>':''}
+      ${sold? '<span class="opt-sold">Tükendi</span>': extra}
     </label>`;
   };
+  const freeTxt = (n, word)=> n>0 ? `İlk ${n} ${word} ücretsiz` : `Her ${word} ücretli`;
   root.innerHTML = `
     <div class="bowl-hero">
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="ph">${ICONS.bowl}</div>`}
-      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`:'<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu ve garnitürlerini seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
+      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`:'<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu, garnitürlerini ve mezeni seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
     </div>
     <div class="opt-step">
       <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Tek seçim</small></div>
@@ -1333,16 +1392,27 @@ function renderBowl(){
       <div class="opt-grid" role="radiogroup">${opts.chicken.length? opts.chicken.map(o=>tile('radio','bowl-chicken',o)).join('') : '<div class="opt-empty">Henüz tavuk çeşidi eklenmemiş.</div>'}</div>
     </div>
     <div class="opt-step">
-      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>En fazla ${max} adet · isteğe bağlı</small></div>
+      <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>${freeTxt(freeG,'garnitür')}${pG>0? ', sonrası +'+fmtPrice(pG):''} · en fazla ${max}</small></div>
         <span class="opt-badge ${nG? 'ok':''}">${nG}/${max}</span></div>
       <div class="opt-grid">${opts.garnish.length? opts.garnish.map(o=>tile('check','bowl-garnish',o)).join('') : '<div class="opt-empty">Henüz garnitür eklenmemiş.</div>'}</div>
+    </div>
+    <div class="opt-step">
+      <div class="opt-title"><span class="opt-num">3</span><div><h4>Meze Seçimi</h4><small>${freeTxt(freeM,'meze')}${pM>0? ', sonrası +'+fmtPrice(pM):''} · isteğe bağlı</small></div>
+        <span class="opt-badge ${nM? 'ok':''}">${nM? nM+' meze' : 'İsteğe bağlı'}</span></div>
+      <div class="opt-grid">${(opts.meze||[]).length? opts.meze.map(o=>tile('check','bowl-meze',o)).join('') : '<div class="opt-empty">Henüz meze eklenmemiş.</div>'}</div>
+    </div>
+    <div class="bowl-sum" id="bowl-sum">
+      <div class="bs-row"><span>Bowl</span><span class="num">${fmtPrice(it.price)}</span></div>
+      ${x.extraGarnish? `<div class="bs-row x"><span>Ekstra garnitür (${x.paidG} × ${fmtPrice(pG)})</span><span class="num">+${fmtPrice(x.extraGarnish)}</span></div>`:''}
+      ${x.extraMeze? `<div class="bs-row x"><span>Ekstra meze (${x.paidM} × ${fmtPrice(pM)})</span><span class="num">+${fmtPrice(x.extraMeze)}</span></div>`:''}
+      <div class="bs-row t"><span>1 adet</span><span class="num">${fmtPrice(it.price + x.extra)}</span></div>
     </div>`;
   renderBowlFoot();
 }
 function renderBowlFoot(){
   const it = bowlSel && state.items.find(x=>x.id===bowlSel.itemId); if(!it) return;
   const q = document.getElementById('bowl-qty'); if(q) q.textContent = bowlSel.qty;
-  const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice(it.price * bowlSel.qty);
+  const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice((it.price + bowlExtras(bowlSel.garnish.length, bowlSel.meze.length).extra) * bowlSel.qty);
   const ready = bowlSel.baseId && bowlSel.chickenId;
   const b = document.getElementById('bowl-add'); if(b) b.disabled = !ready;
   const l = document.getElementById('bowl-add-label'); if(l) l.textContent = ready ? 'Sepete Ekle' : !bowlSel.baseId ? 'Önce taban seçin' : 'Şimdi tavuk seçin';
@@ -1355,9 +1425,12 @@ function addBowlToCart(){
   const ch = optById('chicken', bowlSel.chickenId);
   if(!ch || ch.available===false){ showToast('Lütfen bir tavuk çeşidi seçin'); return; }
   const gs = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
-  const options = { baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name) };
+  const ms = bowlSel.meze.map(id=>optById('meze', id)).filter(g=>g && g.available!==false);
+  const x = bowlExtras(gs.length, ms.length);
+  const options = { baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name),
+    mezeIds: ms.map(g=>g.id), meze: ms.map(g=>g.name), extraGarnish: x.extraGarnish, extraMeze: x.extraMeze, extra: x.extra };
   const key = lineKey(it.id, options);
-  if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price, name: it.name, options };
+  if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price + x.extra, name: it.name, options };
   cart[key].qty += bowlSel.qty;
   saveCart(); updateItemControl(it.id); updateDock(true);
   closeModal(); bowlSel = null;
@@ -1623,7 +1696,12 @@ function sendOrder(){
     createdAt: new Date().toISOString(),
     items: Object.entries(cart).map(([key,c])=>{
       const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
-      if(c.options){ li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] }; if(c.options.base) li.options.base = c.options.base; }
+      if(c.options){
+        li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
+        if(c.options.base) li.options.base = c.options.base;
+        if((c.options.meze||[]).length) li.options.meze = c.options.meze;
+        if(c.options.extra){ li.options.extraGarnish = c.options.extraGarnish||0; li.options.extraMeze = c.options.extraMeze||0; li.options.extra = c.options.extra; }
+      }
       return li;
     }),
     total,
@@ -1762,7 +1840,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
-          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
+          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
         </div>
@@ -1880,7 +1958,7 @@ function openItemModal(existing){
       <option value="populer" ${existing&&existing.badge==='populer'?'selected':''}>Popüler</option>
       <option value="sef" ${existing&&existing.badge==='sef'?'selected':''}>Şefin Tavsiyesi</option>
     </select></div>
-    <div class="field"><label class="chk"><input type="checkbox" id="it-bowl" ${isBowl(existing)?'checked':''}> Bowl seçim ekranı açılsın (tavuk sosu + garnitür)</label>
+    <div class="field"><label class="chk"><input type="checkbox" id="it-bowl" ${isBowl(existing)?'checked':''}> Bowl seçim ekranı açılsın (taban + tavuk sosu + garnitür + meze)</label>
       <div class="hint">İşaretli ürünlerde müşteri "Seç" butonuyla Kendi Bowl'unu Oluştur ekranını açar.</div></div>
     <div class="field"><label>Fotoğraf</label>
       <div id="it-photo-box"></div>
@@ -1947,6 +2025,7 @@ function renderAdminStock(root){
   const cats = state.categories, opts = state.options;
   const sw = (on, attr)=>`<button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" ${attr}><span class="sw-knob"></span><span class="sw-label">${on?'Stokta Var':'Tükendi'}</span></button>`;
   const countOn = list => list.filter(x=>x.available!==false).length;
+  if(!opts.meze) opts.meze = [];
   const optCard = (group, title, sub)=>`
     <div class="card">
       <div class="card-head"><div><h3>${title}</h3><div class="hint" style="margin-top:4px;">${sub}</div></div><span class="stock-sum">${countOn(opts[group])}/${opts[group].length} stokta</span></div>
@@ -1956,7 +2035,7 @@ function renderAdminStock(root){
           ${sw(o.available!==false, `data-stock-opt="${group}:${escapeHtml(o.id)}"`)}
           <button type="button" class="icon-btn" data-opt-del="${group}:${escapeHtml(o.id)}" title="Sil">${ICONS.trash}</button>
         </div>`).join('') || '<div class="hint">Henüz eklenmemiş.</div>'}</div>
-      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${({base:'taban',chicken:'tavuk çeşidi',garnish:'garnitür'})[group]} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
+      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${({base:'taban',chicken:'tavuk çeşidi',garnish:'garnitür',meze:'meze'})[group]} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
       ${group==='garnish'? `<div class="stock-add" style="align-items:center;"><span class="hint" style="flex:1;margin:0;">Müşteri en fazla kaç garnitür seçebilsin?</span><input type="number" id="max-garnish" min="1" max="8" value="${opts.maxGarnish||4}" style="flex:none;width:80px;text-align:center;"></div>`:''}
     </div>`;
   root.innerHTML = `
@@ -1971,7 +2050,14 @@ function renderAdminStock(root){
     </div>
     ${optCard('base','Taban Çeşitleri (Bowl · 0. Adım)','Müşteri tek bir taban seçer. Örn. pilav bittiğinde "Tükendi" yapın.')}
     ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım)','Müşteri tek bir çeşit seçer.')}
-    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir.')}`;
+    ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir. İlk '+numOr(opts.freeGarnish,3)+' garnitür ücretsiz.')}
+    ${optCard('meze','Meze Çeşitleri (Bowl · 3. Adım)','Müşteri birden fazla seçebilir. İlk '+numOr(opts.freeMeze,1)+' meze ücretsiz.')}
+    <div class="card">
+      <div class="card-head"><div><h3>Ekstra Ücretler</h3><div class="hint" style="margin-top:4px;">Ücretsiz kotayı aşan her garnitür / meze için müşteriye eklenecek tutar. Sepet tutarı anında güncellenir.</div></div></div>
+      <div class="stock-add" style="align-items:center;"><label for="extra-garnish-price" class="hint" style="flex:1;margin:0;">Ekstra Garnitür Ücreti (₺) <small>· ${numOr(opts.freeGarnish,3)}. garnitürden sonra her biri</small></label><input type="number" id="extra-garnish-price" min="0" max="1000" step="1" inputmode="decimal" value="${numOr(opts.extraGarnishPrice,10)}" style="flex:none;width:90px;text-align:center;"></div>
+      <div class="stock-add" style="align-items:center;"><label for="extra-meze-price" class="hint" style="flex:1;margin:0;">Ekstra Meze Ücreti (₺) <small>· ${numOr(opts.freeMeze,1)}. mezeden sonra her biri</small></label><input type="number" id="extra-meze-price" min="0" max="1000" step="1" inputmode="decimal" value="${numOr(opts.extraMezePrice,15)}" style="flex:none;width:90px;text-align:center;"></div>
+      <div class="stock-add"><button type="button" class="btn btn-sm btn-primary" id="extra-save" style="margin-left:auto;">Ücretleri Kaydet</button></div>
+    </div>`;
 
   root.querySelectorAll('[data-stock-item]').forEach(b=>b.addEventListener('click',()=>{
     const it = state.items.find(x=>x.id===b.dataset.stockItem); if(!it) return;
@@ -1998,6 +2084,15 @@ function renderAdminStock(root){
   }));
   const mg = root.querySelector('#max-garnish');
   if(mg) mg.addEventListener('change',()=>{ state.options.maxGarnish = Math.max(1, Math.min(8, parseInt(mg.value,10)||4)); saveOptionsNow(); showToast('Garnitür sınırı: '+state.options.maxGarnish); });
+  const es = root.querySelector('#extra-save');
+  if(es) es.addEventListener('click',()=>{
+    const rd = id=>{ const v = parseFloat(String(root.querySelector(id).value).replace(',','.')); return isFinite(v) && v>=0 ? Math.min(1000, Math.round(v*100)/100) : null; };
+    const g = rd('#extra-garnish-price'), m = rd('#extra-meze-price');
+    if(g===null || m===null){ showToast('Geçerli bir tutar yazın (0 veya üzeri)'); return; }
+    state.options.extraGarnishPrice = g; state.options.extraMezePrice = m;
+    saveOptionsNow(); sanitizeCart(); render();
+    showToast('Ekstra ücretler kaydedildi: garnitür +'+fmtPrice(g)+', meze +'+fmtPrice(m), 'success');
+  });
 }
 
 /* --- Yönetim: Siparişler --- */
@@ -2019,7 +2114,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
