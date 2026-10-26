@@ -620,6 +620,31 @@
   .wait-badge.wait-late{background:var(--danger-soft);color:var(--danger);}
   .kv-row.order-fresh{border-color:var(--gold);animation:orderflash 1.2s ease 3;}
   @keyframes orderflash{0%,100%{background:var(--bg-elev);}50%{background:var(--gold-soft);}}
+  /* Siparişler: durum alt sekmeleri */
+  .otabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 14px;padding:5px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);}
+  .otab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;border:0;border-radius:12px;
+    background:none;color:var(--text-dim);font-weight:800;font-size:12.5px;line-height:1.15;text-align:center;cursor:pointer;transition:background .2s,color .2s;}
+  .otab .oi{font-size:16px;line-height:1;}
+  .otab .oc{min-width:20px;padding:1px 7px;border-radius:99px;font-size:11px;background:rgba(255,255,255,.08);color:var(--text-dim);}
+  .otab.active{background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));color:var(--gold-ink);box-shadow:0 6px 16px rgba(212,175,55,.25);}
+  .otab.active .oc{background:rgba(11,12,14,.25);color:var(--gold-ink);}
+  .otab .oc.hot{background:var(--danger);color:#fff;animation:ocpulse 1.6s infinite;}
+  .otab.active .oc.hot{background:#B3261E;color:#fff;}
+  .otab.bump{animation:otbump .5s var(--ease);}
+  @keyframes ocpulse{0%{box-shadow:0 0 0 0 rgba(232,112,93,.6);}100%{box-shadow:0 0 0 8px rgba(232,112,93,0);}}
+  @keyframes otbump{0%{transform:scale(1);}40%{transform:scale(1.08);}100%{transform:scale(1);}}
+  .ord-list{display:flex;flex-direction:column;gap:10px;}
+  .ord-list .kv-row{animation:ordin .3s var(--ease) both;transition:transform .28s var(--ease),opacity .28s ease,max-height .3s ease,margin .3s ease,padding .3s ease;max-height:1200px;overflow:hidden;}
+  .ord-list .kv-row.leaving{transform:translateX(40px);opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin-top:-10px;}
+  @keyframes ordin{from{opacity:0;transform:translateY(8px);}}
+  .ord-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none;}
+  .ord-act{white-space:nowrap;}
+  .ord-act.prep{background:var(--warn-soft);color:var(--warn);border-color:rgba(230,180,80,.45);}
+  .ord-act.road{background:var(--warm-soft);color:var(--warm);border-color:rgba(230,140,80,.45);}
+  .ord-act.done{background:var(--ok-soft);color:var(--ok);border-color:rgba(127,199,154,.45);}
+  .ord-empty{padding:26px 10px;text-align:center;color:var(--text-dim);font-size:13.5px;}
+  .ord-empty .ei{font-size:30px;display:block;margin-bottom:6px;}
+  @media (max-width:520px){ .ord-list .kv-row{flex-direction:column;align-items:stretch !important;} .ord-side{flex-direction:row;justify-content:space-between;align-items:center;} .otab{font-size:11.5px;} }
   .tab-count{background:var(--danger);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px;font-weight:800;}
   @media (max-width:640px){
     #admin-body{padding:14px;}
@@ -2222,11 +2247,54 @@ function renderAdminStock(root){
 }
 
 /* --- Yönetim: Siparişler --- */
+/* Sipariş alt sekmeleri: durumlara göre */
+const ORDER_TABS = [
+  { id:'yeni',         label:'Yeni',            icon:'🆕', match:o=> !o.status || o.status==='yeni' },
+  { id:'hazirlaniyor', label:'Hazırlanıyor',    icon:'👨‍🍳', match:o=> o.status==='hazirlaniyor' },
+  { id:'yolda',        label:'Yolda',           icon:'🛵', match:o=> o.status==='yolda' },
+  { id:'arsiv',        label:'Tamamlandı / Arşiv', icon:'📦', match:o=> !['yeni','hazirlaniyor','yolda'].includes(o.status||'yeni') }
+];
+let orderTab = (()=>{ try{ return sessionStorage.getItem('rm_order_tab') || 'yeni'; }catch(e){ return 'yeni'; } })();
+let orderTabBump = '', archiveShowAll = false;
+function orderTabOf(status){ const o = {status}; return (ORDER_TABS.find(t=>t.match(o))||ORDER_TABS[3]).id; }
+function setOrderTab(id){ orderTab = id; try{ sessionStorage.setItem('rm_order_tab', id); }catch(e){} }
+/* Hızlı aksiyon: bir sonraki adım */
+const NEXT_STEP = {
+  yeni:         { to:'hazirlaniyor', text:'👨‍🍳 Hazırlamaya Başla', cls:'prep' },
+  hazirlaniyor: { to:'yolda',        text:'🛵 Yola Çıkar',          cls:'road' },
+  yolda:        { to:'tamamlandi',   text:'✅ Teslim Edildi',        cls:'done' }
+};
+function moveOrder(id, status, rowEl){
+  const o = getOrders().find(x=>x.id===id); if(!o || o.status===status) return;
+  const from = orderTabOf(o.status), to = orderTabOf(status);
+  const apply = ()=>{
+    updateOrderStatus(id, status);
+    if(from!==to){
+      orderTabBump = to;
+      const t = ORDER_TABS.find(x=>x.id===to);
+      showToast(`Sipariş "${t.label}" sekmesine taşındı`, 'success');
+    }
+    render();
+  };
+  if(rowEl && from!==to){ rowEl.classList.add('leaving'); setTimeout(apply, 280); }   // kart akıcı şekilde kayarak çıkar
+  else apply();
+}
 function renderAdminOrders(root){
-  const orders = Object.values(state.orders || {}).filter(Boolean).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  const all = Object.values(state.orders || {}).filter(Boolean);
   const statusLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', yolda:'Yolda', tamamlandi:'Tamamlandı', iptal:'İptal'};
   const statusClass = {yeni:'info', hazirlaniyor:'warn', yolda:'road', tamamlandi:'ok', iptal:'danger'};
   const isWaiting = o => o.status==='yeni' || o.status==='hazirlaniyor' || o.status==='yolda';
+  if(!ORDER_TABS.some(t=>t.id===orderTab)) setOrderTab('yeni');
+  const tab = ORDER_TABS.find(t=>t.id===orderTab);
+  const counts = Object.fromEntries(ORDER_TABS.map(t=>[t.id, all.filter(t.match).length]));
+  // aktif sekmelerde en eski sipariş en üstte (sıradaki iş), arşivde en yeni en üstte
+  const byTime = (x,y)=> String(x.createdAt||'').localeCompare(String(y.createdAt||''));
+  let orders = all.filter(tab.match).sort(tab.id==='arsiv' ? (x,y)=>byTime(y,x) : byTime);
+  const hidden = (tab.id==='arsiv' && !archiveShowAll && orders.length>50) ? orders.length-50 : 0;
+  if(hidden) orders = orders.slice(0,50);
+  const emptyText = { yeni:['🍽️','Yeni sipariş yok. Gelen siparişler buraya anında düşecek.'], hazirlaniyor:['👨‍🍳','Şu an hazırlanan sipariş yok.'],
+    yolda:['🛵','Yolda olan sipariş yok.'], arsiv:['📦','Henüz tamamlanan veya iptal edilen sipariş yok.'] }[tab.id];
+  const bump = orderTabBump; orderTabBump = '';
   root.innerHTML = `
   <div class="orders-toolbar">
     <span class="live-dot ${fbRef?'':'off'}">${fbRef?'Canlı akış açık':'Bağlantı yok'}</span>
@@ -2235,8 +2303,12 @@ function renderAdminOrders(root){
       <button class="btn btn-sm" id="test-sound">Sesi Dene</button>
     </div>
   </div>
+  <div class="otabs" role="tablist">${ORDER_TABS.map(t=>`
+    <button type="button" class="otab ${t.id===orderTab?'active':''} ${t.id===bump?'bump':''}" data-otab="${t.id}" role="tab" aria-selected="${t.id===orderTab}">
+      <span class="oi">${t.icon}</span><span>${t.label}</span><span class="oc ${t.id==='yeni' && counts.yeni? 'hot':''}">${counts[t.id]}</span>
+    </button>`).join('')}</div>
   <div class="card">
-    ${orders.length? `<div class="kv-list">${orders.map(o=>`
+    ${orders.length? `<div class="kv-list ord-list">${orders.map(o=>{ const nx = NEXT_STEP[o.status||'yeni']; return `
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
@@ -2245,14 +2317,24 @@ function renderAdminOrders(root){
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
         </div>
-        <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
-          ${Object.keys(statusLabel).map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
-        </select>
-      </div>`).join('')}</div>` : `<div class="hint">Henüz sipariş yok. Yeni siparişler buraya anında düşecek.</div>`}
+        <div class="ord-side">
+          <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
+            ${Object.keys(statusLabel).map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
+          </select>
+          ${nx? `<button type="button" class="btn btn-sm ord-act ${nx.cls}" data-order-next="${o.id}" data-to="${nx.to}">${nx.text}</button>`:''}
+        </div>
+      </div>`; }).join('')}</div>
+      ${hidden? `<button type="button" class="btn btn-sm btn-block" id="arch-more" style="margin-top:12px;">Daha eski ${hidden} siparişi göster</button>`:''}`
+    : `<div class="ord-empty"><span class="ei">${emptyText[0]}</span>${emptyText[1]}</div>`}
   </div>`;
+  root.querySelectorAll('[data-otab]').forEach(b=>b.addEventListener('click',()=>{ setOrderTab(b.dataset.otab); archiveShowAll = false; render(); }));
   root.querySelectorAll('[data-order-status]').forEach(sel=>sel.addEventListener('change', e=>{
-    updateOrderStatus(sel.dataset.orderStatus, e.target.value); render();
+    moveOrder(sel.dataset.orderStatus, e.target.value, sel.closest('[data-order-row]'));
   }));
+  root.querySelectorAll('[data-order-next]').forEach(b=>b.addEventListener('click', ()=>{
+    b.disabled = true; moveOrder(b.dataset.orderNext, b.dataset.to, b.closest('[data-order-row]'));
+  }));
+  const more = root.querySelector('#arch-more'); if(more) more.addEventListener('click',()=>{ archiveShowAll = true; render(); });
   root.querySelector('#toggle-sound').addEventListener('click',()=>{
     soundEnabled = !soundEnabled;
     localStorage.setItem('qrmenu_sound_v1', soundEnabled ? 'on' : 'off');
