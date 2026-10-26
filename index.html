@@ -107,6 +107,10 @@
   .info-chip .dot{width:8px;height:8px;border-radius:50%;flex:none;}
   .info-chip.is-open{color:var(--ok);} .info-chip.is-open .dot{background:var(--ok);animation:livepulse 2s infinite;}
   .info-chip.is-closed{color:var(--danger);} .info-chip.is-closed .dot{background:var(--danger);}
+  .info-chip.emergency{background:rgba(232,112,93,.16);border-color:rgba(232,112,93,.55);color:#FFB3A6;font-weight:800;}
+  .info-chip.emergency .dot{background:var(--danger);animation:emgpulse 1.4s infinite;}
+  .info-chip.emergency span{white-space:normal;}
+  @keyframes emgpulse{0%{box-shadow:0 0 0 0 rgba(232,112,93,.7);}100%{box-shadow:0 0 0 9px rgba(232,112,93,0);}}
 
   /* Arama + kategori çubuğu */
   .toolbar{position:sticky;top:calc(8px + var(--safe-t));z-index:20;margin:12px 0 6px;padding:10px;border-radius:22px;
@@ -201,6 +205,8 @@
   .pick-btn:active{transform:scale(.95);}
   .pick-btn .pb-n{min-width:20px;height:20px;padding:0 6px;border-radius:10px;display:grid;place-items:center;background:var(--gold-ink);color:var(--gold-2);font-size:11px;}
   .pick-btn[disabled]{background:rgba(255,255,255,.06);color:var(--text-faint);box-shadow:none;cursor:not-allowed;transform:none;}
+  .pick-btn.closed-btn{height:auto;min-height:38px;padding:6px 10px;font-size:11.5px;line-height:1.2;text-align:center;white-space:normal;max-width:132px;
+    background:rgba(232,112,93,.12);color:#FFB3A6;border:1px solid rgba(232,112,93,.4);}
   .bowl-tag{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--gold);}
   .stepper{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:13px;background:rgba(5,6,8,.5);
     border:1px solid rgba(212,175,55,.35);animation:pop .3s var(--ease);}
@@ -335,6 +341,20 @@
   .cart-sum .total{font-size:17px;color:var(--text);font-weight:800;padding-top:10px;border-top:1px dashed var(--glass-border);}
   .cart-sum .total span:last-child{color:var(--gold-2);}
   .form-title{font-family:var(--font-display);font-weight:600;font-size:17px;margin:20px 0 12px;}
+  .notice.danger{background:rgba(232,112,93,.14);color:#FFB3A6;border:1px solid rgba(232,112,93,.45);}
+  /* Yönetim: acil kapatma şeridi */
+  .emg-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:14px 16px;border-radius:18px;
+    background:rgba(232,112,93,.08);border:1px solid rgba(232,112,93,.35);}
+  .emg-bar.on{background:linear-gradient(135deg,rgba(232,112,93,.28),rgba(160,40,30,.22));border-color:rgba(232,112,93,.8);box-shadow:0 0 0 3px rgba(232,112,93,.15);}
+  .emg-bar .emg-txt{flex:1;min-width:180px;}
+  .emg-bar .emg-txt strong{display:block;font-size:14.5px;color:#FFB3A6;}
+  .emg-bar .emg-txt small{display:block;margin-top:3px;font-size:12px;color:var(--text-dim);line-height:1.4;}
+  .emg-bar.on .emg-txt small{color:#FFD4CC;}
+  .emg-switch{flex:none;display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border-radius:99px;font-weight:800;font-size:12.5px;
+    border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:var(--text-dim);cursor:pointer;}
+  .emg-switch .k{width:28px;height:28px;border-radius:50%;background:#5b5f66;transition:background .25s;}
+  .emg-switch.on{flex-direction:row-reverse;padding:4px 4px 4px 12px;background:var(--danger);border-color:var(--danger);color:#fff;}
+  .emg-switch.on .k{background:#fff;}
   .notice{margin-top:12px;padding:11px 14px;border-radius:13px;background:var(--warn-soft);color:var(--warn);font-size:12.8px;font-weight:600;line-height:1.45;}
   .btn-sub{font-weight:700;opacity:.8;font-size:14px;}
 
@@ -668,18 +688,20 @@ function fmtPrice(n){ const v = Number(n)||0; return v.toLocaleString('tr-TR',{m
 function fmtDateTime(iso){ const d = new Date(iso); return d.toLocaleString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
 function trLower(s){ return String(s||'').toLocaleLowerCase('tr'); }
 function toList(v){ return v ? (Array.isArray(v) ? v : Object.values(v)).filter(Boolean) : []; }   // güvenli dizi dönüşümü
+const EMERGENCY_MSG = 'İşletmemiz şu an yoğunluk/hava koşulları nedeniyle geçici olarak sipariş almamaktadır.';
+function isEmergencyClosed(){ return !!(state && state.settings && state.settings.emergencyClosed===true); }
 function showToast(msg, type){
   const root = document.getElementById('toast-root');
   const el = document.createElement('div'); el.className='toast'+(type?' toast-'+type:''); el.textContent=msg;
   root.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, type==='success' ? 4200 : 2600);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .25s'; setTimeout(()=>el.remove(),250); }, type==='success' ? 4200 : msg.length>70 ? 5200 : 2600);
 }
 
 /* ============================= STATE ============================= */
 function defaultData(){
   return {
     settings:{ businessName:'RiceMore', tagline:'Pilavdan daha fazlası', hours:'', location:'', mapsUrl:'',
-               whatsappNumber:'', currency:'₺', adminPin:'1234' },
+               whatsappNumber:'', currency:'₺', adminPin:'1234', emergencyClosed:false },
     categories:[],
     items:[],
     options: defaultOptions(),
@@ -1186,8 +1208,10 @@ function updateHero(){
   hero.querySelector('.brand-name').textContent = brandName();
   document.getElementById('hero-title').textContent = brandName();
   document.getElementById('hero-tag').textContent = brandTagline();
-  document.getElementById('hero-info').innerHTML = (s.hours||s.location)? `
-      ${st? `<span class="info-chip ${st.open?'is-open':'is-closed'}"><i class="dot"></i><span>${st.open? 'Şu an açık · '+st.closeAt+"'e kadar" : 'Şu an kapalı · '+st.openAt+"'da açılır"}</span></span>`:''}
+  const emg = isEmergencyClosed();
+  document.getElementById('hero-info').innerHTML = (s.hours||s.location||emg)? `
+      ${emg? `<span class="info-chip is-closed emergency" role="status"><i class="dot"></i><span>Hava Muhalefeti / Yoğunluk Nedeniyle Kapalıyız</span></span>`
+        : st? `<span class="info-chip ${st.open?'is-open':'is-closed'}"><i class="dot"></i><span>${st.open? 'Şu an açık · '+st.closeAt+"'e kadar" : 'Şu an kapalı · '+st.openAt+"'da açılır"}</span></span>`:''}
       ${s.hours? `<span class="info-chip">${ICONS.clock}<span>${escapeHtml(s.hours)}</span></span>`:''}
       ${s.location? `<a class="info-chip link" href="${escapeHtml(mapsLink())}" target="_blank" rel="noopener">${ICONS.pin}<span>${escapeHtml(s.location)}</span></a>`:''}` : '';
 }
@@ -1215,6 +1239,8 @@ function updateChips(){
 
 const BADGE_LABEL = {yeni:'Yeni', populer:'Popüler', sef:'Şefin Tavsiyesi'};
 function ctlHtml(it){
+  if(it.available!==false && isEmergencyClosed())
+    return `<button type="button" class="pick-btn closed-btn" disabled aria-label="Şu an Sipariş Alamıyoruz">Şu an Sipariş Alamıyoruz</button>`;
   if(it.available===false) return isBowl(it)
     ? `<button type="button" class="pick-btn" disabled aria-label="Tükendi">Tükendi</button>`
     : `<button type="button" class="add-btn" disabled aria-label="Tükendi">${ICONS.plus}</button>`;
@@ -1293,6 +1319,7 @@ function updateDock(bump){
 
 function addToCart(itemId){
   const it = state.items.find(x=>x.id===itemId); if(!it || it.available===false) return;
+  if(isEmergencyClosed()){ showToast(EMERGENCY_MSG); return; }
   if(!cart[itemId]) cart[itemId] = { qty:0, price:it.price, name:it.name };
   cart[itemId].qty += 1;
   saveCart(); updateItemControl(itemId); updateDock(true);
@@ -1349,7 +1376,8 @@ function renderDetail(){
       <h2 class="dt-name">${escapeHtml(it.name)}</h2>
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
-      ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
+      ${!sold && isEmergencyClosed()? `<div class="notice danger">🚨 ${EMERGENCY_MSG}</div>`
+        : sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
             : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz) ve mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) seçeceksin.</div>` : ''}
     </div>`;
   renderDetailFoot();
@@ -1358,15 +1386,17 @@ function renderDetailFoot(){
   const it = detailSel && state.items.find(x=>x.id===detailSel.itemId); if(!it) return;
   const sold = it.available===false, bowl = isBowl(it);
   const q = document.getElementById('dt-qty'); if(q) q.textContent = detailSel.qty;
-  const st = document.getElementById('dt-stepper'); if(st) st.style.display = sold ? 'none' : '';
+  const off = sold || isEmergencyClosed();
+  const st = document.getElementById('dt-stepper'); if(st) st.style.display = off ? 'none' : '';
   const b = document.getElementById('dt-add'), l = document.getElementById('dt-add-label'), t = document.getElementById('dt-total');
-  if(b) b.disabled = sold;
-  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
-  if(t) t.textContent = sold ? '' : fmtPrice(it.price * detailSel.qty);
+  if(b) b.disabled = off;
+  if(l) l.textContent = sold ? 'Tükendi' : off ? 'Şu an Sipariş Alamıyoruz' : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
+  if(t) t.textContent = off ? '' : fmtPrice(it.price * detailSel.qty);
 }
 function detailAdd(){
   const it = state.items.find(x=>x.id===detailSel.itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
+  if(isEmergencyClosed()){ showToast(EMERGENCY_MSG); renderDetail(); return; }
   const qty = detailSel.qty;
   if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
   if(!cart[it.id]) cart[it.id] = { qty:0, price:it.price, name:it.name };
@@ -1381,6 +1411,7 @@ let bowlSel = null;   // { itemId, baseId, chickenId, garnish:[ids], qty }
 function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
+  if(isEmergencyClosed()){ showToast(EMERGENCY_MSG); return; }
   bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], meze:[], qty: Math.max(1, Math.min(20, initQty||1)) };
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
@@ -1416,6 +1447,7 @@ function renderBowl(){
   const root = document.getElementById('bowl-root'); if(!root || !bowlSel) return;
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün az önce tükendi'); return; }
+  if(isEmergencyClosed()){ closeModal(); bowlSel = null; showToast(EMERGENCY_MSG); return; }   // dükkan o an kapatıldıysa
   // canlı stok: seçili malzeme tükendiyse seçimi kaldır
   const bs = optById('base', bowlSel.baseId);
   if(bowlSel.baseId && (!bs || bs.available===false)){ showToast((bs?bs.name:'Seçtiğiniz taban')+' az önce tükendi, lütfen başka bir taban seçin'); bowlSel.baseId=''; }
@@ -1493,6 +1525,7 @@ function renderBowlFoot(){
 function addBowlToCart(){
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
+  if(isEmergencyClosed()){ closeModal(); bowlSel = null; showToast(EMERGENCY_MSG); return; }
   const bs = optById('base', bowlSel.baseId);
   if(!bs || bs.available===false){ showToast('Lütfen bir taban seçin'); return; }
   const ch = optById('chicken', bowlSel.chickenId);
@@ -1696,6 +1729,7 @@ function openCartModal(){
       <div><span>Ara toplam</span><span class="num" id="cart-sub"></span></div>
       <div class="total"><span>Toplam</span><span class="num" id="cart-total"></span></div>
     </div>
+    <div id="cart-closed"></div>
     ${st && !st.open? `<div class="notice">Şu an kapalıyız. Siparişiniz açılış saatinde (${st.openAt}) hazırlanmaya başlar.</div>`:''}
     ${geoState==='outside'? `<div class="notice">📍 Konumunuz Bergama Merkez dışında görünüyor. Teslimatı yalnızca Bergama Merkez sınırları içinde yapabiliyoruz.</div>`:''}
     <div class="form-title">Teslimat Bilgileri</div>
@@ -1740,11 +1774,18 @@ function renderCartLines(){
   document.getElementById('cart-sub').textContent = total;
   document.getElementById('cart-total').textContent = total;
   document.getElementById('cart-send-total').textContent = total;
+  const cc = document.getElementById('cart-closed');   // acil kapatma canlı uyarısı
+  if(cc) cc.innerHTML = isEmergencyClosed() ? `<div class="notice danger">🚨 ${EMERGENCY_MSG}</div>` : '';
 }
 
 function sendOrder(){
   const lines = Object.entries(cart);
   if(!lines.length){ showToast('Sepetiniz boş'); return; }
+  if(isEmergencyClosed()){                            // acil kapatma / tatil modu: sipariş alınmaz
+    showToast(EMERGENCY_MSG);
+    const cc = document.getElementById('cart-closed'); if(cc){ cc.innerHTML = `<div class="notice danger">🚨 ${EMERGENCY_MSG}</div>`; cc.scrollIntoView({block:'center', behavior:'smooth'}); }
+    return;
+  }
   const nameEl = document.getElementById('cart-name'), addrEl = document.getElementById('cart-address'), phoneEl = document.getElementById('cart-phone');
   const name = nameEl.value.trim();
   const phoneOk = validPhone(phoneEl.value), phone = phoneOk ? fmtPhone(phoneEl.value) : '';
@@ -1919,12 +1960,24 @@ function renderAdmin(root){
         </div>
         <button class="btn btn-sm" id="exit-admin">Müşteri Görünümüne Dön</button>
       </div>
-      <div id="admin-body"></div>
+      <div id="admin-body">${(()=>{ const on = isEmergencyClosed(); return `
+        <div class="emg-bar ${on?'on':''}" id="emg-bar">
+          <div class="emg-txt"><strong>🚨 Acil Dükkanını Kapat (Yağmur / Yoğunluk Modu)</strong>
+            <small>${on? 'DÜKKAN KAPALI — müşteriler şu an sipariş veremiyor. Açmak için anahtarı kapatın.' : 'Açarsanız menüdeki tüm sipariş butonları anında kapanır, müşterilere "Kapalıyız" yazar.'}</small></div>
+          <button type="button" class="emg-switch ${on?'on':''}" id="emg-toggle" role="switch" aria-checked="${on}"><span class="k"></span><span>${on?'KAPALI':'Normal'}</span></button>
+        </div>`; })()}</div>
     </div>`;
+  root.querySelector('#emg-toggle').addEventListener('click', ()=>{
+    const v = !isEmergencyClosed();
+    state.settings.emergencyClosed = v;
+    if(fbRef) fbRef.child('settings').child('emergencyClosed').set(v).catch(e=>showToast('Kaydetme hatası: '+e.message));
+    render();
+    showToast(v ? '🚨 Dükkan kapatıldı — yeni sipariş alınmıyor' : '✅ Dükkan tekrar açıldı — siparişler alınıyor', v ? '' : 'success');
+  });
   root.querySelectorAll('[data-atab]').forEach(t=>t.addEventListener('click',()=>{ adminTab=t.dataset.atab; render(); }));
   root.querySelector('#exit-admin').addEventListener('click',()=>{ view='menu'; render(); window.scrollTo(0,0); });
 
-  const body = document.getElementById('admin-body');
+  const body = document.getElementById('admin-body').appendChild(document.createElement('div'));   // acil kapatma şeridinin altına
   if(adminTab==='menu') renderAdminMenu(body);
   else if(adminTab==='stock') renderAdminStock(body);
   else if(adminTab==='orders') renderAdminOrders(body);
