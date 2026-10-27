@@ -341,6 +341,34 @@
   .cart-sum .total{font-size:17px;color:var(--text);font-weight:800;padding-top:10px;border-top:1px dashed var(--glass-border);}
   .cart-sum .total span:last-child{color:var(--gold-2);}
   .form-title{font-family:var(--font-display);font-weight:600;font-size:17px;margin:20px 0 12px;}
+  /* Kupon */
+  .coupon-row{display:flex;gap:8px;align-items:stretch;}
+  .coupon-row input{flex:1;min-width:0;text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .coupon-row input::placeholder{text-transform:none;letter-spacing:0;font-weight:500;}
+  .coupon-row .btn{flex:none;min-width:84px;border-color:rgba(212,175,55,.5);color:var(--gold-2);background:var(--gold-soft);}
+  .coupon-ok{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;border:1px dashed rgba(212,175,55,.65);
+    background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(212,175,55,.05));}
+  .coupon-ok .ci{font-size:20px;line-height:1;}
+  .coupon-ok .ct{flex:1;min-width:0;font-size:13px;color:var(--text-dim);line-height:1.35;}
+  .coupon-ok .ct strong{display:block;color:var(--gold-2);font-size:14.5px;letter-spacing:.06em;}
+  .coupon-ok .btn{flex:none;}
+  #coupon-hint.bad{color:var(--danger);font-weight:600;} #coupon-hint.ok{color:var(--ok);font-weight:600;}
+  .cart-sum .disc{color:var(--ok) !important;}
+  .cart-sum .disc span:first-child{display:inline-flex;align-items:center;gap:6px;}
+  .tc-row.disc span{color:var(--ok) !important;}
+  .adm-coupon{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;
+    background:var(--ok-soft);color:var(--ok);border:1px solid rgba(127,199,154,.4);}
+  .cp-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 13px;border-radius:14px;background:var(--bg-elev);border:1px solid var(--glass-border);}
+  .cp-row.off{opacity:.6;}
+  .cp-row .cp-info{flex:1;min-width:150px;}
+  .cp-row .cp-code{font-weight:800;font-size:15px;letter-spacing:.08em;color:var(--gold-2);}
+  .cp-row .cp-meta{font-size:12px;color:var(--text-dim);margin-top:2px;}
+  .cp-form{display:grid;grid-template-columns:1.4fr .9fr .8fr;gap:8px;align-items:end;}
+  .cp-form .field{margin:0;}
+  .cp-form #cp-code{text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .cp-form #cp-code::placeholder{text-transform:none;letter-spacing:0;font-weight:500;}
+  .cp-act{display:flex;align-items:center;gap:8px;margin-left:auto;}
+  @media (max-width:520px){ .cp-form{grid-template-columns:1fr 1fr;} .cp-form .field:first-child{grid-column:1 / -1;} }
   .send-wrap{width:100%;display:flex;flex-direction:column;gap:10px;}
   .send-wrap .notice{margin:0;}
   .send-wrap #cart-send[disabled]{background:rgba(255,255,255,.07);color:var(--text-faint);box-shadow:none;filter:none;}
@@ -1772,6 +1800,119 @@ function fmtPhone(v){
 }
 function telHref(v){ const d = normPhone(v); return 'tel:+90' + d.slice(1); }
 
+/* ============================= KUPON SİSTEMİ =============================
+   Firebase: qrmenu_data/coupons/<KOD> = { code, type:'percent'|'amount', value, active, createdAt }
+             qrmenu_data/couponUses/<KOD>/<telefon-özeti> = { at, orderId }
+   Telefon numarası açık yazılmaz; yalnızca tek yönlü özeti (hash) saklanır. Müşteri cihazı kupon
+   listesinin tamamını değil, sadece yazdığı kodu okur. */
+let appliedCoupon = null;          // { code, type, value }
+let couponWatchRef = null, couponWatchCode = '';
+let couponsData = {};              // yönetici: tüm kuponlar
+let couponsListening = false;
+function normCode(v){
+  return String(v||'').trim().replace(/\s+/g,'')
+    .replace(/[ıİ]/g,'I').replace(/[şŞ]/g,'S').replace(/[ğĞ]/g,'G').replace(/[üÜ]/g,'U').replace(/[öÖ]/g,'O').replace(/[çÇ]/g,'C')
+    .toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,24);
+}
+function cyrb53(str, seed){
+  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+  for(let i=0; i<str.length; i++){ const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+  return (h2>>>0).toString(16).padStart(8,'0') + (h1>>>0).toString(16).padStart(8,'0');
+}
+function phoneKey(phone, code){                 // aynı numara her yazımda aynı anahtar: 05XXXXXXXXX
+  const d = normPhone(phone), base = 'rm|' + normCode(code) + '|' + d;
+  return 'p' + cyrb53(base, 7) + cyrb53(base, 1911);
+}
+function couponLabel(c){ return c ? (c.type==='amount' ? fmtPrice(c.value)+' indirim' : '%'+c.value+' indirim') : ''; }
+function couponDiscount(sub){
+  const c = appliedCoupon; if(!c || !(sub>0)) return 0;
+  const v = Number(c.value)||0;
+  const d = c.type==='amount' ? Math.min(v, sub) : sub * Math.min(100, Math.max(0, v)) / 100;
+  return Math.round(d*100)/100;
+}
+function withTimeout(pr, ms){ return Promise.race([pr, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')), ms))]); }
+/* Kupon geçerli mi + bu telefonla daha önce kullanıldı mı? → { ok, reason, coupon } */
+async function checkCoupon(code, phone){
+  code = normCode(code);
+  if(!code) return { ok:false, reason:'Lütfen bir indirim kodu yazın.' };
+  if(!fbRef) return { ok:false, reason:'Bağlantı yok, kupon kontrol edilemedi.' };
+  try{
+    const snap = await withTimeout(fbRef.child('coupons').child(code).once('value'), 8000);
+    const c = snap.val();
+    if(!c) return { ok:false, reason:'Geçersiz indirim kodu.' };
+    if(c.active===false) return { ok:false, reason:'Bu indirim kodu şu an aktif değil.' };
+    const coupon = { code, type: c.type==='amount' ? 'amount' : 'percent', value: Number(c.value)||0 };
+    if(!(coupon.value>0)) return { ok:false, reason:'Geçersiz indirim kodu.' };
+    if(phone && validPhone(phone)){
+      const u = await withTimeout(fbRef.child('couponUses').child(code).child(phoneKey(phone, code)).once('value'), 8000);
+      if(u.val()) return { ok:false, used:true, reason:'Bu indirim kodu daha önce bu telefon numarasıyla kullanılmıştır.' };
+    }
+    return { ok:true, coupon };
+  }catch(e){ return { ok:false, reason:'Kupon şu an kontrol edilemedi, lütfen tekrar deneyin.' }; }
+}
+/* Uygulanan kupon panelden pasif yapılır / silinir / değiştirilirse sepete anında yansır */
+function watchCoupon(code){
+  if(couponWatchRef){ try{ couponWatchRef.off(); }catch(e){} couponWatchRef = null; couponWatchCode = ''; }
+  if(!code || !fbRef) return;
+  couponWatchCode = code;
+  couponWatchRef = fbRef.child('coupons').child(code);
+  couponWatchRef.on('value', snap=>{
+    if(!appliedCoupon || appliedCoupon.code!==code) return;
+    const c = snap.val();
+    if(!c || c.active===false || !(Number(c.value)>0)){
+      removeCoupon(); setCouponHint((c? 'Bu indirim kodu şu an aktif değil.' : 'Bu indirim kodu artık geçerli değil.') + ' İndirim kaldırıldı.', 'bad');
+      showToast('İndirim kodu artık geçerli değil, indirim kaldırıldı');
+      return;
+    }
+    appliedCoupon = { code, type: c.type==='amount' ? 'amount' : 'percent', value: Number(c.value) };
+    renderCouponBox(); renderCartLines();
+  });
+}
+function removeCoupon(){ appliedCoupon = null; watchCoupon(''); renderCouponBox(); renderCartLines(); }
+function setCouponHint(msg, cls){ const h = document.getElementById('coupon-hint'); if(h){ h.textContent = msg||''; h.className = 'hint ' + (cls||''); } }
+function renderCouponBox(){
+  const box = document.getElementById('coupon-box'); if(!box) return;
+  if(appliedCoupon){
+    box.innerHTML = `<div class="coupon-ok"><span class="ci">🎟️</span><div class="ct"><strong>${escapeHtml(appliedCoupon.code)}</strong>${escapeHtml(couponLabel(appliedCoupon))} uygulandı</div>
+      <button type="button" class="btn btn-sm btn-ghost" id="coupon-remove">Kaldır</button></div>`;
+    box.querySelector('#coupon-remove').addEventListener('click', ()=>{ removeCoupon(); setCouponHint('İndirim kaldırıldı.'); });
+  } else {
+    box.innerHTML = `<div class="coupon-row"><input type="text" id="cart-coupon" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Kupon kodunuz (örn. HALLOWEEN10)" aria-label="İndirim kuponu">
+      <button type="button" class="btn" id="coupon-apply">Uygula</button></div>`;
+    const inp = box.querySelector('#cart-coupon'), btn = box.querySelector('#coupon-apply');
+    btn.addEventListener('click', ()=>applyCoupon(inp.value));
+    inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); applyCoupon(inp.value); } });
+    inp.addEventListener('input', ()=>setCouponHint(''));
+  }
+}
+async function applyCoupon(raw){
+  const code = normCode(raw);
+  const btn = document.getElementById('coupon-apply');
+  if(!code){ setCouponHint('Lütfen bir indirim kodu yazın.', 'bad'); return; }
+  const phoneEl = document.getElementById('cart-phone'), phone = phoneEl ? phoneEl.value : '';
+  if(btn){ btn.disabled = true; btn.textContent = '…'; }
+  const r = await checkCoupon(code, phone);
+  if(btn){ btn.disabled = false; btn.textContent = 'Uygula'; }
+  if(!r.ok){ setCouponHint(r.reason, 'bad'); if(r.used) showToast(r.reason); return; }
+  appliedCoupon = r.coupon; watchCoupon(code);
+  renderCouponBox(); renderCartLines();
+  setCouponHint(validPhone(phone) ? 'İndirim uygulandı! 🎉' : 'İndirim uygulandı! Kod, telefon numaranıza göre sipariş onayında tekrar kontrol edilir.', 'ok');
+}
+/* Telefon yazılınca, uygulanmış kupon bu numarayla kullanılmış mı hemen bakılır */
+let couponPhoneTimer = null;
+function recheckCouponForPhone(){
+  clearTimeout(couponPhoneTimer);
+  couponPhoneTimer = setTimeout(async ()=>{
+    const phoneEl = document.getElementById('cart-phone');
+    if(!appliedCoupon || !phoneEl || !validPhone(phoneEl.value)) return;
+    const code = appliedCoupon.code, r = await checkCoupon(code, phoneEl.value);
+    if(!appliedCoupon || appliedCoupon.code!==code) return;
+    if(!r.ok){ removeCoupon(); setCouponHint(r.reason, 'bad'); showToast(r.reason); }
+  }, 450);
+}
+
 /* ============================= SEPET ============================= */
 function openCartModal(){
   if(!cartCount()){ showToast('Sepetiniz boş — menüden ürün ekleyin'); return; }
@@ -1780,6 +1921,7 @@ function openCartModal(){
     <div id="cart-lines"></div>
     <div class="cart-sum">
       <div><span>Ara toplam</span><span class="num" id="cart-sub"></span></div>
+      <div class="disc" id="cart-disc-row" hidden><span id="cart-disc-label">🎟️ İndirim</span><span class="num" id="cart-disc"></span></div>
       <div class="total"><span>Toplam</span><span class="num" id="cart-total"></span></div>
     </div>
     ${geoState==='outside'? `<div class="notice">📍 Konumunuz Bergama Merkez dışında görünüyor. Teslimatı yalnızca Bergama Merkez sınırları içinde yapabiliyoruz.</div>`:''}
@@ -1788,9 +1930,13 @@ function openCartModal(){
     <div class="field"><label for="cart-phone">Telefon Numaranız <em>(Zorunlu)</em></label><input type="tel" id="cart-phone" inputmode="tel" autocomplete="tel" maxlength="17" value="${escapeHtml(cust.phone? fmtPhone(cust.phone):'')}" placeholder="05XX XXX XX XX">
       <div class="hint" id="phone-hint">Siparişinizle ilgili sizi arayabilmemiz için.</div></div>
     <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea></div>
-    <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>`;
+    <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>
+    <div class="field coupon-field" style="margin:12px 0 4px;"><label for="cart-coupon">İndirim Kuponu</label>
+      <div id="coupon-box"></div><div class="hint" id="coupon-hint"></div></div>`;
   const foot = `<div class="send-wrap"><div id="cart-closed" role="alert"></div><button type="button" class="btn btn-primary btn-block btn-lg" id="cart-send"><span>Siparişi Onayla</span><span class="btn-sub num" id="cart-send-total"></span></button></div>`;
   openModal('Sepetiniz', body, foot);
+  renderCouponBox();
+  if(appliedCoupon) watchCoupon(appliedCoupon.code);
   renderCartLines();
   document.getElementById('cart-lines').addEventListener('click', e=>{
     const t = e.target.closest('[data-c-inc],[data-c-dec]'); if(!t) return;
@@ -1804,8 +1950,9 @@ function openCartModal(){
     if(d[0]==='9'){ if(d.length>=12) ph.value = fmtPhone(d); return; }   // +90 / 90 ile yazılıyorsa tamamlanınca çevir
     if(d[0]==='5') d = '0' + d;                                          // başa 0 yazılmadıysa ekle
     ph.value = d ? fmtPhone(d) : '';
-    if(validPhone(ph.value)){ const h = document.getElementById('phone-hint'); if(h){ h.textContent = 'Siparişinizle ilgili sizi arayabilmemiz için.'; h.style.color = ''; } }
+    if(validPhone(ph.value)){ const h = document.getElementById('phone-hint'); if(h){ h.textContent = 'Siparişinizle ilgili sizi arayabilmemiz için.'; h.style.color = ''; } recheckCouponForPhone(); }
   });
+  if(appliedCoupon && validPhone(ph.value)) recheckCouponForPhone();
   document.getElementById('cart-send').addEventListener('click', sendOrder);
 }
 function renderCartLines(){
@@ -1821,8 +1968,10 @@ function renderCartLines(){
         <div class="stepper sm"><button type="button" data-c-dec="${escapeHtml(id)}" aria-label="Azalt">${ICONS.minus}</button><span class="q">${c.qty}</span><button type="button" data-c-inc="${escapeHtml(id)}" aria-label="Arttır">${ICONS.plus}</button></div>
       </div></div>`;
   }).join('');
-  const total = fmtPrice(cartTotal());
-  document.getElementById('cart-sub').textContent = total;
+  const sub = cartTotal(), disc = couponDiscount(sub), total = fmtPrice(sub - disc);
+  document.getElementById('cart-sub').textContent = fmtPrice(sub);
+  const dr = document.getElementById('cart-disc-row');
+  if(dr){ dr.hidden = !disc; if(disc){ document.getElementById('cart-disc-label').textContent = '🎟️ İndirim (' + appliedCoupon.code + ' · ' + couponLabel(appliedCoupon) + ')'; document.getElementById('cart-disc').textContent = '−' + fmtPrice(disc); } }
   document.getElementById('cart-total').textContent = total;
   document.getElementById('cart-send-total').textContent = total;
   const cc = document.getElementById('cart-closed');   // acil kapatma canlı uyarısı
@@ -1831,7 +1980,7 @@ function renderCartLines(){
   const sb = document.getElementById('cart-send'); if(sb && !sb.dataset.sending) sb.disabled = closed;   // kapalıyken onay butonu kilitli
 }
 
-function sendOrder(){
+async function sendOrder(){
   const lines = Object.entries(cart);
   if(!lines.length){ showToast('Sepetiniz boş'); return; }
   if(isOrderingClosed()){                             // GÜVENLİK: kapalı dükkan (acil kapatma / mesai dışı) → Firebase'e hiçbir şey gitmez
@@ -1858,7 +2007,22 @@ function sendOrder(){
   const removedNow = sanitizeCart();                 // son anda tükenen ürün/malzeme kontrolü
   if(removedNow.length){ showToast('Tükendi, sepetinizden çıkarıldı: ' + removedNow.join(', ')); renderCartLines(); refreshAllControls(); updateDock(); return; }
   const btn = document.getElementById('cart-send'); if(btn){ btn.disabled = true; btn.dataset.sending = '1'; }   // çift tıklamayla mükerrer sipariş olmasın
-  const total = cartTotal();
+  const unlockBtn = ()=>{ if(btn){ delete btn.dataset.sending; btn.disabled = isOrderingClosed(); } };
+  // KUPON: son kontrol — hâlâ aktif mi, bu telefonla daha önce kullanıldı mı?
+  let coupon = null;
+  if(appliedCoupon){
+    const r = await checkCoupon(appliedCoupon.code, phone);
+    if(!r.ok){
+      removeCoupon(); setCouponHint(r.reason + ' İndirim kaldırıldı; yeni toplamı kontrol edip tekrar onaylayın.', 'bad');
+      showToast(r.reason); unlockBtn();
+      const cb = document.getElementById('coupon-box'); if(cb) cb.scrollIntoView({block:'center', behavior:'smooth'});
+      return;
+    }
+    appliedCoupon = r.coupon; coupon = r.coupon;
+  }
+  if(isOrderingClosed()){ showToast(closedMsg()); unlockBtn(); renderCartLines(); return; }   // kontrol sırasında dükkan kapandıysa
+  const subtotal = cartTotal(), discount = couponDiscount(subtotal);
+  const total = Math.round((subtotal - discount)*100)/100;
   const order = {
     id: uid('ord'),
     createdAt: new Date().toISOString(),
@@ -1875,16 +2039,21 @@ function sendOrder(){
     total,
     customerName: name,
     phone: phone,
+    ...(coupon? { subtotal, discount, coupon: { code: coupon.code, type: coupon.type, value: coupon.value } } : {}),
     address: address,
     note: note,
     status: 'yeni'
   };
   if(!pushOrder(order)){ if(btn){ btn.disabled = false; delete btn.dataset.sending; } return; }   // bağlantı yoksa sepet korunur
+  if(coupon){                                                        // bu telefon için kupon kullanıldı olarak işaretlenir
+    fbRef.child('couponUses').child(coupon.code).child(phoneKey(phone, coupon.code)).set({ at: order.createdAt, orderId: order.id }).catch(()=>{});
+    appliedCoupon = null; watchCoupon('');
+  }
   notifyKitchen(order);                                              // mutfak telefonuna (ntfy) sesli bildirim
   askNotifyPermission();                                             // sipariş durumu değişince bu telefona haber verebilmek için
 
   saveCustomer({name, address, phone});
-  setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name });
+  setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name, ...(coupon? { subtotal, discount, couponCode: coupon.code } : {}) });
   cart = {}; saveCart();
   refreshAllControls(); updateDock();
   showToast('Siparişiniz Mutfak Paneline İletildi!', 'success');
@@ -1970,6 +2139,8 @@ function renderTrack(){
       </ol>` : '<div style="height:18px"></div>'}
       <div class="track-card">
         ${toList(a.items).map(li=>`<div class="tc-row"><span>${li.qty}× ${escapeHtml(li.name)}</span><span class="num">${fmtPrice(li.price*li.qty)}</span></div>${li.options? `<div class="tc-opts">${escapeHtml(optsText(li.options))}</div>`:''}`).join('')}
+        ${a.discount? `<div class="tc-row"><span>Ara toplam</span><span class="num">${fmtPrice(a.subtotal)}</span></div>
+        <div class="tc-row disc"><span>🎟️ İndirim (${escapeHtml(a.couponCode||'')})</span><span class="num">−${fmtPrice(a.discount)}</span></div>`:''}
         <div class="tc-row total"><span>Toplam</span><span class="num">${fmtPrice(a.total)}</span></div>
         ${a.address? `<div class="tc-addr">${ICONS.pin}<span>${escapeHtml(a.address)}</span></div>`:''}
       </div>
@@ -1989,7 +2160,7 @@ function openAdminLogin(){
   const submit = ()=>{
     const val = document.getElementById('admin-pin').value.trim();
     if(val === (state.settings.adminPin||'1234')){
-      adminAuthed = true; unlockAudio(); startOrdersListener(); askNotifyPermission();   // giriş tıklaması = ses + bildirim izni
+      adminAuthed = true; unlockAudio(); startOrdersListener(); startCouponsListener(); askNotifyPermission();   // giriş tıklaması = ses + bildirim izni
       closeModal(); view='admin'; adminTab='menu'; render();
     }
     else showToast('PIN hatalı');
@@ -2010,6 +2181,7 @@ function renderAdmin(root){
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
           <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
+          <div class="admin-tab ${adminTab==='coupons'?'active':''}" data-atab="coupons">🎟️ Kuponlar</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
         </div>
         <button class="btn btn-sm" id="exit-admin">Müşteri Görünümüne Dön</button>
@@ -2035,6 +2207,7 @@ function renderAdmin(root){
   if(adminTab==='menu') renderAdminMenu(body);
   else if(adminTab==='stock') renderAdminStock(body);
   else if(adminTab==='orders') renderAdminOrders(body);
+  else if(adminTab==='coupons') renderAdminCoupons(body);
   else renderAdminSettings(body);
 }
 
@@ -2345,6 +2518,7 @@ function renderAdminOrders(root){
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
+          ${o.coupon? `<div class="adm-coupon">🎟️ ${escapeHtml(o.coupon.code||'')} · −${fmtPrice(o.discount||0)}${o.subtotal? ` <span style="font-weight:600;opacity:.8;">(ara toplam ${fmtPrice(o.subtotal)})</span>`:''}</div>`:''}
         </div>
         <div class="ord-side">
           <select data-order-status="${o.id}" class="pill ${statusClass[o.status]||'info'}" style="border:none;">
@@ -2370,6 +2544,85 @@ function renderAdminOrders(root){
     unlockAudio(); render();
   });
   root.querySelector('#test-sound').addEventListener('click',()=>{ unlockAudio(); playOrderSound(true); });
+}
+
+/* --- Yönetim: Kuponlar --- */
+function startCouponsListener(){
+  if(couponsListening || !fbRef) return;
+  couponsListening = true;
+  fbRef.child('coupons').on('value', snap=>{
+    couponsData = snap.val() || {};
+    const list = document.getElementById('coupon-list');
+    if(view==='admin' && adminTab==='coupons' && list) renderCouponList(list);   // form yazılırken silinmesin: sadece liste yenilenir
+  }, err=>{ couponsListening = false; showToast('Kuponlar okunamadı: ' + err.message); });
+}
+const couponBackfilled = new Set();
+function backfillCouponUses(){                  // eski siparişlerdeki kupon kullanımlarını telefon kaydına işle
+  if(!fbRef) return;
+  getOrders().forEach(o=>{
+    if(!o || !o.coupon || !o.coupon.code || !o.phone || couponBackfilled.has(o.id)) return;
+    couponBackfilled.add(o.id);
+    const code = normCode(o.coupon.code);
+    fbRef.child('couponUses').child(code).child(phoneKey(o.phone, code)).set({ at: o.createdAt||'', orderId: o.id }).catch(()=>{});
+  });
+}
+function couponUseCount(code){ return getOrders().filter(o=>o && o.coupon && normCode(o.coupon.code)===code && o.status!=='iptal').length; }
+function renderCouponList(list){
+  const items = Object.values(couponsData||{}).filter(c=>c && c.code).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  list.innerHTML = items.length ? items.map(c=>{ const on = c.active!==false, n = couponUseCount(c.code); return `
+    <div class="cp-row ${on?'':'off'}">
+      <div class="cp-info"><div class="cp-code">${escapeHtml(c.code)}</div>
+        <div class="cp-meta">${escapeHtml(couponLabel({type:c.type, value:Number(c.value)||0}))} · Her telefon numarası 1 kez · ${n} kez kullanıldı</div></div>
+      <div class="cp-act"><button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" data-cp-toggle="${escapeHtml(c.code)}"><span class="sw-knob"></span><span class="sw-label">${on?'Aktif':'Pasif'}</span></button>
+      <button type="button" class="icon-btn" data-cp-del="${escapeHtml(c.code)}" title="Sil">${ICONS.trash}</button></div>
+    </div>`; }).join('') : '<div class="hint">Henüz kupon yok. Yukarıdan ilk kuponunuzu oluşturun.</div>';
+  list.querySelectorAll('[data-cp-toggle]').forEach(b=>b.addEventListener('click', ()=>{
+    const code = b.dataset.cpToggle, c = couponsData[code]; if(!c) return;
+    const v = c.active===false;
+    fbRef.child('coupons').child(code).child('active').set(v).catch(e=>showToast('Kaydetme hatası: '+e.message));
+    showToast(code + (v ? ' aktif edildi' : ' pasif yapıldı — müşteriler artık kullanamaz'), v ? 'success' : '');
+  }));
+  list.querySelectorAll('[data-cp-del]').forEach(b=>b.addEventListener('click', ()=>{
+    const code = b.dataset.cpDel;
+    if(!confirm('"'+code+'" kuponu silinsin mi?')) return;
+    fbRef.child('coupons').child(code).set(null).catch(e=>showToast('Silme hatası: '+e.message));
+    showToast(code + ' silindi');
+  }));
+}
+function renderAdminCoupons(root){
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h3>Yeni Kupon Oluştur</h3><div class="hint" style="margin-top:4px;">Müşteri kodu sepette büyük/küçük harf fark etmeksizin yazabilir. Her telefon numarası bir kuponu yalnızca 1 kez kullanabilir.</div></div></div>
+      <div class="cp-form">
+        <div class="field"><label for="cp-code">Kupon Kodu</label><input type="text" id="cp-code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Örn. HALLOWEEN10"></div>
+        <div class="field"><label for="cp-type">İndirim Türü</label><select id="cp-type"><option value="percent">Yüzde (%)</option><option value="amount">Tutar (${escapeHtml(state.settings.currency||'₺')})</option></select></div>
+        <div class="field"><label for="cp-value">Değer</label><input type="number" id="cp-value" min="1" step="1" inputmode="decimal" placeholder="10"></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button type="button" class="btn btn-primary btn-sm" id="cp-save">${ICONS.plus} Kuponu Kaydet</button></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3>Kuponlar</h3><div class="hint" style="margin-top:4px;">Pasif yaptığınız veya sildiğiniz kupon müşterilerin sepetinden anında düşer.</div></div></div>
+      <div class="kv-list" id="coupon-list"></div>
+    </div>`;
+  startCouponsListener();
+  backfillCouponUses();
+  renderCouponList(root.querySelector('#coupon-list'));
+  const codeEl = root.querySelector('#cp-code');
+  codeEl.addEventListener('input', ()=>{ const p = codeEl.selectionStart, v = normCode(codeEl.value); if(codeEl.value!==v){ codeEl.value = v; try{ codeEl.setSelectionRange(p,p); }catch(e){} } });
+  root.querySelector('#cp-save').addEventListener('click', ()=>{
+    const code = normCode(codeEl.value), type = root.querySelector('#cp-type').value;
+    const value = Math.round(parseFloat(String(root.querySelector('#cp-value').value).replace(',','.'))*100)/100;
+    if(code.length<3){ showToast('Kupon kodu en az 3 karakter olmalı (harf/rakam)'); codeEl.focus(); return; }
+    if(!(value>0) || (type==='percent' && value>100)){ showToast(type==='percent' ? 'Yüzde 1 ile 100 arasında olmalı' : 'Geçerli bir tutar yazın'); return; }
+    if(!fbRef){ showToast('Bağlantı yok'); return; }
+    const exists = !!couponsData[code];
+    if(exists && !confirm('"'+code+'" zaten var. Yeni değerle güncellensin mi?')) return;
+    const prev = couponsData[code] || {};
+    fbRef.child('coupons').child(code).set({ code, type, value, active:true, createdAt: prev.createdAt || new Date().toISOString() })
+      .then(()=>{ showToast(code + (exists? ' güncellendi' : ' oluşturuldu') + ' · ' + couponLabel({type, value}), 'success'); })
+      .catch(e=>showToast('Kaydetme hatası: '+e.message));
+    codeEl.value = ''; root.querySelector('#cp-value').value = '';
+  });
 }
 
 /* --- Yönetim: Ayarlar --- */
