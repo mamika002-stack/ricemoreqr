@@ -371,6 +371,14 @@
   @media (max-width:520px){ .cp-form{grid-template-columns:1fr 1fr;} .cp-form .field:first-child{grid-column:1 / -1;} }
   .send-wrap{width:100%;display:flex;flex-direction:column;gap:10px;}
   .send-wrap .notice{margin:0;}
+  .notice.soft{background:rgba(255,255,255,.05);color:var(--text-dim);border:1px solid var(--glass-border);font-weight:600;}
+  .closed-alert{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border-radius:16px;
+    background:linear-gradient(135deg,rgba(212,175,55,.16),rgba(232,112,93,.12));border:1px solid rgba(212,175,55,.55);box-shadow:0 10px 26px rgba(0,0,0,.35);}
+  .closed-alert .ca-ico{font-size:24px;line-height:1;}
+  .closed-alert strong{display:block;color:var(--gold-2);font-size:14.5px;margin-bottom:3px;}
+  .closed-alert p{margin:0;font-size:12.8px;line-height:1.45;color:var(--text);}
+  .closed-alert.shake{animation:cashake .45s ease;}
+  @keyframes cashake{0%,100%{transform:none;}20%{transform:translateX(-6px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(3px);}}
   .send-wrap #cart-send[disabled]{background:rgba(255,255,255,.07);color:var(--text-faint);box-shadow:none;filter:none;}
   .pick-btn.closed-btn{flex-direction:column;gap:1px;justify-content:center;}
   .pick-btn.closed-btn small{display:block;font-size:10px;font-weight:700;opacity:.85;margin-top:1px;}
@@ -425,6 +433,17 @@
   .opt.sold .opt-name{text-decoration:line-through;text-decoration-color:var(--danger);color:var(--text-faint);}
   .opt-extra{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:800;background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.4);white-space:nowrap;}
   .opt.sel .opt-extra{background:var(--gold);color:#1A1405;border-color:var(--gold);}
+  .bowl-name-step{margin-top:4px;}
+  .bowl-name-step .bn-wrap{position:relative;}
+  .bowl-name-step .bn-wrap span{z-index:1;position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;}
+  .bowl-name-step .field input[type=text]{width:100%;box-sizing:border-box;padding-left:44px;border-color:rgba(212,175,55,.35);font-weight:700;letter-spacing:.02em;}
+  .bowl-name-step input:focus{border-color:var(--gold);}
+  .bowl-name-step .hint{margin-top:6px;}
+  .cl-boxname{display:inline-flex;align-items:center;gap:5px;margin-top:4px;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:700;
+    background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.35);}
+  .tc-boxname{font-size:12px;color:var(--gold-2);font-weight:700;margin:-2px 0 4px;}
+  .adm-boxname{display:inline-flex;align-items:center;gap:7px;margin:4px 0 2px;padding:5px 12px;border-radius:10px;font-size:14px;font-weight:900;letter-spacing:.06em;
+    background:var(--gold);color:#1A1405;box-shadow:0 4px 12px rgba(212,175,55,.3);}
   .bowl-sum{margin:6px 0 4px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--glass-border);font-size:13px;}
   .bowl-sum .bs-row{display:flex;justify-content:space-between;gap:10px;padding:3px 0;color:var(--text-dim);}
   .bowl-sum .bs-row.x{color:var(--gold-2);font-weight:700;}
@@ -748,7 +767,7 @@ function trLower(s){ return String(s||'').toLocaleLowerCase('tr'); }
 function toList(v){ return v ? (Array.isArray(v) ? v : Object.values(v)).filter(Boolean) : []; }   // güvenli dizi dönüşümü
 const EMERGENCY_MSG = 'İşletmemiz şu an yoğunluk/hava koşulları nedeniyle geçici olarak sipariş almamaktadır.';
 function isEmergencyClosed(){ return !!(state && state.settings && state.settings.emergencyClosed===true); }
-const HOURS_MSG = 'İşletmemiz şu an kapalı/mesai dışı olduğu için yeni sipariş alınmamaktadır.';
+const HOURS_MSG = 'İşletmemiz şu an kapalıdır. İsterseniz sepetinizi önceden hazırlayabilir, mesai saatlerimiz başladığında onaylayabilirsiniz.';
 /* Sipariş alınmıyor mu? 'emergency' (acil kapatma) | 'hours' (çalışma saati dışı) | '' (açık) */
 function closedReason(){
   if(isEmergencyClosed()) return 'emergency';
@@ -757,8 +776,9 @@ function closedReason(){
 }
 function isOrderingClosed(){ return !!closedReason(); }
 function closedMsg(){
-  const r = closedReason(); if(r==='emergency') return EMERGENCY_MSG;
+  const r = closedReason();
   if(r==='hours'){ const st = openStatus(state.settings.hours); return HOURS_MSG + (st? ' Açılış saatimiz: '+st.openAt+'.' : ''); }
+  if(r==='emergency') return EMERGENCY_MSG + ' Sepetiniz kayıtlı kalır; tekrar açıldığımızda onaylayabilirsiniz.';
   return '';
 }
 function closedBtnText(){ return closedReason()==='emergency' ? 'Şu an Sipariş Alamıyoruz' : 'Şu an Kapalıyız · Sipariş Alınmıyor'; }
@@ -823,7 +843,9 @@ function optsText(o){
     m.length? '🧆 Meze: '+m.join(', ')+(xm? ' (+'+fmtPrice(xm)+' Ekstra)' : '') : ''].filter(Boolean).join(' · ');
 }
 /* Sepet satır anahtarı: aynı Bowl farklı seçimlerle ayrı satır olur */
-function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',')+((o.mezeIds||[]).length? '|'+o.mezeIds.slice().sort().join(',') : '') : itemId; }
+function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',')+((o.mezeIds||[]).length? '|'+o.mezeIds.slice().sort().join(',') : '')+(o.customName? '|n:'+o.customName.toLocaleLowerCase('tr-TR') : '') : itemId; }
+function cleanBoxName(v){ return String(v||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,30); }
+function boxNameUpper(v){ return cleanBoxName(v).toLocaleUpperCase('tr-TR'); }
 function lineItemId(key, c){ return (c && c.itemId) || String(key).split('|')[0]; }
 function qtyInCart(itemId){ return Object.entries(cart).reduce((s,[k,c])=> s + (lineItemId(k,c)===itemId ? c.qty : 0), 0); }
 let state = defaultData();
@@ -1318,10 +1340,6 @@ function updateChips(){
 
 const BADGE_LABEL = {yeni:'Yeni', populer:'Popüler', sef:'Şefin Tavsiyesi'};
 function ctlHtml(it){
-  if(it.available!==false && isOrderingClosed()){
-    const t = closedReason()==='emergency' ? 'Şu an Sipariş Alamıyoruz' : '<span>Şu an Kapalıyız</span><small>Sipariş Alınmıyor</small>';
-    return `<button type="button" class="pick-btn closed-btn" disabled aria-label="${closedBtnText()}">${t}</button>`;
-  }
   if(it.available===false) return isBowl(it)
     ? `<button type="button" class="pick-btn" disabled aria-label="Tükendi">Tükendi</button>`
     : `<button type="button" class="add-btn" disabled aria-label="Tükendi">${ICONS.plus}</button>`;
@@ -1400,7 +1418,6 @@ function updateDock(bump){
 
 function addToCart(itemId){
   const it = state.items.find(x=>x.id===itemId); if(!it || it.available===false) return;
-  if(isOrderingClosed()){ showToast(closedMsg()); return; }
   if(!cart[itemId]) cart[itemId] = { qty:0, price:it.price, name:it.name };
   cart[itemId].qty += 1;
   saveCart(); updateItemControl(itemId); updateDock(true);
@@ -1457,8 +1474,7 @@ function renderDetail(){
       <h2 class="dt-name">${escapeHtml(it.name)}</h2>
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
-      ${!sold && isOrderingClosed()? `<div class="notice danger">${closedReason()==='emergency'?'🚨':'🌙'} ${closedMsg()}</div>`
-        : sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
+      ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
             : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz) ve mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) seçeceksin.</div>` : ''}
     </div>`;
   renderDetailFoot();
@@ -1467,17 +1483,16 @@ function renderDetailFoot(){
   const it = detailSel && state.items.find(x=>x.id===detailSel.itemId); if(!it) return;
   const sold = it.available===false, bowl = isBowl(it);
   const q = document.getElementById('dt-qty'); if(q) q.textContent = detailSel.qty;
-  const off = sold || isOrderingClosed();
+  const off = sold;   // kapalıyken de sepete eklenebilir (ön sipariş); kontrol yalnızca onayda
   const st = document.getElementById('dt-stepper'); if(st) st.style.display = off ? 'none' : '';
   const b = document.getElementById('dt-add'), l = document.getElementById('dt-add-label'), t = document.getElementById('dt-total');
   if(b) b.disabled = off;
-  if(l) l.textContent = sold ? 'Tükendi' : off ? closedBtnText() : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
+  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
   if(t) t.textContent = off ? '' : fmtPrice(it.price * detailSel.qty);
 }
 function detailAdd(){
   const it = state.items.find(x=>x.id===detailSel.itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
-  if(isOrderingClosed()){ showToast(closedMsg()); renderDetail(); return; }
   const qty = detailSel.qty;
   if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
   if(!cart[it.id]) cart[it.id] = { qty:0, price:it.price, name:it.name };
@@ -1492,13 +1507,21 @@ let bowlSel = null;   // { itemId, baseId, chickenId, garnish:[ids], qty }
 function openBowlModal(itemId, initQty){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  if(isOrderingClosed()){ showToast(closedMsg()); return; }
-  bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], meze:[], qty: Math.max(1, Math.min(20, initQty||1)) };
+  bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], meze:[], customName:'', qty: Math.max(1, Math.min(20, initQty||1)) };
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
     </div>`;
-  openModal(escapeHtml(it.name), '<div id="bowl-root"></div>', foot);
+  openModal(escapeHtml(it.name), `<div id="bowl-root"></div>
+    <div class="opt-step bowl-name-step">
+      <div class="opt-title"><span class="opt-num">✎</span><div><h4>Kutunun Üzerine Yazılacak İsim</h4><small>Opsiyonel · Örn. "Muhammed", "Rukiye Hanım"</small></div></div>
+      <div class="bn-wrap field" style="margin:0;"><span>👤</span><input type="text" id="bowl-name" maxlength="30" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="İsim yazın (boş bırakabilirsiniz)" aria-label="Kutunun üzerine yazılacak isim"></div>
+      <div class="hint" id="bowl-name-hint">Paketleme sırasında bu Bowl'un kutusuna yazılır.</div>
+    </div>
+    <div id="bowl-sum-wrap"></div>`, foot);
+  const nameInp = document.getElementById('bowl-name');
+  nameInp.addEventListener('input', ()=>{ if(bowlSel) bowlSel.customName = cleanBoxName(nameInp.value); renderBowlNameHint(); });
+  nameInp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); nameInp.blur(); } });
   const root = document.getElementById('bowl-root');
   root.addEventListener('change', e=>{
     const inp = e.target; if(!bowlSel || !inp.name) return;
@@ -1528,7 +1551,6 @@ function renderBowl(){
   const root = document.getElementById('bowl-root'); if(!root || !bowlSel) return;
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün az önce tükendi'); return; }
-  if(isOrderingClosed()){ closeModal(); bowlSel = null; showToast(closedMsg()); return; }   // dükkan o an kapandıysa
   // canlı stok: seçili malzeme tükendiyse seçimi kaldır
   const bs = optById('base', bowlSel.baseId);
   if(bowlSel.baseId && (!bs || bs.available===false)){ showToast((bs?bs.name:'Seçtiğiniz taban')+' az önce tükendi, lütfen başka bir taban seçin'); bowlSel.baseId=''; }
@@ -1586,7 +1608,9 @@ function renderBowl(){
       <div class="opt-title"><span class="opt-num">3</span><div><h4>Meze Seçimi</h4><small>${freeTxt(freeM,'meze')}${pM>0? ', sonrası +'+fmtPrice(pM):''} · isteğe bağlı</small></div>
         <span class="opt-badge ${nM? 'ok':''}">${nM? nM+' meze' : 'İsteğe bağlı'}</span></div>
       <div class="opt-grid">${(opts.meze||[]).length? opts.meze.map(o=>tile('check','bowl-meze',o)).join('') : '<div class="opt-empty">Henüz meze eklenmemiş.</div>'}</div>
-    </div>
+    </div>`;
+  const sumWrap = document.getElementById('bowl-sum-wrap');
+  if(sumWrap) sumWrap.innerHTML = `
     <div class="bowl-sum" id="bowl-sum">
       <div class="bs-row"><span>Bowl</span><span class="num">${fmtPrice(it.price)}</span></div>
       ${x.extraGarnish? `<div class="bs-row x"><span>Ekstra garnitür (${x.paidG} × ${fmtPrice(pG)})</span><span class="num">+${fmtPrice(x.extraGarnish)}</span></div>`:''}
@@ -1595,7 +1619,13 @@ function renderBowl(){
     </div>`;
   renderBowlFoot();
 }
+function renderBowlNameHint(){
+  const h = document.getElementById('bowl-name-hint'); if(!h || !bowlSel) return;
+  const n = bowlSel.customName;
+  h.innerHTML = n ? `Kutuya yazılacak: <strong style="color:var(--gold-2);letter-spacing:.04em;">${escapeHtml(boxNameUpper(n))}</strong>${bowlSel.qty>1? ` · ${bowlSel.qty} kutunun hepsine`:''}` : "Paketleme sırasında bu Bowl'un kutusuna yazılır.";
+}
 function renderBowlFoot(){
+  renderBowlNameHint();
   const it = bowlSel && state.items.find(x=>x.id===bowlSel.itemId); if(!it) return;
   const q = document.getElementById('bowl-qty'); if(q) q.textContent = bowlSel.qty;
   const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice((it.price + bowlExtras(bowlSel.garnish.length, bowlSel.meze.length).extra) * bowlSel.qty);
@@ -1606,7 +1636,6 @@ function renderBowlFoot(){
 function addBowlToCart(){
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
-  if(isOrderingClosed()){ closeModal(); bowlSel = null; showToast(closedMsg()); return; }
   const bs = optById('base', bowlSel.baseId);
   if(!bs || bs.available===false){ showToast('Lütfen bir taban seçin'); return; }
   const ch = optById('chicken', bowlSel.chickenId);
@@ -1616,12 +1645,14 @@ function addBowlToCart(){
   const x = bowlExtras(gs.length, ms.length);
   const options = { baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name),
     mezeIds: ms.map(g=>g.id), meze: ms.map(g=>g.name), extraGarnish: x.extraGarnish, extraMeze: x.extraMeze, extra: x.extra };
+  const nm = cleanBoxName((document.getElementById('bowl-name')||{}).value || bowlSel.customName);
+  if(nm) options.customName = nm;
   const key = lineKey(it.id, options);
   if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price + x.extra, name: it.name, options };
   cart[key].qty += bowlSel.qty;
   saveCart(); updateItemControl(it.id); updateDock(true);
   closeModal(); bowlSel = null;
-  showToast(it.name + ' sepete eklendi', 'success');
+  showToast(it.name + (nm? ' (' + nm + ')' : '') + ' sepete eklendi', 'success');
 }
 
 /* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
@@ -1963,7 +1994,7 @@ function renderCartLines(){
     const it = state.items.find(x=>x.id===lineItemId(id,c));
     const thumb = it && it.photoUrl ? `<img class="cl-thumb" src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="cl-thumb">${ICONS.bowl}</div>`;
     return `<div class="cart-line">${thumb}
-      <div style="min-width:0;"><div class="cl-name">${escapeHtml(c.name)}</div>${c.options? `<div class="cl-opts">${escapeHtml(optsText(c.options))}</div>`:''}<div class="cl-price num">${fmtPrice(c.price)} × ${c.qty}</div></div>
+      <div style="min-width:0;"><div class="cl-name">${escapeHtml(c.name)}</div>${c.options? `<div class="cl-opts">${escapeHtml(optsText(c.options))}</div>`:''}${c.options && c.options.customName? `<div class="cl-boxname">👤 İsim: ${escapeHtml(c.options.customName)}</div>`:''}<div class="cl-price num">${fmtPrice(c.price)} × ${c.qty}</div></div>
       <div class="cl-right"><div class="cl-total num">${fmtPrice(c.price*c.qty)}</div>
         <div class="stepper sm"><button type="button" data-c-dec="${escapeHtml(id)}" aria-label="Azalt">${ICONS.minus}</button><span class="q">${c.qty}</span><button type="button" data-c-inc="${escapeHtml(id)}" aria-label="Arttır">${ICONS.plus}</button></div>
       </div></div>`;
@@ -1976,19 +2007,27 @@ function renderCartLines(){
   document.getElementById('cart-send-total').textContent = total;
   const cc = document.getElementById('cart-closed');   // acil kapatma canlı uyarısı
   const closed = isOrderingClosed();
-  if(cc) cc.innerHTML = closed ? `<div class="notice danger">${closedReason()==='emergency'?'🚨':'🌙'} ${closedMsg()}</div>` : '';
-  const sb = document.getElementById('cart-send'); if(sb && !sb.dataset.sending) sb.disabled = closed;   // kapalıyken onay butonu kilitli
+  if(cc && !cc.dataset.alert) cc.innerHTML = closed ? `<div class="notice soft">${closedReason()==='emergency'?'🚨':'🌙'} Şu an kapalıyız — sepetinizi hazırlayabilirsiniz, onay açılış saatimizde yapılabilir.</div>` : '';
+  if(cc && !closed){ delete cc.dataset.alert; cc.innerHTML = ''; }
+  const sb = document.getElementById('cart-send'); if(sb && !sb.dataset.sending) sb.disabled = false;   // kontrol onaya basınca yapılır
 }
 
+/* Onaya basıldığında dükkan kapalıysa: şık uyarı kutusu + bildirim (sepet silinmez) */
+function showClosedAlert(){
+  const msg = closedMsg(), emg = closedReason()==='emergency';
+  showToast(msg);
+  const cc = document.getElementById('cart-closed');
+  if(cc){
+    cc.dataset.alert = '1';
+    cc.innerHTML = `<div class="closed-alert"><span class="ca-ico">${emg?'🚨':'🌙'}</span><div><strong>${emg?'Geçici olarak kapalıyız':'İşletmemiz şu an kapalı'}</strong><p>${escapeHtml(msg)}</p></div></div>`;
+    const box = cc.firstElementChild; if(box){ box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+  }
+  if(navigator.vibrate) navigator.vibrate(120);
+}
 async function sendOrder(){
   const lines = Object.entries(cart);
   if(!lines.length){ showToast('Sepetiniz boş'); return; }
-  if(isOrderingClosed()){                             // GÜVENLİK: kapalı dükkan (acil kapatma / mesai dışı) → Firebase'e hiçbir şey gitmez
-    showToast(closedMsg());
-    const cc = document.getElementById('cart-closed'); if(cc) cc.innerHTML = `<div class="notice danger">${closedReason()==='emergency'?'🚨':'🌙'} ${closedMsg()}</div>`;
-    const sb = document.getElementById('cart-send'); if(sb) sb.disabled = true;
-    return;
-  }
+  if(isOrderingClosed()){ showClosedAlert(); return; }   // GÜVENLİK: kapalı dükkan → Firebase'e hiçbir şey gitmez, sepet korunur
   const nameEl = document.getElementById('cart-name'), addrEl = document.getElementById('cart-address'), phoneEl = document.getElementById('cart-phone');
   const name = nameEl.value.trim();
   const phoneOk = validPhone(phoneEl.value), phone = phoneOk ? fmtPhone(phoneEl.value) : '';
@@ -2007,7 +2046,7 @@ async function sendOrder(){
   const removedNow = sanitizeCart();                 // son anda tükenen ürün/malzeme kontrolü
   if(removedNow.length){ showToast('Tükendi, sepetinizden çıkarıldı: ' + removedNow.join(', ')); renderCartLines(); refreshAllControls(); updateDock(); return; }
   const btn = document.getElementById('cart-send'); if(btn){ btn.disabled = true; btn.dataset.sending = '1'; }   // çift tıklamayla mükerrer sipariş olmasın
-  const unlockBtn = ()=>{ if(btn){ delete btn.dataset.sending; btn.disabled = isOrderingClosed(); } };
+  const unlockBtn = ()=>{ if(btn){ delete btn.dataset.sending; btn.disabled = false; } };
   // KUPON: son kontrol — hâlâ aktif mi, bu telefonla daha önce kullanıldı mı?
   let coupon = null;
   if(appliedCoupon){
@@ -2020,7 +2059,7 @@ async function sendOrder(){
     }
     appliedCoupon = r.coupon; coupon = r.coupon;
   }
-  if(isOrderingClosed()){ showToast(closedMsg()); unlockBtn(); renderCartLines(); return; }   // kontrol sırasında dükkan kapandıysa
+  if(isOrderingClosed()){ unlockBtn(); showClosedAlert(); return; }   // kontrol sırasında dükkan kapandıysa
   const subtotal = cartTotal(), discount = couponDiscount(subtotal);
   const total = Math.round((subtotal - discount)*100)/100;
   const order = {
@@ -2028,6 +2067,7 @@ async function sendOrder(){
     createdAt: new Date().toISOString(),
     items: Object.entries(cart).map(([key,c])=>{
       const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
+      if(c.options && c.options.customName) li.customName = cleanBoxName(c.options.customName);   // kutu üzerine yazılacak isim
       if(c.options){
         li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
         if(c.options.base) li.options.base = c.options.base;
@@ -2138,7 +2178,7 @@ function renderTrack(){
           return `<li class="${done?'done':''} ${active?'active':''}"><span class="st-dot">${done? ICONS.check : i+1}</span><span>${t}</span></li>`; }).join('')}
       </ol>` : '<div style="height:18px"></div>'}
       <div class="track-card">
-        ${toList(a.items).map(li=>`<div class="tc-row"><span>${li.qty}× ${escapeHtml(li.name)}</span><span class="num">${fmtPrice(li.price*li.qty)}</span></div>${li.options? `<div class="tc-opts">${escapeHtml(optsText(li.options))}</div>`:''}`).join('')}
+        ${toList(a.items).map(li=>`<div class="tc-row"><span>${li.qty}× ${escapeHtml(li.name)}</span><span class="num">${fmtPrice(li.price*li.qty)}</span></div>${li.options? `<div class="tc-opts">${escapeHtml(optsText(li.options))}</div>`:''}${li.customName? `<div class="tc-boxname">👤 İsim: ${escapeHtml(li.customName)}</div>`:''}`).join('')}
         ${a.discount? `<div class="tc-row"><span>Ara toplam</span><span class="num">${fmtPrice(a.subtotal)}</span></div>
         <div class="tc-row disc"><span>🎟️ İndirim (${escapeHtml(a.couponCode||'')})</span><span class="num">−${fmtPrice(a.discount)}</span></div>`:''}
         <div class="tc-row total"><span>Toplam</span><span class="num">${fmtPrice(a.total)}</span></div>
@@ -2189,7 +2229,7 @@ function renderAdmin(root){
       <div id="admin-body">${(()=>{ const on = isEmergencyClosed(); return `
         <div class="emg-bar ${on?'on':''}" id="emg-bar">
           <div class="emg-txt"><strong>🚨 Acil Dükkanını Kapat (Yağmur / Yoğunluk Modu)</strong>
-            <small>${on? 'DÜKKAN KAPALI — müşteriler şu an sipariş veremiyor. Açmak için anahtarı kapatın.' : 'Açarsanız menüdeki tüm sipariş butonları anında kapanır, müşterilere "Kapalıyız" yazar.'}</small></div>
+            <small>${on? 'DÜKKAN KAPALI — müşteriler sepet hazırlayabilir ama sipariş onaylayamıyor. Açmak için anahtarı kapatın.' : 'Açarsanız müşteriler menüyü gezip sepet hazırlayabilir ama siparişi onaylayamaz; "Kapalıyız" uyarısı görür.'}</small></div>
           <button type="button" class="emg-switch ${on?'on':''}" id="emg-toggle" role="switch" aria-checked="${on}"><span class="k"></span><span>${on?'KAPALI':'Normal'}</span></button>
         </div>`; })()}</div>
     </div>`;
@@ -2514,7 +2554,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
