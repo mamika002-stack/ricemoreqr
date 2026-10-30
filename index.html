@@ -363,7 +363,7 @@
   .cp-row .cp-info{flex:1;min-width:150px;}
   .cp-row .cp-code{font-weight:800;font-size:15px;letter-spacing:.08em;color:var(--gold-2);}
   .cp-row .cp-meta{font-size:12px;color:var(--text-dim);margin-top:2px;}
-  .cp-form{display:grid;grid-template-columns:1.4fr .9fr .8fr;gap:8px;align-items:end;}
+  .cp-form{display:grid;grid-template-columns:1.4fr .9fr .7fr .8fr;gap:8px;align-items:end;}
   .cp-form .field{margin:0;}
   .cp-form #cp-code{text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
   .cp-form #cp-code::placeholder{text-transform:none;letter-spacing:0;font-weight:500;}
@@ -481,6 +481,10 @@
   .adm-tag{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);color:var(--text-dim);}
   .adm-tag.base{background:rgba(255,255,255,.08);border-color:rgba(230,202,101,.45);color:var(--text);}
   .adm-tag.meze{background:rgba(255,255,255,.08);border-color:rgba(230,202,101,.35);color:var(--text);}
+  .adm-tag.sauce{background:rgba(232,140,80,.12);border-color:rgba(232,140,80,.45);color:#F5B98A;}
+  .adm-tag.kind{font-weight:900;letter-spacing:.05em;font-size:11px;}
+  .adm-tag.kind.bowl{background:rgba(127,199,154,.12);border-color:rgba(127,199,154,.45);color:var(--ok);}
+  .adm-tag.kind.pilav{background:rgba(230,202,101,.14);border-color:rgba(230,202,101,.55);color:var(--gold-2);}
   .adm-tag.extra{background:var(--gold);border-color:var(--gold);color:#1A1405;}
   .adm-tag.sos{background:var(--gold-soft);border-color:rgba(212,175,55,.45);color:var(--gold-2);}
 
@@ -805,11 +809,13 @@ const DEFAULT_CHICKEN = ['BBQ Soslu Tavuk','Sweet Chili Soslu','Hot Chili Soslu'
 const DEFAULT_GARNISH = ['Mısır','Salatalık Turşusu','Jalapeno Turşusu','Bezelye','Cherry Domates','Salatalık','Siyah Zeytin','Haşlanmış Nohut'];
 const DEFAULT_BASE = ['Tereyağlı Pilav','İtalyan Makarna','Taze Yeşillik / Akdeniz Salata'];
 const DEFAULT_MEZE = ['Haydari','Şakşuka','Atom','Humus'];
-const OPT_PREFIX = { base:'bs', chicken:'ch', garnish:'gr', meze:'mz' };
-const PRICE_DEFAULTS = { freeGarnish:3, extraGarnishPrice:10, freeMeze:1, extraMezePrice:15 };
+const DEFAULT_SAUCE = ['Burger Sos','Ranch Sos','Sarımsaklı Mayonez','Barbekü Sos'];
+const OPT_PREFIX = { base:'bs', chicken:'ch', garnish:'gr', meze:'mz', sauce:'sc' };
+const PILAV_CAT_NAME = 'Soslu / Özel Tavuk Pilavlar';
+const PRICE_DEFAULTS = { freeGarnish:3, extraGarnishPrice:10, freeMeze:1, extraMezePrice:15, freeSauce:1, extraSaucePrice:10 };
 const mkOpts = (p, list) => list.map((name,i)=>({ id: p+'_'+(i+1), name, available:true }));
 function defaultOptions(){
-  return Object.assign({ maxGarnish:6, base: mkOpts('bs', DEFAULT_BASE), chicken: mkOpts('ch', DEFAULT_CHICKEN), garnish: mkOpts('gr', DEFAULT_GARNISH), meze: mkOpts('mz', DEFAULT_MEZE) }, PRICE_DEFAULTS);
+  return Object.assign({ maxGarnish:6, base: mkOpts('bs', DEFAULT_BASE), chicken: mkOpts('ch', DEFAULT_CHICKEN), garnish: mkOpts('gr', DEFAULT_GARNISH), meze: mkOpts('mz', DEFAULT_MEZE), sauce: mkOpts('sc', DEFAULT_SAUCE) }, PRICE_DEFAULTS);
 }
 function normOptions(v){
   if(!v) return defaultOptions();
@@ -819,31 +825,40 @@ function normOptions(v){
     // meze listesi: hiç kurulmamış eski veritabanında varsayılanlar; yönetici hepsini sildiyse boş kalır
     meze: v.meze ? toList(v.meze) : (v.extraMezePrice!=null ? [] : mkOpts('mz', DEFAULT_MEZE)),
     freeGarnish: numOr(v.freeGarnish, PRICE_DEFAULTS.freeGarnish), extraGarnishPrice: numOr(v.extraGarnishPrice, PRICE_DEFAULTS.extraGarnishPrice),
-    freeMeze: numOr(v.freeMeze, PRICE_DEFAULTS.freeMeze), extraMezePrice: numOr(v.extraMezePrice, PRICE_DEFAULTS.extraMezePrice) };
+    freeMeze: numOr(v.freeMeze, PRICE_DEFAULTS.freeMeze), extraMezePrice: numOr(v.extraMezePrice, PRICE_DEFAULTS.extraMezePrice),
+    // sos listesi: hiç kurulmamışsa varsayılanlar; yönetici hepsini sildiyse boş kalır
+    sauce: v.sauce ? toList(v.sauce) : (v.extraSaucePrice!=null ? [] : mkOpts('sc', DEFAULT_SAUCE)),
+    freeSauce: numOr(v.freeSauce, PRICE_DEFAULTS.freeSauce), extraSaucePrice: numOr(v.extraSaucePrice, PRICE_DEFAULTS.extraSaucePrice) };
 }
 function numOr(x, d){ const n = Number(x); return (x===undefined || x===null || x==='' || !isFinite(n) || n<0) ? d : n; }
 /* Dinamik ekstra ücret: ücretsiz kotayı aşan her garnitür / meze için ek tutar */
-function bowlExtras(nG, nM){
+function bowlExtras(nG, nM, nS){
   const o = state.options || {};
+  const paidS = Math.max(0, (nS||0) - numOr(o.freeSauce, PRICE_DEFAULTS.freeSauce));
+  const extraSauce = paidS * numOr(o.extraSaucePrice, PRICE_DEFAULTS.extraSaucePrice);
   const paidG = Math.max(0, nG - numOr(o.freeGarnish, PRICE_DEFAULTS.freeGarnish));
   const paidM = Math.max(0, nM - numOr(o.freeMeze, PRICE_DEFAULTS.freeMeze));
   const extraGarnish = paidG * numOr(o.extraGarnishPrice, PRICE_DEFAULTS.extraGarnishPrice);
   const extraMeze = paidM * numOr(o.extraMezePrice, PRICE_DEFAULTS.extraMezePrice);
-  return { paidG, paidM, extraGarnish, extraMeze, extra: extraGarnish + extraMeze };
+  return { paidG, paidM, paidS, extraGarnish, extraMeze, extraSauce, extra: extraGarnish + extraMeze + extraSauce };
 }
 function baseIcon(name){ const n = trLower(name); return /makarna|penne|pasta/.test(n) ? '🍝' : /yeşil|salata|akdeniz/.test(n) ? '🥗' : '🍚'; }
 function optById(group, id){ return ((state.options||{})[group]||[]).find(o=>o.id===id); }
-function isBowl(it){ if(!it) return false; if(typeof it.isBowl==='boolean') return it.isBowl; return /bowl/i.test(it.name||''); }
+function isPilav(it){ return !!(it && it.isPilav===true); }   // Soslu / Özel Tavuk Pilav: tavuk + sos seçimi
+function isBowl(it){ if(!it || isPilav(it)) return false; if(typeof it.isBowl==='boolean') return it.isBowl; return /bowl/i.test(it.name||''); }
+function hasBuilder(it){ return isBowl(it) || isPilav(it); }
 function optsText(o){
   if(!o) return '';
   const g = toList(o.garnish);
   const m = toList(o.meze), xg = Number(o.extraGarnish)||0, xm = Number(o.extraMeze)||0;
-  return [o.base? baseIcon(o.base)+' Taban: '+o.base : '', o.chicken? 'Sos: '+o.chicken : '',
+  const sc = toList(o.sauce), xs = Number(o.extraSauce)||0;
+  return [o.base? baseIcon(o.base)+' Taban: '+o.base : '', o.chicken? '🍗 Tavuk: '+o.chicken : '',
     g.length? 'Garnitür: '+g.join(', ')+(xg? ' (+'+fmtPrice(xg)+' Ekstra)' : '') : '',
-    m.length? '🧆 Meze: '+m.join(', ')+(xm? ' (+'+fmtPrice(xm)+' Ekstra)' : '') : ''].filter(Boolean).join(' · ');
+    m.length? '🧆 Meze: '+m.join(', ')+(xm? ' (+'+fmtPrice(xm)+' Ekstra)' : '') : '',
+    sc.length? '🥫 Sos: '+sc.join(', ')+(xs? ' (+'+fmtPrice(xs)+' Ekstra)' : '') : ''].filter(Boolean).join(' · ');
 }
 /* Sepet satır anahtarı: aynı Bowl farklı seçimlerle ayrı satır olur */
-function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',')+((o.mezeIds||[]).length? '|'+o.mezeIds.slice().sort().join(',') : '')+(o.customName? '|n:'+o.customName.toLocaleLowerCase('tr-TR') : '') : itemId; }
+function lineKey(itemId, o){ return o ? itemId+'|'+(o.baseId? o.baseId+'|' : '')+(o.chickenId||'')+'|'+(o.garnishIds||[]).slice().sort().join(',')+((o.mezeIds||[]).length? '|'+o.mezeIds.slice().sort().join(',') : '')+((o.sauceIds||[]).length? '|s:'+o.sauceIds.slice().sort().join(',') : '')+(o.customName? '|n:'+o.customName.toLocaleLowerCase('tr-TR') : '') : itemId; }
 function cleanBoxName(v){ return String(v||'').replace(/[\u0000-\u001f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,30); }
 function boxNameUpper(v){ return cleanBoxName(v).toLocaleUpperCase('tr-TR'); }
 function lineItemId(key, c){ return (c && c.itemId) || String(key).split('|')[0]; }
@@ -901,7 +916,7 @@ function initFirebase(){
   try{
     const app = firebase.apps.length? firebase.app() : firebase.initializeApp(FIREBASE_CONFIG);
     fbRef = app.database().ref(DB_PATH);
-    const loaded = {}; let settingsMissing = false, optionsMissing = false, baseMissing = false, mezeMissing = false;
+    const loaded = {}; let settingsMissing = false, optionsMissing = false, baseMissing = false, mezeMissing = false, sauceMissing = false;
     PUBLIC_KEYS.forEach(k=>{
       fbRef.child(k).on('value', snap=>{
         const v = snap.val();
@@ -912,6 +927,7 @@ function initFirebase(){
           if(!v && !loaded.options) optionsMissing = true;
           if(v && !loaded.options && !v.base) baseMissing = true;
           if(v && !loaded.options && v.extraMezePrice==null) mezeMissing = true;
+          if(v && !loaded.options && v.extraSaucePrice==null) sauceMissing = true;
           state.options = normOptions(v);
         } else {
           state[k] = toList(v);
@@ -933,6 +949,18 @@ function initFirebase(){
               const o = state.options; if(o.maxGarnish <= o.freeGarnish + 1) o.maxGarnish = 6;
               fbRef.child('options').update({ meze:o.meze, maxGarnish:o.maxGarnish, freeGarnish:o.freeGarnish, extraGarnishPrice:o.extraGarnishPrice, freeMeze:o.freeMeze, extraMezePrice:o.extraMezePrice });
             }
+            if(sauceMissing){  // Sos çeşitleri + ekstra sos ücretini ilk kez ekle
+              const o = state.options;
+              fbRef.child('options').update({ sauce:o.sauce, freeSauce:o.freeSauce, extraSaucePrice:o.extraSaucePrice });
+            }
+          }
+          if(!settingsMissing && !state.settings.pilavCatAdded){   // "Soslu / Özel Tavuk Pilavlar" kategorisini bir kez oluştur
+            if(!state.categories.some(c=>/soslu|özel tavuk pilav/i.test(c.name||''))){
+              state.categories.push({ id: uid('cat'), name: PILAV_CAT_NAME, order: state.categories.reduce((m,c)=>Math.max(m, Number(c.order)||0), -1) + 1 });
+              fbRef.child('categories').set(state.categories);
+            }
+            state.settings.pilavCatAdded = true;
+            fbRef.child('settings').child('pilavCatAdded').set(true);
           }
           startTracking();
         }
@@ -975,14 +1003,15 @@ function sanitizeCart(){
       const bs = c.options.baseId ? optById('base', c.options.baseId) : true, badB = !bs || bs.available===false;
       const badG = (c.options.garnishIds||[]).map(id=>optById('garnish', id)).filter(g=>!g || g.available===false);
       const badM = (c.options.mezeIds||[]).map(id=>optById('meze', id)).filter(g=>!g || g.available===false);
-      if(badB || !ch || ch.available===false || badG.length || badM.length){
-        removed.push(c.name + ' (' + [badB? c.options.base : '', (!ch||ch.available===false)? c.options.chicken : '', ...badG.map(g=>g? g.name : 'malzeme'), ...badM.map(g=>g? g.name : 'meze')].filter(Boolean).join(', ') + ')');
+      const badS = (c.options.sauceIds||[]).map(id=>optById('sauce', id)).filter(g=>!g || g.available===false);
+      if(badB || !ch || ch.available===false || badG.length || badM.length || badS.length){
+        removed.push(c.name + ' (' + [badB? c.options.base : '', (!ch||ch.available===false)? c.options.chicken : '', ...badG.map(g=>g? g.name : 'malzeme'), ...badM.map(g=>g? g.name : 'meze'), ...badS.map(g=>g? g.name : 'sos')].filter(Boolean).join(', ') + ')');
         delete cart[key]; changed = true; return;
       }
       // ekstra ücretler güncel fiyatlarla yeniden hesaplanır (yönetici ücreti değiştirirse sepet de güncellenir)
-      const x = bowlExtras((c.options.garnishIds||[]).length, (c.options.mezeIds||[]).length);
-      if(c.options.extra!==x.extra || c.options.extraGarnish!==x.extraGarnish || c.options.extraMeze!==x.extraMeze){
-        c.options.extraGarnish = x.extraGarnish; c.options.extraMeze = x.extraMeze; c.options.extra = x.extra; changed = true;
+      const x = bowlExtras((c.options.garnishIds||[]).length, (c.options.mezeIds||[]).length, (c.options.sauceIds||[]).length);
+      if(c.options.extra!==x.extra || c.options.extraGarnish!==x.extraGarnish || c.options.extraMeze!==x.extraMeze || (c.options.extraSauce||0)!==x.extraSauce){
+        c.options.extraGarnish = x.extraGarnish; c.options.extraMeze = x.extraMeze; c.options.extraSauce = x.extraSauce; c.options.extra = x.extra; changed = true;
       }
     }
     const unit = it.price + (c.options ? (Number(c.options.extra)||0) : 0);
@@ -1265,12 +1294,13 @@ function renderCustomerMenu(root){
 }
 
 function onMenuClick(e){
-  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand,[data-detail]');
+  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-pilav],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand,[data-detail]');
   if(!t) return;
   if(t.hasAttribute('data-geo-retry')) return requestLocation(true);
   if(t.hasAttribute('data-geo-help')) return openGeoHelp();
   if(t.id==='hero-brand') return registerSecretTap();
   if(t.dataset.bowl) return openBowlModal(t.dataset.bowl);
+  if(t.dataset.pilav) return openBowlModal(t.dataset.pilav, 1, 'pilav');
   if(t.dataset.detail && !e.target.closest('button')) return openDetailModal(t.dataset.detail);
   if(t.dataset.cartAdd) return addToCart(t.dataset.cartAdd);
   if(t.dataset.cartInc) return addToCart(t.dataset.cartInc);
@@ -1332,20 +1362,26 @@ function updateChips(){
   if(!cats.length){ box.style.display='none'; return; }
   box.style.display='';
   const count = id => state.items.filter(it=>it.categoryId===id).length;
+  const shown = cats.filter(c=>count(c.id)>0 || selectedCategoryId===c.id);   // boş kategoriler müşteriye gösterilmez
+  if(!shown.length){ box.style.display='none'; return; }
   box.innerHTML = `<button type="button" class="chip ${!selectedCategoryId?'active':''}" data-cat="" role="tab" aria-selected="${!selectedCategoryId}">Tümü</button>` +
-    cats.map(c=>`<button type="button" class="chip ${selectedCategoryId===c.id?'active':''}" data-cat="${escapeHtml(c.id)}" role="tab" aria-selected="${selectedCategoryId===c.id}">${escapeHtml(c.name)}<span class="cnt">${count(c.id)}</span></button>`).join('');
+    shown.map(c=>`<button type="button" class="chip ${selectedCategoryId===c.id?'active':''}" data-cat="${escapeHtml(c.id)}" role="tab" aria-selected="${selectedCategoryId===c.id}">${escapeHtml(c.name)}<span class="cnt">${count(c.id)}</span></button>`).join('');
   const act = box.querySelector('.chip.active');
   if(act) act.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
 }
 
 const BADGE_LABEL = {yeni:'Yeni', populer:'Popüler', sef:'Şefin Tavsiyesi'};
 function ctlHtml(it){
-  if(it.available===false) return isBowl(it)
+  if(it.available===false) return hasBuilder(it)
     ? `<button type="button" class="pick-btn" disabled aria-label="Tükendi">Tükendi</button>`
     : `<button type="button" class="add-btn" disabled aria-label="Tükendi">${ICONS.plus}</button>`;
   if(isBowl(it)){
     const n = qtyInCart(it.id);
     return `<button type="button" class="pick-btn" data-bowl="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} seç">${n? `<span class="pb-n">${n}</span>`:''}Seç ${ICONS.arrow}</button>`;
+  }
+  if(isPilav(it)){
+    const n = qtyInCart(it.id);
+    return `<button type="button" class="pick-btn" data-pilav="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} seç">${n? `<span class="pb-n">${n}</span>`:''}Seç ${ICONS.arrow}</button>`;
   }
   const c = cart[it.id];
   if(c) return `<div class="stepper"><button type="button" data-cart-dec="${escapeHtml(it.id)}" aria-label="Azalt">${ICONS.minus}</button><span class="q">${c.qty}</span><button type="button" data-cart-inc="${escapeHtml(it.id)}" aria-label="Arttır">${ICONS.plus}</button></div>`;
@@ -1361,7 +1397,8 @@ function itemCard(it, i){
     <div class="item-body">
       <h3 class="item-name">${escapeHtml(it.name)}</h3>
       ${it.description? `<p class="item-desc">${escapeHtml(it.description)}</p>`:''}
-      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, sosunu, garnitürünü & mezeni seç</span>`:''}
+      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, tavuğunu, garnitürünü, mezeni & sosunu seç</span>`:''}
+      ${isPilav(it) && it.available!==false? `<span class="bowl-tag">✦ Tavuğunu & sosunu seç</span>`:''}
       <div class="item-foot">
         <span class="price">${fmtPrice(it.price)}</span>
         <div data-ctl="${escapeHtml(it.id)}">${ctlHtml(it)}</div>
@@ -1475,7 +1512,8 @@ function renderDetail(){
       <span class="dt-price num">${fmtPrice(it.price)}</span>
       <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
       ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
-            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz) ve mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) seçeceksin.</div>` : ''}
+            : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz), mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) ve sosunu (ilk ${numOr(state.options.freeSauce,1)} ücretsiz) seçeceksin.</div>`
+            : isPilav(it)? `<div class="dt-note">✦ Soslu Tavuk Pilav: bir sonraki adımda tavuk çeşidini ve sosunu (ilk ${numOr(state.options.freeSauce,1)} ücretsiz) seçeceksin.</div>` : ''}
     </div>`;
   renderDetailFoot();
 }
@@ -1487,7 +1525,7 @@ function renderDetailFoot(){
   const st = document.getElementById('dt-stepper'); if(st) st.style.display = off ? 'none' : '';
   const b = document.getElementById('dt-add'), l = document.getElementById('dt-add-label'), t = document.getElementById('dt-total');
   if(b) b.disabled = off;
-  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : 'Sepete Ekle';
+  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : isPilav(it) ? 'Tavuğunu & Sosunu Seç ›' : 'Sepete Ekle';
   if(t) t.textContent = off ? '' : fmtPrice(it.price * detailSel.qty);
 }
 function detailAdd(){
@@ -1495,6 +1533,7 @@ function detailAdd(){
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
   const qty = detailSel.qty;
   if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
+  if(isPilav(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty, 'pilav'), 230); return; }   // Tavuk Pilav → tavuk + sos
   if(!cart[it.id]) cart[it.id] = { qty:0, price:it.price, name:it.name };
   cart[it.id].qty += qty;
   saveCart(); updateItemControl(it.id); updateDock(true);
@@ -1504,10 +1543,11 @@ function detailAdd(){
 
 /* ============================= KENDİ BOWL'UNU OLUŞTUR ============================= */
 let bowlSel = null;   // { itemId, baseId, chickenId, garnish:[ids], qty }
-function openBowlModal(itemId, initQty){
+function openBowlModal(itemId, initQty, mode){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
-  bowlSel = { itemId, baseId:'', chickenId:'', garnish:[], meze:[], customName:'', qty: Math.max(1, Math.min(20, initQty||1)) };
+  mode = mode || (isPilav(it) ? 'pilav' : 'bowl');
+  bowlSel = { itemId, mode, baseId:'', chickenId:'', garnish:[], meze:[], sauce:[], customName:'', qty: Math.max(1, Math.min(20, initQty||1)) };
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
@@ -1516,7 +1556,7 @@ function openBowlModal(itemId, initQty){
     <div class="opt-step bowl-name-step">
       <div class="opt-title"><span class="opt-num">✎</span><div><h4>Kutunun Üzerine Yazılacak İsim</h4><small>Opsiyonel · Örn. "Muhammed", "Rukiye Hanım"</small></div></div>
       <div class="bn-wrap field" style="margin:0;"><span>👤</span><input type="text" id="bowl-name" maxlength="30" autocomplete="off" autocapitalize="words" enterkeyhint="done" placeholder="İsim yazın (boş bırakabilirsiniz)" aria-label="Kutunun üzerine yazılacak isim"></div>
-      <div class="hint" id="bowl-name-hint">Paketleme sırasında bu Bowl'un kutusuna yazılır.</div>
+      <div class="hint" id="bowl-name-hint">Paketleme sırasında bu ürünün kutusuna yazılır.</div>
     </div>
     <div id="bowl-sum-wrap"></div>`, foot);
   const nameInp = document.getElementById('bowl-name');
@@ -1537,6 +1577,10 @@ function openBowlModal(itemId, initQty){
     else if(inp.name==='bowl-meze'){
       if(inp.checked){ if(!bowlSel.meze.includes(inp.value)) bowlSel.meze.push(inp.value); }
       else bowlSel.meze = bowlSel.meze.filter(x=>x!==inp.value);
+    }
+    else if(inp.name==='bowl-sauce'){
+      if(inp.checked){ if(!bowlSel.sauce.includes(inp.value)) bowlSel.sauce.push(inp.value); }
+      else bowlSel.sauce = bowlSel.sauce.filter(x=>x!==inp.value);
     }
     renderBowl();
   });
@@ -1560,20 +1604,24 @@ function renderBowl(){
   if(lost.length){ showToast(lost.map(g=>g?g.name:'Bir garnitür').join(', ')+' az önce tükendi'); bowlSel.garnish = bowlSel.garnish.filter(id=>{ const g=optById('garnish',id); return g && g.available!==false; }); }
   const lostM = bowlSel.meze.map(id=>optById('meze', id)).filter(g=>!g || g.available===false);
   if(lostM.length){ showToast(lostM.map(g=>g?g.name:'Bir meze').join(', ')+' az önce tükendi'); bowlSel.meze = bowlSel.meze.filter(id=>{ const g=optById('meze',id); return g && g.available!==false; }); }
+  const lostS = bowlSel.sauce.map(id=>optById('sauce', id)).filter(g=>!g || g.available===false);
+  if(lostS.length){ showToast(lostS.map(g=>g?g.name:'Bir sos').join(', ')+' az önce tükendi'); bowlSel.sauce = bowlSel.sauce.filter(id=>{ const g=optById('sauce',id); return g && g.available!==false; }); }
+  const pilav = bowlSel.mode==='pilav';
 
   const opts = state.options, max = opts.maxGarnish||4, nG = bowlSel.garnish.length, nM = bowlSel.meze.length;
   const freeG = numOr(opts.freeGarnish, 3), freeM = numOr(opts.freeMeze, 1);
   const pG = numOr(opts.extraGarnishPrice, 10), pM = numOr(opts.extraMezePrice, 15);
-  const x = bowlExtras(nG, nM);
+  const nS = bowlSel.sauce.length, freeS = numOr(opts.freeSauce, 1), pS = numOr(opts.extraSaucePrice, 10);
+  const x = bowlExtras(nG, nM, nS);
   const tile = (type, group, o)=>{
     const sold = o.available===false;
-    const list = group==='bowl-meze' ? bowlSel.meze : bowlSel.garnish;
+    const list = group==='bowl-meze' ? bowlSel.meze : group==='bowl-sauce' ? bowlSel.sauce : bowlSel.garnish;
     const sel = group==='bowl-base' ? bowlSel.baseId===o.id : type==='radio' ? bowlSel.chickenId===o.id : list.includes(o.id);
     const limit = group==='bowl-garnish' && !sel && !sold && nG>=max;
     // ücretsiz kota dolduysa: seçili ücretli olanlarda ve yeni seçilecek olanlarda ek ücret rozeti
     let extra = '';
     if(type==='check' && !sold && !limit){
-      const free = group==='bowl-meze' ? freeM : freeG, price = group==='bowl-meze' ? pM : pG;
+      const free = group==='bowl-meze' ? freeM : group==='bowl-sauce' ? freeS : freeG, price = group==='bowl-meze' ? pM : group==='bowl-sauce' ? pS : pG;
       const paid = sel ? list.indexOf(o.id) >= free : list.length >= free;
       if(paid && price>0) extra = `<span class="opt-extra">+${fmtPrice(price)}</span>`;
     }
@@ -1587,19 +1635,19 @@ function renderBowl(){
   root.innerHTML = `
     <div class="bowl-hero">
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="ph">${ICONS.bowl}</div>`}
-      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`:'<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu, garnitürlerini ve mezeni seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
+      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`: pilav ? '<p>Tavuk pilavını kendine göre hazırla: tavuk çeşidini ve sosunu seç.</p>' : '<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu, garnitürlerini, mezeni ve sosunu seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
     </div>
-    <div class="opt-step">
+    ${pilav? '' : `<div class="opt-step">
       <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Tek seçim</small></div>
         <span class="opt-badge ${bowlSel.baseId?'ok':'req'}">${bowlSel.baseId?'✓ Seçildi':'Zorunlu'}</span></div>
       <div class="opt-grid" role="radiogroup">${(opts.base||[]).length? opts.base.map(o=>tile('radio','bowl-base',o)).join('') : '<div class="opt-empty">Henüz taban eklenmemiş.</div>'}</div>
-    </div>
+    </div>`}
     <div class="opt-step">
       <div class="opt-title"><span class="opt-num">1</span><div><h4>Tavuk Çeşidini Seçin</h4><small>Tek seçim</small></div>
         <span class="opt-badge ${bowlSel.chickenId?'ok':'req'}">${bowlSel.chickenId?'✓ Seçildi':'Zorunlu'}</span></div>
       <div class="opt-grid" role="radiogroup">${opts.chicken.length? opts.chicken.map(o=>tile('radio','bowl-chicken',o)).join('') : '<div class="opt-empty">Henüz tavuk çeşidi eklenmemiş.</div>'}</div>
     </div>
-    <div class="opt-step">
+    ${pilav? '' : `<div class="opt-step">
       <div class="opt-title"><span class="opt-num">2</span><div><h4>Garnitür Çeşitlerini Seçin</h4><small>${freeTxt(freeG,'garnitür')}${pG>0? ', sonrası +'+fmtPrice(pG):''} · en fazla ${max}</small></div>
         <span class="opt-badge ${nG? 'ok':''}">${nG}/${max}</span></div>
       <div class="opt-grid">${opts.garnish.length? opts.garnish.map(o=>tile('check','bowl-garnish',o)).join('') : '<div class="opt-empty">Henüz garnitür eklenmemiş.</div>'}</div>
@@ -1608,13 +1656,19 @@ function renderBowl(){
       <div class="opt-title"><span class="opt-num">3</span><div><h4>Meze Seçimi</h4><small>${freeTxt(freeM,'meze')}${pM>0? ', sonrası +'+fmtPrice(pM):''} · isteğe bağlı</small></div>
         <span class="opt-badge ${nM? 'ok':''}">${nM? nM+' meze' : 'İsteğe bağlı'}</span></div>
       <div class="opt-grid">${(opts.meze||[]).length? opts.meze.map(o=>tile('check','bowl-meze',o)).join('') : '<div class="opt-empty">Henüz meze eklenmemiş.</div>'}</div>
+    </div>`}
+    <div class="opt-step">
+      <div class="opt-title"><span class="opt-num">${pilav? 2 : 4}</span><div><h4>Sos Seçimi</h4><small>${freeTxt(freeS,'sos')}${pS>0? ', sonrası +'+fmtPrice(pS):''} · isteğe bağlı</small></div>
+        <span class="opt-badge ${nS? 'ok':''}">${nS? nS+' sos' : 'İsteğe bağlı'}</span></div>
+      <div class="opt-grid">${(opts.sauce||[]).length? opts.sauce.map(o=>tile('check','bowl-sauce',o)).join('') : '<div class="opt-empty">Henüz sos eklenmemiş.</div>'}</div>
     </div>`;
   const sumWrap = document.getElementById('bowl-sum-wrap');
   if(sumWrap) sumWrap.innerHTML = `
     <div class="bowl-sum" id="bowl-sum">
-      <div class="bs-row"><span>Bowl</span><span class="num">${fmtPrice(it.price)}</span></div>
+      <div class="bs-row"><span>${pilav? 'Tavuk Pilav' : 'Bowl'}</span><span class="num">${fmtPrice(it.price)}</span></div>
       ${x.extraGarnish? `<div class="bs-row x"><span>Ekstra garnitür (${x.paidG} × ${fmtPrice(pG)})</span><span class="num">+${fmtPrice(x.extraGarnish)}</span></div>`:''}
       ${x.extraMeze? `<div class="bs-row x"><span>Ekstra meze (${x.paidM} × ${fmtPrice(pM)})</span><span class="num">+${fmtPrice(x.extraMeze)}</span></div>`:''}
+      ${x.extraSauce? `<div class="bs-row x"><span>Ekstra sos (${x.paidS} × ${fmtPrice(pS)})</span><span class="num">+${fmtPrice(x.extraSauce)}</span></div>`:''}
       <div class="bs-row t"><span>1 adet</span><span class="num">${fmtPrice(it.price + x.extra)}</span></div>
     </div>`;
   renderBowlFoot();
@@ -1622,29 +1676,35 @@ function renderBowl(){
 function renderBowlNameHint(){
   const h = document.getElementById('bowl-name-hint'); if(!h || !bowlSel) return;
   const n = bowlSel.customName;
-  h.innerHTML = n ? `Kutuya yazılacak: <strong style="color:var(--gold-2);letter-spacing:.04em;">${escapeHtml(boxNameUpper(n))}</strong>${bowlSel.qty>1? ` · ${bowlSel.qty} kutunun hepsine`:''}` : "Paketleme sırasında bu Bowl'un kutusuna yazılır.";
+  h.innerHTML = n ? `Kutuya yazılacak: <strong style="color:var(--gold-2);letter-spacing:.04em;">${escapeHtml(boxNameUpper(n))}</strong>${bowlSel.qty>1? ` · ${bowlSel.qty} kutunun hepsine`:''}` : "Paketleme sırasında bu ürünün kutusuna yazılır.";
 }
 function renderBowlFoot(){
   renderBowlNameHint();
   const it = bowlSel && state.items.find(x=>x.id===bowlSel.itemId); if(!it) return;
   const q = document.getElementById('bowl-qty'); if(q) q.textContent = bowlSel.qty;
-  const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice((it.price + bowlExtras(bowlSel.garnish.length, bowlSel.meze.length).extra) * bowlSel.qty);
-  const ready = bowlSel.baseId && bowlSel.chickenId;
+  const t = document.getElementById('bowl-total'); if(t) t.textContent = fmtPrice((it.price + bowlExtras(bowlSel.garnish.length, bowlSel.meze.length, bowlSel.sauce.length).extra) * bowlSel.qty);
+  const pilav = bowlSel.mode==='pilav';
+  const ready = (pilav || bowlSel.baseId) && bowlSel.chickenId;
   const b = document.getElementById('bowl-add'); if(b) b.disabled = !ready;
-  const l = document.getElementById('bowl-add-label'); if(l) l.textContent = ready ? 'Sepete Ekle' : !bowlSel.baseId ? 'Önce taban seçin' : 'Şimdi tavuk seçin';
+  const l = document.getElementById('bowl-add-label'); if(l) l.textContent = ready ? 'Sepete Ekle' : (!pilav && !bowlSel.baseId) ? 'Önce taban seçin' : pilav ? 'Tavuk çeşidi seçin' : 'Şimdi tavuk seçin';
 }
 function addBowlToCart(){
   const it = state.items.find(x=>x.id===bowlSel.itemId);
   if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
-  const bs = optById('base', bowlSel.baseId);
-  if(!bs || bs.available===false){ showToast('Lütfen bir taban seçin'); return; }
+  const pilav = bowlSel.mode==='pilav';
+  const bs = pilav ? null : optById('base', bowlSel.baseId);
+  if(!pilav && (!bs || bs.available===false)){ showToast('Lütfen bir taban seçin'); return; }
   const ch = optById('chicken', bowlSel.chickenId);
   if(!ch || ch.available===false){ showToast('Lütfen bir tavuk çeşidi seçin'); return; }
-  const gs = bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
-  const ms = bowlSel.meze.map(id=>optById('meze', id)).filter(g=>g && g.available!==false);
-  const x = bowlExtras(gs.length, ms.length);
-  const options = { baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name),
-    mezeIds: ms.map(g=>g.id), meze: ms.map(g=>g.name), extraGarnish: x.extraGarnish, extraMeze: x.extraMeze, extra: x.extra };
+  const gs = pilav ? [] : bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
+  const ms = pilav ? [] : bowlSel.meze.map(id=>optById('meze', id)).filter(g=>g && g.available!==false);
+  const ss = bowlSel.sauce.map(id=>optById('sauce', id)).filter(g=>g && g.available!==false);
+  const x = bowlExtras(gs.length, ms.length, ss.length);
+  const options = pilav
+    ? { kind:'pilav', chickenId: ch.id, chicken: ch.name, sauceIds: ss.map(g=>g.id), sauce: ss.map(g=>g.name), extraSauce: x.extraSauce, extra: x.extra }
+    : { kind:'bowl', baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name),
+        mezeIds: ms.map(g=>g.id), meze: ms.map(g=>g.name), sauceIds: ss.map(g=>g.id), sauce: ss.map(g=>g.name),
+        extraGarnish: x.extraGarnish, extraMeze: x.extraMeze, extraSauce: x.extraSauce, extra: x.extra };
   const nm = cleanBoxName((document.getElementById('bowl-name')||{}).value || bowlSel.customName);
   if(nm) options.customName = nm;
   const key = lineKey(it.id, options);
@@ -2070,9 +2130,11 @@ async function sendOrder(){
       if(c.options && c.options.customName) li.customName = cleanBoxName(c.options.customName);   // kutu üzerine yazılacak isim
       if(c.options){
         li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
+        li.options.kind = c.options.kind || 'bowl';
         if(c.options.base) li.options.base = c.options.base;
         if((c.options.meze||[]).length) li.options.meze = c.options.meze;
-        if(c.options.extra){ li.options.extraGarnish = c.options.extraGarnish||0; li.options.extraMeze = c.options.extraMeze||0; li.options.extra = c.options.extra; }
+        if((c.options.sauce||[]).length) li.options.sauce = c.options.sauce;
+        if(c.options.extra){ li.options.extraGarnish = c.options.extraGarnish||0; li.options.extraMeze = c.options.extraMeze||0; li.options.extraSauce = c.options.extraSauce||0; li.options.extra = c.options.extra; }
       }
       return li;
     }),
@@ -2219,7 +2281,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
-          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
+          <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[]),...(state.options.sauce||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='coupons'?'active':''}" data-atab="coupons">🎟️ Kuponlar</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
@@ -2351,8 +2413,12 @@ function openItemModal(existing){
       <option value="populer" ${existing&&existing.badge==='populer'?'selected':''}>Popüler</option>
       <option value="sef" ${existing&&existing.badge==='sef'?'selected':''}>Şefin Tavsiyesi</option>
     </select></div>
-    <div class="field"><label class="chk"><input type="checkbox" id="it-bowl" ${isBowl(existing)?'checked':''}> Bowl seçim ekranı açılsın (taban + tavuk sosu + garnitür + meze)</label>
-      <div class="hint">İşaretli ürünlerde müşteri "Seç" butonuyla Kendi Bowl'unu Oluştur ekranını açar.</div></div>
+    <div class="field"><label for="it-kind">Seçim Ekranı</label><select id="it-kind">
+      <option value="none" ${!hasBuilder(existing)?'selected':''}>Yok — tek tıkla sepete eklenir (ör. Sade Tavuk Pilav)</option>
+      <option value="bowl" ${isBowl(existing)?'selected':''}>Bowl — taban + tavuk + garnitür + meze + sos</option>
+      <option value="pilav" ${isPilav(existing)?'selected':''}>Soslu / Özel Tavuk Pilav — tavuk + sos</option>
+    </select>
+      <div class="hint">Soslu Tavuk Pilav ürünlerini "${PILAV_CAT_NAME}" kategorisine koyun; sade pilavı "Yok" seçerek ana kategoride tutun.</div></div>
     <div class="field"><label>Fotoğraf</label>
       <div id="it-photo-box"></div>
       <div class="photo-drop" id="it-photo-drop">Fotoğraf seçmek için tıklayın</div>
@@ -2402,7 +2468,8 @@ function openItemModal(existing){
       name, price, categoryId: document.getElementById('it-cat').value,
       description: document.getElementById('it-desc').value.trim(),
       badge: document.getElementById('it-badge').value || null,
-      isBowl: document.getElementById('it-bowl').checked,
+      isBowl: document.getElementById('it-kind').value==='bowl',
+      isPilav: document.getElementById('it-kind').value==='pilav',
       photoUrl: photoData
     };
     if(existing) Object.assign(existing, data);
@@ -2419,6 +2486,7 @@ function renderAdminStock(root){
   const sw = (on, attr)=>`<button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" ${attr}><span class="sw-knob"></span><span class="sw-label">${on?'Stokta Var':'Tükendi'}</span></button>`;
   const countOn = list => list.filter(x=>x.available!==false).length;
   if(!opts.meze) opts.meze = [];
+  if(!opts.sauce) opts.sauce = [];
   const optCard = (group, title, sub)=>`
     <div class="card">
       <div class="card-head"><div><h3>${title}</h3><div class="hint" style="margin-top:4px;">${sub}</div></div><span class="stock-sum">${countOn(opts[group])}/${opts[group].length} stokta</span></div>
@@ -2428,7 +2496,7 @@ function renderAdminStock(root){
           ${sw(o.available!==false, `data-stock-opt="${group}:${escapeHtml(o.id)}"`)}
           <button type="button" class="icon-btn" data-opt-del="${group}:${escapeHtml(o.id)}" title="Sil">${ICONS.trash}</button>
         </div>`).join('') || '<div class="hint">Henüz eklenmemiş.</div>'}</div>
-      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${({base:'taban',chicken:'tavuk çeşidi',garnish:'garnitür',meze:'meze'})[group]} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
+      <div class="stock-add"><input type="text" id="add-${group}" placeholder="Yeni ${({base:'taban',chicken:'tavuk çeşidi',garnish:'garnitür',meze:'meze',sauce:'sos'})[group]} adı" maxlength="40"><button type="button" class="btn btn-sm" data-opt-add="${group}">${ICONS.plus} Ekle</button></div>
       ${group==='garnish'? `<div class="stock-add" style="align-items:center;"><span class="hint" style="flex:1;margin:0;">Müşteri en fazla kaç garnitür seçebilsin?</span><input type="number" id="max-garnish" min="1" max="8" value="${opts.maxGarnish||4}" style="flex:none;width:80px;text-align:center;"></div>`:''}
     </div>`;
   root.innerHTML = `
@@ -2437,18 +2505,20 @@ function renderAdminStock(root){
       <div class="stock-list">${state.items.map(it=>{ const c = cats.find(x=>x.id===it.categoryId); return `
         <div class="stock-row ${it.available===false?'off':''}">
           ${it.photoUrl? `<img class="thumb" src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;color:var(--gold);">${ICONS.bowl}</div>`}
-          <div class="sr-info"><div class="sr-name">${escapeHtml(it.name)}</div><div class="sr-meta">${c? escapeHtml(c.name):'Kategorisiz'} · ${fmtPrice(it.price)}${isBowl(it)?' · Bowl':''}</div></div>
+          <div class="sr-info"><div class="sr-name">${escapeHtml(it.name)}</div><div class="sr-meta">${c? escapeHtml(c.name):'Kategorisiz'} · ${fmtPrice(it.price)}${isBowl(it)?' · Bowl': isPilav(it)?' · Tavuk Pilav':''}</div></div>
           ${sw(it.available!==false, `data-stock-item="${escapeHtml(it.id)}"`)}
         </div>`; }).join('') || '<div class="hint">Henüz ürün yok. Menü sekmesinden ekleyin.</div>'}</div>
     </div>
     ${optCard('base','Taban Çeşitleri (Bowl · 0. Adım)','Müşteri tek bir taban seçer. Örn. pilav bittiğinde "Tükendi" yapın.')}
-    ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım)','Müşteri tek bir çeşit seçer.')}
+    ${optCard('chicken','Tavuk Çeşitleri (Bowl · 1. Adım · Tavuk Pilav)','Müşteri tek bir çeşit seçer. Bowl ve Soslu Tavuk Pilav aynı listeyi kullanır.')}
     ${optCard('garnish','Garnitür Çeşitleri (Bowl · 2. Adım)','Müşteri birden fazla seçebilir. İlk '+numOr(opts.freeGarnish,3)+' garnitür ücretsiz.')}
     ${optCard('meze','Meze Çeşitleri (Bowl · 3. Adım)','Müşteri birden fazla seçebilir. İlk '+numOr(opts.freeMeze,1)+' meze ücretsiz.')}
+    ${optCard('sauce','Sos Çeşitleri (Bowl · 4. Adım · Tavuk Pilav)','Müşteri birden fazla seçebilir. İlk '+numOr(opts.freeSauce,1)+' sos ücretsiz. Bowl ve Soslu Tavuk Pilav aynı listeyi kullanır.')}
     <div class="card">
-      <div class="card-head"><div><h3>Ekstra Ücretler</h3><div class="hint" style="margin-top:4px;">Ücretsiz kotayı aşan her garnitür / meze için müşteriye eklenecek tutar. Sepet tutarı anında güncellenir.</div></div></div>
+      <div class="card-head"><div><h3>Ekstra Ücretler</h3><div class="hint" style="margin-top:4px;">Ücretsiz kotayı aşan her garnitür / meze / sos için müşteriye eklenecek tutar. Sepet tutarı anında güncellenir.</div></div></div>
       <div class="stock-add" style="align-items:center;"><label for="extra-garnish-price" class="hint" style="flex:1;margin:0;">Ekstra Garnitür Ücreti (₺) <small>· ${numOr(opts.freeGarnish,3)}. garnitürden sonra her biri</small></label><input type="number" id="extra-garnish-price" min="0" max="1000" step="1" inputmode="decimal" value="${numOr(opts.extraGarnishPrice,10)}" style="flex:none;width:90px;text-align:center;"></div>
       <div class="stock-add" style="align-items:center;"><label for="extra-meze-price" class="hint" style="flex:1;margin:0;">Ekstra Meze Ücreti (₺) <small>· ${numOr(opts.freeMeze,1)}. mezeden sonra her biri</small></label><input type="number" id="extra-meze-price" min="0" max="1000" step="1" inputmode="decimal" value="${numOr(opts.extraMezePrice,15)}" style="flex:none;width:90px;text-align:center;"></div>
+      <div class="stock-add" style="align-items:center;"><label for="extra-sauce-price" class="hint" style="flex:1;margin:0;">Ekstra Sos Ücreti (₺) <small>· ${numOr(opts.freeSauce,1)}. sostan sonra her biri</small></label><input type="number" id="extra-sauce-price" min="0" max="1000" step="1" inputmode="decimal" value="${numOr(opts.extraSaucePrice,10)}" style="flex:none;width:90px;text-align:center;"></div>
       <div class="stock-add"><button type="button" class="btn btn-sm btn-primary" id="extra-save" style="margin-left:auto;">Ücretleri Kaydet</button></div>
     </div>`;
 
@@ -2480,11 +2550,11 @@ function renderAdminStock(root){
   const es = root.querySelector('#extra-save');
   if(es) es.addEventListener('click',()=>{
     const rd = id=>{ const v = parseFloat(String(root.querySelector(id).value).replace(',','.')); return isFinite(v) && v>=0 ? Math.min(1000, Math.round(v*100)/100) : null; };
-    const g = rd('#extra-garnish-price'), m = rd('#extra-meze-price');
-    if(g===null || m===null){ showToast('Geçerli bir tutar yazın (0 veya üzeri)'); return; }
-    state.options.extraGarnishPrice = g; state.options.extraMezePrice = m;
+    const g = rd('#extra-garnish-price'), m = rd('#extra-meze-price'), sc = rd('#extra-sauce-price');
+    if(g===null || m===null || sc===null){ showToast('Geçerli bir tutar yazın (0 veya üzeri)'); return; }
+    state.options.extraGarnishPrice = g; state.options.extraMezePrice = m; state.options.extraSaucePrice = sc;
     saveOptionsNow(); sanitizeCart(); render();
-    showToast('Ekstra ücretler kaydedildi: garnitür +'+fmtPrice(g)+', meze +'+fmtPrice(m), 'success');
+    showToast('Ekstra ücretler kaydedildi: garnitür +'+fmtPrice(g)+', meze +'+fmtPrice(m)+', sos +'+fmtPrice(sc), 'success');
   });
 }
 
@@ -2554,7 +2624,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts">${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
@@ -2606,6 +2676,7 @@ function backfillCouponUses(){                  // eski siparişlerdeki kupon ku
     fbRef.child('couponUses').child(code).child(phoneKey(o.phone, code)).set({ at: o.createdAt||'', orderId: o.id }).catch(()=>{});
   });
 }
+let couponEditing = '';
 function couponUseCount(code){ return getOrders().filter(o=>o && o.coupon && normCode(o.coupon.code)===code && o.status!=='iptal').length; }
 function renderCouponList(list){
   const items = Object.values(couponsData||{}).filter(c=>c && c.code).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
@@ -2614,6 +2685,7 @@ function renderCouponList(list){
       <div class="cp-info"><div class="cp-code">${escapeHtml(c.code)}</div>
         <div class="cp-meta">${escapeHtml(couponLabel({type:c.type, value:Number(c.value)||0}))} · Her telefon numarası 1 kez · ${n} kez kullanıldı</div></div>
       <div class="cp-act"><button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" data-cp-toggle="${escapeHtml(c.code)}"><span class="sw-knob"></span><span class="sw-label">${on?'Aktif':'Pasif'}</span></button>
+      <button type="button" class="btn btn-sm" data-cp-edit="${escapeHtml(c.code)}" title="Düzenle">Düzenle</button>
       <button type="button" class="icon-btn" data-cp-del="${escapeHtml(c.code)}" title="Sil">${ICONS.trash}</button></div>
     </div>`; }).join('') : '<div class="hint">Henüz kupon yok. Yukarıdan ilk kuponunuzu oluşturun.</div>';
   list.querySelectorAll('[data-cp-toggle]').forEach(b=>b.addEventListener('click', ()=>{
@@ -2621,6 +2693,15 @@ function renderCouponList(list){
     const v = c.active===false;
     fbRef.child('coupons').child(code).child('active').set(v).catch(e=>showToast('Kaydetme hatası: '+e.message));
     showToast(code + (v ? ' aktif edildi' : ' pasif yapıldı — müşteriler artık kullanamaz'), v ? 'success' : '');
+  }));
+  list.querySelectorAll('[data-cp-edit]').forEach(b=>b.addEventListener('click', ()=>{
+    const c = couponsData[b.dataset.cpEdit]; if(!c) return;
+    const f = document.getElementById('cp-code'); if(!f) return;
+    f.value = c.code; document.getElementById('cp-type').value = c.type==='amount' ? 'amount' : 'percent';
+    document.getElementById('cp-value').value = c.value; document.getElementById('cp-active').value = c.active===false ? '0' : '1';
+    couponEditing = c.code;
+    const sv = document.getElementById('cp-save'); if(sv) sv.innerHTML = '💾 Değişiklikleri Kaydet';
+    f.scrollIntoView({block:'center', behavior:'smooth'}); f.focus();
   }));
   list.querySelectorAll('[data-cp-del]').forEach(b=>b.addEventListener('click', ()=>{
     const code = b.dataset.cpDel;
@@ -2632,11 +2713,12 @@ function renderCouponList(list){
 function renderAdminCoupons(root){
   root.innerHTML = `
     <div class="card">
-      <div class="card-head"><div><h3>Yeni Kupon Oluştur</h3><div class="hint" style="margin-top:4px;">Müşteri kodu sepette büyük/küçük harf fark etmeksizin yazabilir. Her telefon numarası bir kuponu yalnızca 1 kez kullanabilir.</div></div></div>
+      <div class="card-head"><div><h3>Yeni Kupon Oluştur</h3><div class="hint" style="margin-top:4px;">İstediğiniz kadar kupon oluşturabilirsiniz. Müşteri kodu sepette büyük/küçük harf fark etmeksizin yazabilir. Her telefon numarası her kuponu yalnızca 1 kez kullanabilir.</div></div></div>
       <div class="cp-form">
         <div class="field"><label for="cp-code">Kupon Kodu</label><input type="text" id="cp-code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Örn. HALLOWEEN10"></div>
         <div class="field"><label for="cp-type">İndirim Türü</label><select id="cp-type"><option value="percent">Yüzde (%)</option><option value="amount">Tutar (${escapeHtml(state.settings.currency||'₺')})</option></select></div>
         <div class="field"><label for="cp-value">Değer</label><input type="number" id="cp-value" min="1" step="1" inputmode="decimal" placeholder="10"></div>
+        <div class="field"><label for="cp-active">Durum</label><select id="cp-active"><option value="1">Aktif</option><option value="0">Pasif</option></select></div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button type="button" class="btn btn-primary btn-sm" id="cp-save">${ICONS.plus} Kuponu Kaydet</button></div>
     </div>
@@ -2656,10 +2738,11 @@ function renderAdminCoupons(root){
     if(!(value>0) || (type==='percent' && value>100)){ showToast(type==='percent' ? 'Yüzde 1 ile 100 arasında olmalı' : 'Geçerli bir tutar yazın'); return; }
     if(!fbRef){ showToast('Bağlantı yok'); return; }
     const exists = !!couponsData[code];
-    if(exists && !confirm('"'+code+'" zaten var. Yeni değerle güncellensin mi?')) return;
-    const prev = couponsData[code] || {};
-    fbRef.child('coupons').child(code).set({ code, type, value, active:true, createdAt: prev.createdAt || new Date().toISOString() })
-      .then(()=>{ showToast(code + (exists? ' güncellendi' : ' oluşturuldu') + ' · ' + couponLabel({type, value}), 'success'); })
+    if(exists && couponEditing!==code && !confirm('"'+code+'" zaten var. Yeni değerle güncellensin mi?')) return;
+    const prev = couponsData[code] || {}, active = root.querySelector('#cp-active').value!=='0';
+    couponEditing = ''; root.querySelector('#cp-save').innerHTML = ICONS.plus + ' Kuponu Kaydet'; root.querySelector('#cp-active').value = '1';
+    fbRef.child('coupons').child(code).set({ code, type, value, active, createdAt: prev.createdAt || new Date().toISOString() })
+      .then(()=>{ showToast(code + (exists? ' güncellendi' : ' oluşturuldu') + ' · ' + couponLabel({type, value}) + (active? '' : ' · Pasif'), 'success'); })
       .catch(e=>showToast('Kaydetme hatası: '+e.message));
     codeEl.value = ''; root.querySelector('#cp-value').value = '';
   });
