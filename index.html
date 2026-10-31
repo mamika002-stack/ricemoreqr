@@ -575,6 +575,70 @@
   .tel-link{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 12px;border-radius:99px;text-decoration:none;font-weight:800;font-size:13.5px;
     background:var(--gold-soft);border:1px solid rgba(212,175,55,.5);color:var(--gold-2);font-variant-numeric:tabular-nums;}
   .tel-link:hover{background:rgba(212,175,55,.24);}
+  /* sipariş kartı: ara + yol tarifi */
+  .ord-contact{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px;}
+  .ord-contact .tel-link{margin-top:0;}
+  .map-link{font-family:inherit;cursor:pointer;position:relative;background:rgba(126,182,230,.12);border-color:rgba(126,182,230,.5);color:#A9D0F2;}
+  .map-link:hover{background:rgba(126,182,230,.22);}
+  .map-link svg{width:15px;height:15px;}
+  .map-pin-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(127,199,154,.25);}
+  .map-dest{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:var(--bg-elev);border:1px solid var(--glass-border);}
+  .map-dest .md-ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--gold-soft);color:var(--gold-2);}
+  .map-dest .md-ico svg{width:19px;height:19px;}
+  .md-addr{margin-top:3px;font-size:14px;line-height:1.45;color:var(--text-dim);}
+  .md-src{margin-top:6px;font-size:12px;color:var(--text-faint);font-weight:600;}
+  .md-src.ok{color:var(--ok);}
+  .map-opts{display:flex;flex-direction:column;gap:10px;margin-top:14px;}
+  .map-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;text-decoration:none;color:var(--text);
+    background:linear-gradient(160deg, rgba(30,32,40,.7), rgba(22,24,30,.66));border:1px solid var(--glass-border);transition:border-color .2s, transform .2s var(--ease);}
+  .map-opt:hover,.map-opt:active{border-color:var(--gold);transform:translateY(-1px);}
+  .map-opt > svg{width:16px;height:16px;color:var(--gold);margin-left:auto;}
+  .mo-ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:17px;color:#fff;}
+  .map-opt.g .mo-ico{background:linear-gradient(135deg,#4285F4,#34A853);}
+  .map-opt.a .mo-ico{background:linear-gradient(135deg,#3A3A3C,#1C1C1E);border:1px solid rgba(255,255,255,.18);}
+  .map-opt.a .mo-ico::before{content:'';width:18px;height:18px;background:#fff;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 11 21 3l-8 18-2-8z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 11 21 3l-8 18-2-8z'/%3E%3C/svg%3E") center/contain no-repeat;}
+  .map-opt.y .mo-ico{background:linear-gradient(135deg,#FC3F1D,#FF7A45);}
+  .map-opt.o .mo-ico{background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.45);}
+  .mo-txt{display:flex;flex-direction:column;min-width:0;}
+  .mo-txt b{font-size:15px;}
+  .mo-txt small{font-size:12px;color:var(--text-faint);margin-top:1px;}
+  .map-alt{display:block;margin-top:12px;text-align:center;font-size:12.5px;color:var(--gold-2);text-decoration:none;font-weight:700;}
+  .geo-share{margin-top:10px;align-items:flex-start!important;padding:10px 12px;border-radius:12px;background:var(--bg-elev);border:1px solid var(--glass-border);}
+  .geo-share small{display:block;font-size:11.5px;color:var(--text-faint);font-weight:500;margin-top:2px;}
+  .adm-tag.daily{background:var(--gold-soft);border-color:rgba(212,175,55,.6);color:var(--gold-2);font-weight:900;font-size:11px;letter-spacing:.04em;}
+  /* yönetim: günün menüleri */
+  .dm-admin .kv-row{flex-wrap:wrap;}
+  .dm-admin .kv-row.dm-off{opacity:.62;}
+  .dm-a-info{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 220px;}
+  .dm-a-move{display:flex;flex-direction:column;gap:4px;}
+  .dm-a-desc{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+  .dm-admin .switch.on .sw-label{color:var(--ok);}
+  /* müşteri: günün menüleri */
+  .daily{margin-top:6px;}
+  .daily .sec-head{margin-top:20px;}
+  .dm-track{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 12px;margin:0 -2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
+  .dm-track::-webkit-scrollbar{display:none;}
+  .dm-card{flex:0 0 82%;max-width:340px;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;border-radius:24px;overflow:hidden;cursor:pointer;
+    background:linear-gradient(165deg, rgba(212,175,55,.13), rgba(30,32,40,.66) 38%, rgba(22,24,30,.62));border:1px solid rgba(212,175,55,.38);
+    box-shadow:inset 0 1px 0 var(--glass-hi), 0 14px 34px rgba(0,0,0,.35);
+    animation:rise .55s var(--ease) both;animation-delay:calc(min(var(--i,0),6) * 60ms);transition:transform .4s var(--ease), border-color .3s;}
+  .dm-card:hover{border-color:var(--gold);transform:translateY(-2px);}
+  .dm-track.single .dm-card{flex-basis:100%;max-width:none;}
+  .dm-media{position:relative;aspect-ratio:16/10;overflow:hidden;background:linear-gradient(145deg,#1E2128,#181A20);}
+  .dm-media img{width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.03);transition:transform .7s var(--ease), opacity .5s ease;}
+  .dm-media img.ok{opacity:1;transform:none;}
+  .dm-media .ph{position:absolute;inset:0;display:grid;place-items:center;color:rgba(212,175,55,.55);}
+  .dm-media .ph svg{width:30%;height:30%;}
+  .dm-media::after{content:'';position:absolute;inset:auto 0 0 0;height:45%;pointer-events:none;background:linear-gradient(0deg, rgba(11,12,14,.55), transparent);}
+  .dm-media .sold{position:absolute;inset:0;display:grid;place-items:center;background:rgba(11,12,14,.55);z-index:2;}
+  .dm-media .sold span{padding:6px 14px;border-radius:99px;border:1px solid rgba(212,175,55,.6);background:rgba(11,12,14,.78);color:var(--gold-2);font-weight:800;font-size:12px;letter-spacing:.08em;}
+  .dm-ribbon{position:absolute;left:12px;top:12px;z-index:1;padding:5px 11px;border-radius:99px;font-size:10.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--gold-ink);background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .dm-body{display:flex;flex-direction:column;flex:1;padding:13px 15px 14px;}
+  .dm-name{font-family:var(--font-display);font-weight:600;font-size:19px;margin:0;line-height:1.25;letter-spacing:-.01em;}
+  .dm-desc{margin:5px 0 0;font-size:12.8px;color:var(--text-dim);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .dm-card.soldout .dm-media img{filter:grayscale(.7) brightness(.7);}
+  @media (min-width:720px){ .dm-card{flex-basis:calc(50% - 7px);max-width:none;} }
 
   /* ============================= CANLI SİPARİŞ TAKİBİ ============================= */
   .track{text-align:center;padding-top:4px;}
@@ -844,6 +908,9 @@ function bowlExtras(nG, nM, nS){
 }
 function baseIcon(name){ const n = trLower(name); return /makarna|penne|pasta/.test(n) ? '🍝' : /yeşil|salata|akdeniz/.test(n) ? '🥗' : '🍚'; }
 function optById(group, id){ return ((state.options||{})[group]||[]).find(o=>o.id===id); }
+function isDaily(it){ return !!(it && it.isDaily===true); }   // Günün Menüsü kartı (ana sayfada üstte gösterilir)
+function isOrderable(it){ return !!it && it.available!==false && !(isDaily(it) && it.active===false); }
+function dailyMenus(all){ return state.items.filter(it=>isDaily(it) && (all || it.active!==false)).sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)); }
 function isPilav(it){ return !!(it && it.isPilav===true); }   // Soslu / Özel Tavuk Pilav: tavuk + sos seçimi
 function isBowl(it){ if(!it || isPilav(it)) return false; if(typeof it.isBowl==='boolean') return it.isBowl; return /bowl/i.test(it.name||''); }
 function hasBuilder(it){ return isBowl(it) || isPilav(it); }
@@ -997,7 +1064,7 @@ function sanitizeCart(){
   let changed = false; const removed = [];
   Object.keys(cart).forEach(key=>{
     const c = cart[key], it = state.items.find(x=>x.id===lineItemId(key,c));
-    if(!it || it.available===false){ removed.push(c.name); delete cart[key]; changed = true; return; }
+    if(!isOrderable(it)){ removed.push(c.name); delete cart[key]; changed = true; return; }
     if(c.options){
       const ch = optById('chicken', c.options.chickenId);
       const bs = c.options.baseId ? optById('base', c.options.baseId) : true, badB = !bs || bs.available===false;
@@ -1270,6 +1337,7 @@ function renderCustomerMenu(root){
       <div class="c-wrap" id="c-wrap">
         <header class="hero glass" id="hero"></header>
         <section class="region glass" id="region" role="status" aria-live="polite"></section>
+        <section class="daily" id="daily" aria-label="Günün Menüleri" hidden></section>
         <div class="toolbar glass" id="toolbar">
           <label class="search">${ICONS.search}
             <input type="search" id="search-input" placeholder="Menüde ara…" autocomplete="off" enterkeyhint="search" aria-label="Menüde ara">
@@ -1361,7 +1429,7 @@ function updateChips(){
   const cats = sortedCats();
   if(!cats.length){ box.style.display='none'; return; }
   box.style.display='';
-  const count = id => state.items.filter(it=>it.categoryId===id).length;
+  const count = id => state.items.filter(it=>it.categoryId===id && !isDaily(it)).length;
   const shown = cats.filter(c=>count(c.id)>0 || selectedCategoryId===c.id);   // boş kategoriler müşteriye gösterilmez
   if(!shown.length){ box.style.display='none'; return; }
   box.innerHTML = `<button type="button" class="chip ${!selectedCategoryId?'active':''}" data-cat="" role="tab" aria-selected="${!selectedCategoryId}">Tümü</button>` +
@@ -1406,18 +1474,50 @@ function itemCard(it, i){
     </div>
   </article>`;
 }
+function dailyCard(it, i){
+  const id = escapeHtml(it.id), sold = it.available===false;
+  return `<article class="dm-card ${sold?'soldout':''}" style="--i:${i}" data-detail="${id}" tabindex="0" aria-label="${escapeHtml(it.name)} detayını aç">
+    <div class="dm-media">
+      ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="${escapeHtml(it.name)}" loading="lazy" decoding="async" onload="this.classList.add('ok')">` : `<div class="ph">${ICONS.bowl}</div>`}
+      <span class="dm-ribbon">★ Günün Menüsü</span>
+      ${sold? '<div class="sold"><span>TÜKENDİ</span></div>':''}
+    </div>
+    <div class="dm-body">
+      <h3 class="dm-name">${escapeHtml(it.name)}</h3>
+      ${it.description? `<p class="dm-desc">${escapeHtml(it.description)}</p>`:''}
+      <div class="item-foot">
+        <span class="price">${fmtPrice(it.price)}</span>
+        <div data-ctl="${id}">${ctlHtml(it)}</div>
+      </div>
+    </div>
+  </article>`;
+}
+/* Günün Menüleri: yalnızca "Tümü" görünümünde ve arama yokken en üstte, yatay kaydırmalı kartlar */
+function updateDaily(){
+  const box = document.getElementById('daily'); if(!box) return;
+  const list = dailyMenus();
+  const show = list.length && !selectedCategoryId && !searchQuery.trim();
+  if(!show){ box.hidden = true; box.innerHTML = ''; return; }
+  const old = box.querySelector('.dm-track'), sl = old ? old.scrollLeft : 0;
+  box.hidden = false;
+  box.innerHTML = `<div class="sec-head"><h2>✦ Günün Menüleri</h2><span>${list.length} menü</span></div>
+    <div class="dm-track ${list.length===1?'single':''}">${list.map((it,i)=>dailyCard(it,i)).join('')}</div>`;
+  if(sl) box.querySelector('.dm-track').scrollLeft = sl;   // canlı güncellemede kaydırma yeri korunur
+}
 function updateList(){
+  updateDaily();
   const box = document.getElementById('menu-list'); if(!box) return;
   const q = trLower(searchQuery.trim());
   const cats = sortedCats();
   const items = state.items.filter(it=>{
+    if(isDaily(it) && (!q || it.active===false)) return false;   // günün menüleri üstteki bölümde; aramada da bulunur
     if(selectedCategoryId && it.categoryId!==selectedCategoryId) return false;
     if(q && !trLower(it.name).includes(q) && !trLower(it.description).includes(q)) return false;
     return true;
   });
   let i = 0;
   const empty = (title, text)=>`<div class="empty"><div class="em-ico">${ICONS.bowl}</div><div class="big">${title}</div>${text}</div>`;
-  if(!state.items.length){ box.innerHTML = empty('Menümüz hazırlanıyor','Çok yakında lezzetlerimizle buradayız.'); return; }
+  if(!state.items.some(x=>!isDaily(x)) && !q){ box.innerHTML = dailyMenus().length ? '' : empty('Menümüz hazırlanıyor','Çok yakında lezzetlerimizle buradayız.'); return; }
   if(!items.length){ box.innerHTML = empty('Sonuç bulunamadı', q? `"${escapeHtml(searchQuery.trim())}" için ürün yok. Farklı bir arama deneyin.` : 'Bu kategoride henüz ürün yok.'); return; }
   if(selectedCategoryId || q){
     const title = q ? 'Arama sonuçları' : (cats.find(c=>c.id===selectedCategoryId)||{}).name || 'Ürünler';
@@ -1429,7 +1529,7 @@ function updateList(){
     if(!list.length) return '';
     return `<section><div class="sec-head"><h2>${escapeHtml(cat.name)}</h2><span>${list.length} ürün</span></div><div class="items">${list.map(it=>itemCard(it, i++)).join('')}</div></section>`;
   });
-  const other = items.filter(it=>!cats.some(c=>c.id===it.categoryId));
+  const other = items.filter(it=>!isDaily(it) && !cats.some(c=>c.id===it.categoryId));
   if(other.length) sections.push(`<section><div class="sec-head"><h2>Diğer</h2><span>${other.length} ürün</span></div><div class="items">${other.map(it=>itemCard(it, i++)).join('')}</div></section>`);
   box.innerHTML = sections.join('');
 }
@@ -1454,7 +1554,7 @@ function updateDock(bump){
 }
 
 function addToCart(itemId){
-  const it = state.items.find(x=>x.id===itemId); if(!it || it.available===false) return;
+  const it = state.items.find(x=>x.id===itemId); if(!isOrderable(it)) return;
   if(!cart[itemId]) cart[itemId] = { qty:0, price:it.price, name:it.name };
   cart[itemId].qty += 1;
   saveCart(); updateItemControl(itemId); updateDock(true);
@@ -1469,7 +1569,7 @@ function decFromCart(itemId){
 function incLine(key){
   const c = cart[key]; if(!c) return;
   const it = state.items.find(x=>x.id===lineItemId(key,c));
-  if(!it || it.available===false){ showToast('Bu ürün tükendi'); return; }
+  if(!isOrderable(it)){ showToast('Bu ürün tükendi'); return; }
   c.qty += 1; saveCart(); updateItemControl(it.id); updateDock(true);
 }
 function decLine(key){
@@ -1530,7 +1630,7 @@ function renderDetailFoot(){
 }
 function detailAdd(){
   const it = state.items.find(x=>x.id===detailSel.itemId);
-  if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
+  if(!isOrderable(it)){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
   const qty = detailSel.qty;
   if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
   if(isPilav(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty, 'pilav'), 230); return; }   // Tavuk Pilav → tavuk + sos
@@ -1716,9 +1816,10 @@ function addBowlToCart(){
 }
 
 /* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
-   Konum yalnızca bu cihazda uzaklık hesaplamak için kullanılır; hiçbir yere gönderilmez/kaydedilmez. */
+   Konum bu cihazda uzaklık hesaplamak için kullanılır. Yalnızca müşteri sepette "Konumumu kuryeye gönder"
+   kutusunu kendisi işaretlerse siparişle birlikte (kurye yol tarifi için) gönderilir; aksi halde hiçbir yere gitmez. */
 const DELIVERY_AREA = { name:'Bergama Merkez', lat:39.1214, lng:27.1799, radiusKm:5 };   // gerekirse buradan değiştirin
-let geoState = 'idle', geoKm = null;   // idle | checking | inside | outside | denied | unsupported
+let geoState = 'idle', geoKm = null, geoPos = null;   // idle | checking | inside | outside | denied | unsupported
 function distKm(lat1, lng1, lat2, lng2){
   const R = 6371, r = x => x*Math.PI/180, dLat = r(lat2-lat1), dLng = r(lng2-lng1);
   const a = Math.sin(dLat/2)**2 + Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(dLng/2)**2;
@@ -1758,6 +1859,7 @@ function requestLocation(manual){
   const started = Date.now();
   navigator.geolocation.getCurrentPosition(pos=>{
     geoKm = distKm(pos.coords.latitude, pos.coords.longitude, DELIVERY_AREA.lat, DELIVERY_AREA.lng);
+    geoPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
     geoState = geoKm <= DELIVERY_AREA.radiusKm ? 'inside' : 'outside';
     updateRegion();
     if(manual) showToast(geoState==='inside' ? 'Konumunuz teslimat bölgemizde ✓' : 'Konumunuz Bergama Merkez dışında görünüyor', geoState==='inside' ? 'success' : '');
@@ -2020,7 +2122,8 @@ function openCartModal(){
     <div class="field"><label for="cart-name">Ad Soyad <em>*</em></label><input type="text" id="cart-name" autocomplete="name" value="${escapeHtml(cust.name||'')}" placeholder="Adınız ve soyadınız"></div>
     <div class="field"><label for="cart-phone">Telefon Numaranız <em>(Zorunlu)</em></label><input type="tel" id="cart-phone" inputmode="tel" autocomplete="tel" maxlength="17" value="${escapeHtml(cust.phone? fmtPhone(cust.phone):'')}" placeholder="05XX XXX XX XX">
       <div class="hint" id="phone-hint">Siparişinizle ilgili sizi arayabilmemiz için.</div></div>
-    <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea></div>
+    <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea>
+      ${geoPos? `<label class="chk geo-share"><input type="checkbox" id="cart-geo"> <span>📍 Konumumu kuryeye gönder <small>Kurye adresinizi haritada daha hızlı bulur (isteğe bağlı)</small></span></label>`:''}</div>
     <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>
     <div class="field coupon-field" style="margin:12px 0 4px;"><label for="cart-coupon">İndirim Kuponu</label>
       <div id="coupon-box"></div><div class="hint" id="coupon-hint"></div></div>`;
@@ -2120,6 +2223,7 @@ async function sendOrder(){
     appliedCoupon = r.coupon; coupon = r.coupon;
   }
   if(isOrderingClosed()){ unlockBtn(); showClosedAlert(); return; }   // kontrol sırasında dükkan kapandıysa
+  const shareGeo = (document.getElementById('cart-geo') && document.getElementById('cart-geo').checked && geoPos) ? geoPos : null;   // müşteri onayıyla
   const subtotal = cartTotal(), discount = couponDiscount(subtotal);
   const total = Math.round((subtotal - discount)*100)/100;
   const order = {
@@ -2127,6 +2231,7 @@ async function sendOrder(){
     createdAt: new Date().toISOString(),
     items: Object.entries(cart).map(([key,c])=>{
       const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
+      if(isDaily(state.items.find(x=>x.id===li.itemId))) li.daily = true;   // mutfakta "Günün Menüsü" etiketi
       if(c.options && c.options.customName) li.customName = cleanBoxName(c.options.customName);   // kutu üzerine yazılacak isim
       if(c.options){
         li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
@@ -2143,6 +2248,7 @@ async function sendOrder(){
     phone: phone,
     ...(coupon? { subtotal, discount, coupon: { code: coupon.code, type: coupon.type, value: coupon.value } } : {}),
     address: address,
+    ...(shareGeo? { geo: { lat: +shareGeo.lat.toFixed(6), lng: +shareGeo.lng.toFixed(6), acc: Math.round(shareGeo.acc||0) } } : {}),
     note: note,
     status: 'yeni'
   };
@@ -2281,6 +2387,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
+          <div class="admin-tab ${adminTab==='daily'?'active':''}" data-atab="daily">⭐ Günün Menüleri${(()=>{ const n = dailyMenus().length; return n? `<span class="tab-count" style="background:var(--gold);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[]),...(state.options.sauce||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='coupons'?'active':''}" data-atab="coupons">🎟️ Kuponlar</div>
@@ -2307,6 +2414,7 @@ function renderAdmin(root){
 
   const body = document.getElementById('admin-body').appendChild(document.createElement('div'));   // acil kapatma şeridinin altına
   if(adminTab==='menu') renderAdminMenu(body);
+  else if(adminTab==='daily') renderAdminDaily(body);
   else if(adminTab==='stock') renderAdminStock(body);
   else if(adminTab==='orders') renderAdminOrders(body);
   else if(adminTab==='coupons') renderAdminCoupons(body);
@@ -2336,8 +2444,8 @@ function renderAdminMenu(root){
     <div class="card">
       <div class="card-head"><h3>Ürünler</h3><button class="btn btn-sm btn-primary" id="add-item" ${cats.length?'':'disabled'}>${ICONS.plus} Ürün Ekle</button></div>
       ${!cats.length? `<div class="hint">Ürün eklemeden önce en az bir kategori oluşturmalısınız.</div>` :
-        state.items.length? `<table><thead><tr><th></th><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Durum</th><th></th></tr></thead>
-        <tbody>${state.items.map(it=>{
+        state.items.some(x=>!isDaily(x))? `<table><thead><tr><th></th><th>Ürün</th><th>Kategori</th><th>Fiyat</th><th>Durum</th><th></th></tr></thead>
+        <tbody>${state.items.filter(x=>!isDaily(x)).map(it=>{
           const cat = cats.find(c=>c.id===it.categoryId);
           return `<tr>
             <td>${it.photoUrl? `<img class="thumb" src="${it.photoUrl}">` : `<div class="thumb" style="display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-faint);">Yok</div>`}</td>
@@ -2376,6 +2484,56 @@ function renderAdminMenu(root){
     saveState(); render();
   }));
 }
+/* --- Yönetim: Günün Menüleri --- */
+function renderAdminDaily(root){
+  const list = dailyMenus(true);
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h3>⭐ Günün Menüleri Yönetimi</h3><div class="hint" style="margin-top:4px;">İstediğiniz kadar menü ekleyin. Aktif olanlar müşterinin ana sayfasında en üstte şık kartlar halinde görünür ve tek dokunuşla sepete eklenir.</div></div>
+        <button class="btn btn-sm btn-primary" id="add-daily">${ICONS.plus} Yeni Menü Ekle</button></div>
+      ${list.length? `<div class="kv-list dm-admin">${list.map((it,i)=>{ const on = it.active!==false; return `
+        <div class="kv-row ${on?'':'dm-off'}">
+          <div class="dm-a-info">
+            <div class="dm-a-move">
+              <button class="icon-btn" data-dm-up="${it.id}" ${i===0?'disabled':''} aria-label="Yukarı">${ICONS.up}</button>
+              <button class="icon-btn" data-dm-down="${it.id}" ${i===list.length-1?'disabled':''} aria-label="Aşağı">${ICONS.down}</button>
+            </div>
+            ${it.photoUrl? `<img class="thumb" src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;color:var(--gold);">${ICONS.bowl}</div>`}
+            <div style="min-width:0;">
+              <strong>${escapeHtml(it.name)}</strong> <span class="num" style="color:var(--gold-2);font-weight:800;">${fmtPrice(it.price)}</span>
+              ${it.description? `<div class="hint dm-a-desc">${escapeHtml(it.description)}</div>`:''}
+              ${it.available===false? '<span class="pill danger" style="margin-top:4px;">Tükendi</span>':''}
+            </div>
+          </div>
+          <div class="row-actions">
+            <button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" data-dm-toggle="${it.id}"><span class="sw-knob"></span><span class="sw-label">${on?'Aktif':'Pasif'}</span></button>
+            <button class="icon-btn" data-dm-edit="${it.id}" aria-label="Düzenle">${ICONS.edit}</button>
+            <button class="icon-btn" data-dm-del="${it.id}" aria-label="Sil">${ICONS.trash}</button>
+          </div>
+        </div>`; }).join('')}</div>`
+      : `<div class="ord-empty"><span class="ei">⭐</span>Henüz günün menüsü yok. "Yeni Menü Ekle" ile ilk menünüzü oluşturun (örn. Tavuk Pilav + Ayran + Tatlı).</div>`}
+    </div>`;
+  root.querySelector('#add-daily').addEventListener('click', ()=>openItemModal(null, true));
+  const find = id => state.items.find(x=>x.id===id);
+  root.querySelectorAll('[data-dm-edit]').forEach(b=>b.addEventListener('click', ()=>openItemModal(find(b.dataset.dmEdit), true)));
+  root.querySelectorAll('[data-dm-toggle]').forEach(b=>b.addEventListener('click', ()=>{
+    const it = find(b.dataset.dmToggle); if(!it) return;
+    it.active = it.active===false;
+    saveItemsNow(); render();
+    showToast(it.active ? '⭐ Menü aktif — ana sayfada görünüyor' : 'Menü pasif — müşterilerden gizlendi', it.active ? 'success' : '');
+  }));
+  root.querySelectorAll('[data-dm-del]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Bu günün menüsünü silmek istiyor musunuz?')) return;
+    state.items = state.items.filter(x=>x.id!==b.dataset.dmDel); saveItemsNow(); render();
+  }));
+  const move = (id, dir)=>{
+    const l = dailyMenus(true); l.forEach((x,i)=>x.order = i);
+    const i = l.findIndex(x=>x.id===id), j = i+dir; if(i<0 || j<0 || j>=l.length) return;
+    l[i].order = j; l[j].order = i; saveItemsNow(); render();
+  };
+  root.querySelectorAll('[data-dm-up]').forEach(b=>b.addEventListener('click', ()=>move(b.dataset.dmUp, -1)));
+  root.querySelectorAll('[data-dm-down]').forEach(b=>b.addEventListener('click', ()=>move(b.dataset.dmDown, 1)));
+}
 function moveCategory(id, dir){
   const cats = [...state.categories].sort((a,b)=>(a.order||0)-(b.order||0));
   const idx = cats.findIndex(c=>c.id===id);
@@ -2398,15 +2556,17 @@ function openCategoryModal(existing){
     saveState(); closeModal(); render();
   });
 }
-function openItemModal(existing){
+function openItemModal(existing, daily){
   const cats = state.categories;
+  daily = !!daily || isDaily(existing);
   const body = `
-    <div class="field"><label>Ürün Adı</label><input type="text" id="it-name" value="${existing?escapeHtml(existing.name):''}"></div>
+    <div class="field"><label>${daily?'Menü Adı':'Ürün Adı'}</label><input type="text" id="it-name" value="${existing?escapeHtml(existing.name):''}" ${daily?'placeholder="Örn. Öğle Menüsü"':''}></div>
     <div class="field-row">
       <div class="field"><label>Fiyat</label><input type="number" id="it-price" step="0.01" min="0" value="${existing?existing.price:''}"></div>
-      <div class="field"><label>Kategori</label><select id="it-cat">${cats.map(c=>`<option value="${c.id}" ${existing&&existing.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>
+      ${daily? '' : `<div class="field"><label>Kategori</label><select id="it-cat">${cats.map(c=>`<option value="${c.id}" ${existing&&existing.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>`}
     </div>
-    <div class="field"><label>Açıklama (opsiyonel)</label><textarea id="it-desc" rows="2">${existing?escapeHtml(existing.description||''):''}</textarea></div>
+    <div class="field"><label>${daily?'Açıklama / Menü İçeriği':'Açıklama (opsiyonel)'}</label><textarea id="it-desc" rows="2" ${daily?'placeholder="Örn. Tavuk Pilav + Ayran + Sütlaç"':''}>${existing?escapeHtml(existing.description||''):''}</textarea></div>
+    ${daily? `<div class="field"><label class="chk"><input type="checkbox" id="it-active" ${!existing || existing.active!==false?'checked':''}> Aktif — müşteriler ana sayfada görsün</label></div>` : `
     <div class="field"><label>Etiket</label><select id="it-badge">
       <option value="">Yok</option>
       <option value="yeni" ${existing&&existing.badge==='yeni'?'selected':''}>Yeni</option>
@@ -2418,7 +2578,7 @@ function openItemModal(existing){
       <option value="bowl" ${isBowl(existing)?'selected':''}>Bowl — taban + tavuk + garnitür + meze + sos</option>
       <option value="pilav" ${isPilav(existing)?'selected':''}>Soslu / Özel Tavuk Pilav — tavuk + sos</option>
     </select>
-      <div class="hint">Soslu Tavuk Pilav ürünlerini "${PILAV_CAT_NAME}" kategorisine koyun; sade pilavı "Yok" seçerek ana kategoride tutun.</div></div>
+      <div class="hint">Soslu Tavuk Pilav ürünlerini "${PILAV_CAT_NAME}" kategorisine koyun; sade pilavı "Yok" seçerek ana kategoride tutun.</div></div>`}
     <div class="field"><label>Fotoğraf</label>
       <div id="it-photo-box"></div>
       <div class="photo-drop" id="it-photo-drop">Fotoğraf seçmek için tıklayın</div>
@@ -2429,7 +2589,7 @@ function openItemModal(existing){
     </div>
   `;
   const foot = `<button class="btn btn-ghost" id="it-cancel">Vazgeç</button><button class="btn btn-primary" id="it-save">${existing?'Güncelle':'Kaydet'}</button>`;
-  openModal(existing?'Ürünü Düzenle':'Yeni Ürün', body, foot);
+  openModal(daily ? (existing?'Günün Menüsünü Düzenle':'⭐ Yeni Günün Menüsü') : (existing?'Ürünü Düzenle':'Yeni Ürün'), body, foot);
   let photoData = existing && existing.photoUrl ? existing.photoUrl : null;
   const hadPhoto = !!photoData;
   const showPhoto = ()=>{
@@ -2463,7 +2623,16 @@ function openItemModal(existing){
   document.getElementById('it-save').addEventListener('click',()=>{
     const name = document.getElementById('it-name').value.trim();
     const price = parseFloat(document.getElementById('it-price').value);
-    if(!name || !price || price<=0){ showToast('Lütfen ürün adı ve geçerli fiyat girin'); return; }
+    if(!name || !price || price<=0){ showToast(daily ? 'Lütfen menü adı ve geçerli fiyat girin' : 'Lütfen ürün adı ve geçerli fiyat girin'); return; }
+    if(daily){
+      const data = { name, price, categoryId:'', description: document.getElementById('it-desc').value.trim(), badge:null,
+        isBowl:false, isPilav:false, isDaily:true, active: document.getElementById('it-active').checked, photoUrl: photoData };
+      if(existing) Object.assign(existing, data);
+      else state.items.push({ id:uid('dm'), available:true, order: dailyMenus(true).reduce((m,x)=>Math.max(m, Number(x.order)||0), -1) + 1, ...data });
+      saveItemsNow(); closeModal(); render();
+      showToast(existing ? 'Menü güncellendi' : (data.active ? '⭐ Menü eklendi — ana sayfada görünüyor' : 'Menü eklendi (pasif)'), 'success');
+      return;
+    }
     const data = {
       name, price, categoryId: document.getElementById('it-cat').value,
       description: document.getElementById('it-desc').value.trim(),
@@ -2591,6 +2760,43 @@ function moveOrder(id, status, rowEl){
   if(rowEl && from!==to){ rowEl.classList.add('leaving'); setTimeout(apply, 280); }   // kart akıcı şekilde kayarak çıkar
   else apply();
 }
+/* --- Harita / Yol Tarifi: kurye tek dokunuşla navigasyon başlatır --- */
+function hasGeo(o){ const g = o && o.geo; return !!(g && isFinite(parseFloat(g.lat)) && isFinite(parseFloat(g.lng))); }
+function openMapPicker(o){
+  if(!o) return;
+  const geo = hasGeo(o), lat = geo? (+o.geo.lat).toFixed(6) : '', lng = geo? (+o.geo.lng).toFixed(6) : '';
+  const addr = String(o.address||'').trim();
+  const q = addr ? (/bergama/i.test(addr) ? addr : addr + ', Bergama, İzmir') : '';
+  const dest = geo ? lat+','+lng : q;
+  if(!dest){ showToast('Bu siparişte adres bilgisi yok'); return; }
+  const enc = encodeURIComponent(dest);
+  const opts = [
+    { cls:'g', ico:'G', name:'Google Maps', sub:'Yol tarifini hemen başlat', href:`https://www.google.com/maps/dir/?api=1&destination=${enc}&travelmode=driving` },
+    { cls:'a', ico:'', name:'Apple Haritalar', sub:'iPhone için', href:`https://maps.apple.com/?daddr=${enc}&dirflg=d` },
+    { cls:'y', ico:'Y', name:'Yandex Haritalar', sub:'Yandex Navigasyon / Harita', href: geo ? `https://yandex.com.tr/harita/?rtext=~${lat}%2C${lng}&rtt=auto` : `https://yandex.com.tr/harita/?text=${enc}` }
+  ];
+  if(/android/i.test(navigator.userAgent)) opts.push({ cls:'o', ico:'⋯', name:'Diğer Harita Uygulamaları', sub:'Telefonundaki tüm seçenekler', href: geo ? `geo:${lat},${lng}?q=${lat},${lng}` : `geo:0,0?q=${enc}`, self:true });
+  const body = `
+    <div class="map-dest">
+      <div class="md-ico">${ICONS.pin}</div>
+      <div><strong>${escapeHtml(o.customerName || 'Müşteri')}</strong>
+        <div class="md-addr">${addr? escapeHtml(addr) : '<i>Adres yazılmamış</i>'}</div>
+        <div class="md-src ${geo?'ok':''}">${geo ? '📍 Müşterinin gönderdiği konuma gidilir (kesin nokta)' : '🔎 Adres metnine göre aranır — haritadaki noktayı kontrol edin'}</div>
+      </div>
+    </div>
+    <div class="map-opts">${opts.map(x=>`
+      <a class="map-opt ${x.cls}" href="${escapeHtml(x.href)}" ${x.self? '' : 'target="_blank" rel="noopener"'}>
+        <span class="mo-ico">${x.ico}</span><span class="mo-txt"><b>${x.name}</b><small>${x.sub}</small></span>${ICONS.arrow}
+      </a>`).join('')}</div>
+    ${geo && addr? `<a class="map-alt" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}" target="_blank" rel="noopener">Konum yerine yazılı adresi Google Maps'te ara ›</a>`:''}`;
+  const foot = `${addr? '<button type="button" class="btn" id="map-copy">Adresi Kopyala</button>':''}<button type="button" class="btn btn-ghost" id="map-close">Kapat</button>`;
+  openModal('🗺️ Haritada Aç / Yol Tarifi', body, foot);
+  document.getElementById('map-close').addEventListener('click', closeModal);
+  const cp = document.getElementById('map-copy');
+  if(cp) cp.addEventListener('click', ()=>{
+    (navigator.clipboard ? navigator.clipboard.writeText(addr) : Promise.reject()).then(()=>showToast('Adres kopyalandı', 'success')).catch(()=>showToast('Kopyalanamadı'));
+  });
+}
 function renderAdminOrders(root){
   const all = Object.values(state.orders || {}).filter(Boolean);
   const statusLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', yolda:'Yolda', tamamlandi:'Tamamlandı', iptal:'İptal'};
@@ -2624,9 +2830,9 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.daily? ' <span class="adm-tag daily">⭐ GÜNÜN MENÜSÜ</span>':''}${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
-          ${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}
+          ${(o.phone || o.address || hasGeo(o))? `<div class="ord-contact">${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}${(o.address || hasGeo(o))? `<button type="button" class="tel-link map-link" data-order-map="${o.id}" title="Haritada aç / Yol tarifi">${ICONS.pin}<span>Yol Tarifi</span>${hasGeo(o)? '<i class="map-pin-dot" title="Müşteri konumu var"></i>':''}</button>`:''}</div>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
           ${o.coupon? `<div class="adm-coupon">🎟️ ${escapeHtml(o.coupon.code||'')} · −${fmtPrice(o.discount||0)}${o.subtotal? ` <span style="font-weight:600;opacity:.8;">(ara toplam ${fmtPrice(o.subtotal)})</span>`:''}</div>`:''}
         </div>
@@ -2647,6 +2853,7 @@ function renderAdminOrders(root){
   root.querySelectorAll('[data-order-next]').forEach(b=>b.addEventListener('click', ()=>{
     b.disabled = true; moveOrder(b.dataset.orderNext, b.dataset.to, b.closest('[data-order-row]'));
   }));
+  root.querySelectorAll('[data-order-map]').forEach(b=>b.addEventListener('click', ()=>openMapPicker(getOrders().find(x=>x.id===b.dataset.orderMap))));
   const more = root.querySelector('#arch-more'); if(more) more.addEventListener('click',()=>{ archiveShowAll = true; render(); });
   root.querySelector('#toggle-sound').addEventListener('click',()=>{
     soundEnabled = !soundEnabled;
