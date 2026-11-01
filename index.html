@@ -617,6 +617,92 @@
   .tel-link{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 12px;border-radius:99px;text-decoration:none;font-weight:800;font-size:13.5px;
     background:var(--gold-soft);border:1px solid rgba(212,175,55,.5);color:var(--gold-2);font-variant-numeric:tabular-nums;}
   .tel-link:hover{background:rgba(212,175,55,.24);}
+  /* ödeme şekli seçimi (müşteri sepeti + manuel sipariş) */
+  .pay-seg{display:flex;gap:8px;flex-wrap:wrap;}
+  .pay-opt{flex:1 1 130px;display:flex!important;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--bg-elev);cursor:pointer;font-weight:800!important;font-size:14px!important;color:var(--text)!important;margin:0!important;transition:border-color .2s, background .2s;}
+  .pay-opt input{position:absolute;opacity:0;pointer-events:none;}
+  .pay-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);color:var(--gold-2)!important;box-shadow:0 0 0 3px rgba(212,175,55,.12);}
+  .pay-opt:has(input:focus-visible){outline:2px solid var(--gold);outline-offset:2px;}
+  .field.invalid .pay-opt{border-color:var(--danger);}
+  /* mutfak kartı */
+  .src-tag{display:inline-block;margin:6px 0 2px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:900;letter-spacing:.05em;background:rgba(126,182,230,.14);border:1px solid rgba(126,182,230,.55);color:#A9D0F2;}
+  .pay-pill{border:1px solid var(--glass-border)!important;background:var(--bg-elev);color:var(--text-dim);font-weight:800;}
+  .pay-pill.nakit{background:rgba(168,132,36,.22);border-color:rgba(212,175,55,.6)!important;color:var(--gold-2);}
+  .pay-pill.kart{background:rgba(76,142,218,.2);border-color:rgba(76,142,218,.6)!important;color:#A9D0F2;}
+  .pay-pill.none{color:var(--warn);border-color:rgba(240,190,74,.45)!important;}
+  .manual-btn{width:100%;display:flex;align-items:center;gap:14px;margin:0 0 12px;padding:13px 16px;border-radius:18px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);
+    background:linear-gradient(135deg, rgba(212,175,55,.2), rgba(184,134,11,.1));border:1px dashed rgba(212,175,55,.7);transition:transform .2s var(--ease), border-color .2s;}
+  .manual-btn:hover{border-style:solid;transform:translateY(-1px);}
+  .manual-btn .mi{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:22px;font-weight:900;background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);}
+  .manual-btn b{display:block;font-size:15px;color:var(--gold-2);}
+  .manual-btn small{display:block;margin-top:2px;font-size:12px;color:var(--text-dim);line-height:1.35;}
+  /* manuel sipariş modalı */
+  .mo-lines{display:flex;flex-direction:column;gap:8px;}
+  .mo-line{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--bg-elev);border:1px solid var(--glass-border);}
+  .mo-l-txt{min-width:0;display:flex;flex-direction:column;gap:2px;}
+  .mo-l-txt small{font-size:12px;color:var(--text-dim);line-height:1.4;}
+  .mo-empty{padding:14px;border-radius:14px;border:1px dashed var(--glass-border);text-align:center;font-size:13px;color:var(--text-faint);}
+  .stepper.sm{flex:none;}
+  .mo-sumrow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px;}
+  .mo-sum{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--text-dim);}
+  .mo-sum .disc{color:var(--ok);} .mo-sum .tot{font-size:16px;color:var(--text);} .mo-sum .tot b{color:var(--gold-2);}
+  .mo-disc{display:flex;flex-direction:column;gap:4px;font-size:12px!important;color:var(--text-dim)!important;margin:0!important;}
+  .mo-disc input{width:120px;text-align:center;}
+  .mo-search{margin-bottom:10px;}
+  .mo-items{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow:auto;padding-right:2px;}
+  .mo-gh{font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);margin:2px 2px 6px;}
+  .mo-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px 9px 12px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid var(--glass-border);margin-bottom:6px;}
+  .mo-item.sold{opacity:.5;}
+  .mo-i-txt{min-width:0;display:flex;flex-direction:column;}
+  .mo-i-txt b{font-size:14px;}
+  .mo-i-txt small{font-size:12px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .mo-n{align-self:flex-start;margin-top:2px;font-size:10.5px;font-weight:900;padding:2px 7px;border-radius:99px;background:var(--gold);color:var(--gold-ink);}
+  .mo-i-act{flex:none;display:flex;gap:6px;align-items:center;}
+  .mo-sold{font-size:12px;font-weight:800;color:var(--danger);}
+  /* kasa raporu */
+  .ks-head{padding-bottom:14px;}
+  .ks-nav{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .ks-nav .icon-btn{font-size:20px;font-weight:800;}
+  .ks-nav input[type=date]{flex:0 1 170px;min-width:140px;padding:9px 12px;background:rgba(5,6,8,.5);border:1px solid var(--glass-border);border-radius:12px;font-size:15px;color:var(--text);color-scheme:dark;outline:0;}
+  .ks-nav input[type=date]:disabled{opacity:.45;}
+  .ks-title{margin:12px 0 0;font-family:var(--font-display);}
+  .ks-hero{display:grid;gap:12px;margin-bottom:14px;}
+  .ks-cash{display:flex;flex-direction:column;gap:4px;padding:18px 20px;border-radius:22px;
+    background:linear-gradient(135deg, rgba(212,175,55,.28), rgba(184,134,11,.12) 60%, rgba(22,24,30,.6));border:1px solid rgba(212,175,55,.7);box-shadow:0 14px 34px rgba(0,0,0,.35);}
+  .ks-cash .ks-l{font-size:13px;font-weight:800;color:var(--gold-2);} .ks-cash .ks-l small{font-weight:600;color:var(--text-dim);}
+  .ks-cash b{font-size:40px;line-height:1.1;letter-spacing:-.02em;color:#fff;}
+  .ks-cash .ks-s{font-size:12.5px;color:var(--text-dim);}
+  .ks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  @media (min-width:720px){ .ks-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  .ks-stat{display:flex;flex-direction:column;gap:3px;padding:13px 14px;border-radius:16px;background:var(--panel);border:1px solid var(--glass-border);min-width:0;}
+  .ks-stat .ks-l{font-size:12px;font-weight:700;color:var(--text-faint);}
+  .ks-stat .ks-v{font-size:21px;color:var(--text);overflow:hidden;text-overflow:ellipsis;}
+  .ks-stat.gold .ks-v{color:var(--gold-2);} .ks-stat.bad .ks-v{color:var(--danger);}
+  .ks-stat .ks-s{font-size:11.5px;color:var(--text-dim);line-height:1.35;}
+  .ks-two{display:grid;gap:14px;} @media (min-width:900px){ .ks-two{grid-template-columns:1fr 1fr;} .ks-two .card{margin-bottom:0;} .ks-two{margin-bottom:14px;} }
+  .ks-bar{display:flex;gap:2px;height:16px;border-radius:6px;overflow:hidden;margin:10px 0 12px;background:var(--bg-elev);}
+  .ks-bar.empty{background:repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 6px, transparent 6px 12px);}
+  .ks-seg{display:block;min-width:4px;}
+  .ks-seg.nakit,.ks-sw.nakit{background:#A88424;} .ks-seg.kart,.ks-sw.kart{background:#4C8EDA;}
+  .ks-seg.none,.ks-sw.none{background:repeating-linear-gradient(135deg,#5b5f66 0 4px,#43464c 4px 8px);}
+  .ks-sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle;}
+  .ks-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .ks-table th{text-align:left;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--text-faint);padding:6px 8px;border-bottom:1px solid var(--glass-border);}
+  .ks-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;}
+  .ks-table td.num,.ks-table th:nth-child(n+2){text-align:right;}
+  .ks-orders th:nth-child(n+2), .ks-orders td{text-align:left;} .ks-orders td.num{text-align:right;} .ks-orders th:nth-child(5){text-align:right;}
+  .ks-orders td.num:first-child{text-align:left;}
+  .ks-muted{color:var(--text-faint);}
+  .ks-status{display:flex;flex-direction:column;gap:4px;margin-top:12px;font-size:12.5px;color:var(--text-dim);}
+  .ks-hours{display:flex;align-items:flex-end;gap:4px;height:150px;padding-top:6px;}
+  .ks-hcol{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;}
+  .ks-hb{width:100%;max-width:26px;background:var(--gold);border-radius:4px 4px 0 0;transition:height .4s var(--ease);}
+  .ks-hn{font-size:10.5px;font-weight:800;color:var(--text-dim);min-height:13px;}
+  .ks-hl{font-size:10px;color:var(--text-faint);font-variant-numeric:tabular-nums;}
+  .ks-scroll{overflow-x:auto;margin:0 -4px;}
+  .ks-orders{min-width:560px;}
+  .ks-cancel td{opacity:.5;text-decoration:line-through;} .ks-cancel td:last-child{text-decoration:none;}
+
   /* sipariş kartı: ara + yol tarifi */
   .ord-contact{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px;}
   .ord-contact .tel-link{margin-top:0;}
@@ -806,7 +892,7 @@
   .ord-act.done{background:var(--ok-soft);color:var(--ok);border-color:rgba(127,199,154,.45);}
   .ord-empty{padding:26px 10px;text-align:center;color:var(--text-dim);font-size:13.5px;}
   .ord-empty .ei{font-size:30px;display:block;margin-bottom:6px;}
-  @media (max-width:520px){ .ord-list .kv-row{flex-direction:column;align-items:stretch !important;} .ord-side{flex-direction:row;justify-content:space-between;align-items:center;} .otab{font-size:11.5px;} }
+  @media (max-width:520px){ .ord-list .kv-row{flex-direction:column;align-items:stretch !important;} .ord-side{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;} .otab{font-size:11.5px;} }
   .tab-count{background:var(--danger);color:#fff;border-radius:99px;font-size:11px;padding:1px 7px;margin-left:6px;font-weight:800;}
   @media (max-width:640px){
     #admin-body{padding:14px;}
@@ -1066,7 +1152,7 @@ let searchQuery = '';
 let cart = loadCart();
 
 function loadCart(){ try{ return JSON.parse(localStorage.getItem('qrmenu_cart_v1')) || {}; }catch(e){ return {}; } }
-function saveCart(){ try{ localStorage.setItem('qrmenu_cart_v1', JSON.stringify(cart)); }catch(e){} }
+function saveCart(){ if(manual && manual.building) return; try{ localStorage.setItem('qrmenu_cart_v1', JSON.stringify(cart)); }catch(e){} }
 function loadCustomer(){ try{ return JSON.parse(localStorage.getItem('qrmenu_customer_v1')) || {}; }catch(e){ return {}; } }
 function saveCustomer(c){ try{ localStorage.setItem('qrmenu_customer_v1', JSON.stringify(c)); }catch(e){} }
 
@@ -1297,6 +1383,7 @@ setInterval(()=>{
 
 /* Siparişler sekmesi: sadece "Siparişler" açıksa tam yeniden çiz (Ayarlar formunda yazılanlar silinmesin) */
 function refreshAdminOrdersUI(){
+  if(view==='admin' && adminTab==='kasa' && !document.getElementById('modal-overlay')){ const b = document.getElementById('kasa-root'); if(b) renderKasaBody(b); }
   if(view!=='admin') return;
   if(adminTab==='orders'){ render(); return; }
   const tab = document.querySelector('[data-atab="orders"]');
@@ -1323,6 +1410,7 @@ function startOrdersListener(){
       const row = document.querySelector('[data-order-row="'+o.id+'"]');
       if(row) row.classList.remove('order-fresh');
     }, 4000);
+    if(o.source==='manuel'){ refreshAdminOrdersUI(); return; }   // panelden girilen sipariş: ses/bildirim yok
     playOrderSound();
     if(navigator.vibrate) navigator.vibrate([200,100,200]);
     showToast('🛎 Yeni sipariş: ' + fmtMoney(o.total, state.settings.currency));
@@ -1345,8 +1433,9 @@ function renderSetupError(msg){
 
 /* ============================= MODAL / SHEET ============================= */
 let modalToken = 0;
+var modalOnClose = null;   // modal kapanınca bir kez çalışır (manuel siparişte Bowl ekranından geri dönüş)
 function openModal(title, bodyHtml, footHtml, cls){
-  modalToken++;
+  modalToken++; modalOnClose = null;
   const root = document.getElementById('modal-root');
   root.innerHTML = `<div class="overlay" id="modal-overlay"><div class="dialog ${cls||''}" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
     <div class="dialog-head"><h3>${title}</h3><button class="icon-btn" id="modal-close" aria-label="Kapat">${ICONS.close}</button></div>
@@ -1425,6 +1514,7 @@ function closeModal(){
   const token = ++modalToken;
   ov.classList.add('closing');
   setTimeout(()=>{ if(token===modalToken) root.innerHTML=''; }, 210);
+  const cb = modalOnClose; modalOnClose = null; if(cb) setTimeout(cb, 240);
 }
 
 /* ============================= FOTOĞRAF KÜÇÜLTME ============================= */
@@ -2137,7 +2227,7 @@ function notifyKitchen(order, test){
   const body = test
     ? { topic:c.topic, title:'🔔 Test Bildirimi - RiceMore', message:'Bildirimler çalışıyor! Yeni siparişler bu şekilde gelecek.', priority:5, tags:['bell'], click:kitchenLink() }
     : { topic:c.topic, title:'🔔 Yeni Sipariş Alındı! - RiceMore',
-        message:`Müşteri: ${order.customerName || '—'} | Tutar: ${fmtMoney(order.total, state.settings.currency)} - Detaylar için tıklayın.`,
+        message:`Müşteri: ${order.customerName || '—'} | Tutar: ${fmtMoney(order.total, state.settings.currency)}${order.payment? ' | Kapıda: ' + (PAY_LABEL[order.payment]||order.payment) : ''} - Detaylar için tıklayın.`,
         priority:5, tags:['bell'], click:kitchenLink() };
   return fetch(NTFY_SERVER, { method:'POST', body: JSON.stringify(body), keepalive:true })
     .then(r=>r.ok).catch(()=>false);
@@ -2311,6 +2401,11 @@ function openCartModal(){
     <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea>
       ${geoPos? `<label class="chk geo-share"><input type="checkbox" id="cart-geo"> <span>📍 Konumumu kuryeye gönder <small>Kurye adresinizi haritada daha hızlı bulur (isteğe bağlı)</small></span></label>`:''}</div>
     <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>
+    <div class="field pay-field" id="pay-field" style="margin:12px 0 4px;"><label>Ödeme Şekli <em>(kapıda)</em></label>
+      <div class="pay-seg" role="radiogroup" aria-label="Ödeme şekli">
+        <label class="pay-opt"><input type="radio" name="cart-pay" value="nakit" ${cust.pay==='nakit'?'checked':''}><span>💵 Nakit</span></label>
+        <label class="pay-opt"><input type="radio" name="cart-pay" value="kart" ${cust.pay==='kart'?'checked':''}><span>💳 Kredi Kartı</span></label>
+      </div><div class="hint" id="pay-hint">Ödemeyi teslimatta kuryeye yaparsınız.</div></div>
     <div class="field coupon-field" style="margin:12px 0 4px;"><label for="cart-coupon">İndirim Kuponu</label>
       <div id="coupon-box"></div><div class="hint" id="coupon-hint"></div></div>`;
   const foot = `<div class="send-wrap"><div id="cart-closed" role="alert"></div><button type="button" class="btn btn-primary btn-block btn-lg" id="cart-send"><span>Siparişi Onayla</span><span class="btn-sub num" id="cart-send-total"></span></button></div>`;
@@ -2324,6 +2419,7 @@ function openCartModal(){
     renderCartLines();
   });
   ['cart-name','cart-address','cart-phone'].forEach(id=>document.getElementById(id).addEventListener('input', e=>e.target.closest('.field').classList.remove('invalid')));
+  document.querySelectorAll('input[name="cart-pay"]').forEach(i=>i.addEventListener('change', ()=>document.getElementById('pay-field').classList.remove('invalid')));
   const ph = document.getElementById('cart-phone');
   ph.addEventListener('input', ()=>{                    // yazarken 05XX XXX XX XX biçimine getir
     let d = ph.value.replace(/\D/g,'');
@@ -2373,6 +2469,24 @@ function showClosedAlert(){
   }
   if(navigator.vibrate) navigator.vibrate(120);
 }
+/* Sepet nesnesinden sipariş kalemleri (online ve manuel siparişte aynı biçim) */
+function orderItemsFrom(cartObj){
+  return Object.entries(cartObj).map(([key,c])=>{
+      const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
+      if(isDaily(state.items.find(x=>x.id===li.itemId))) li.daily = true;   // mutfakta "Günün Menüsü" etiketi
+      if(c.options && c.options.customName) li.customName = cleanBoxName(c.options.customName);   // kutu üzerine yazılacak isim
+      if(c.options){
+        li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
+        li.options.kind = c.options.kind || 'bowl';
+        if(c.options.ready) li.options.ready = c.options.ready;   // hazır bowl (olduğu gibi / değiştirildi)
+        if(c.options.base) li.options.base = c.options.base;
+        if((c.options.meze||[]).length) li.options.meze = c.options.meze;
+        if((c.options.sauce||[]).length) li.options.sauce = c.options.sauce;
+        if(c.options.extra){ li.options.extraGarnish = c.options.extraGarnish||0; li.options.extraMeze = c.options.extraMeze||0; li.options.extraSauce = c.options.extraSauce||0; li.options.extra = c.options.extra; }
+      }
+      return li;
+  });
+}
 async function sendOrder(){
   const lines = Object.entries(cart);
   if(!lines.length){ showToast('Sepetiniz boş'); return; }
@@ -2382,10 +2496,15 @@ async function sendOrder(){
   const phoneOk = validPhone(phoneEl.value), phone = phoneOk ? fmtPhone(phoneEl.value) : '';
   const address = (document.getElementById('cart-address')?.value || '').trim();
   const note = document.getElementById('cart-note').value.trim();
+  const payEl = document.querySelector('input[name="cart-pay"]:checked'), payment = payEl ? payEl.value : '';
   let firstBad = null;
   [[nameEl,name],[phoneEl,phone],[addrEl,address]].forEach(([el,v])=>{ el.closest('.field').classList.toggle('invalid', !v); if(!v && !firstBad) firstBad = el; });
   const ph = document.getElementById('phone-hint');
   if(ph){ ph.textContent = phoneOk ? 'Siparişinizle ilgili sizi arayabilmemiz için.' : 'Geçerli bir cep telefonu girin: 05XX XXX XX XX (11 hane).'; ph.style.color = phoneOk ? '' : 'var(--danger)'; }
+  if(!firstBad && !payment){                          // ödeme şekli seçilmeden sipariş gitmez (kasa raporu için)
+    const pf = document.getElementById('pay-field'); pf.classList.add('invalid'); pf.scrollIntoView({block:'center', behavior:'smooth'});
+    showToast('Lütfen ödeme şeklini seçin: Nakit veya Kredi Kartı'); return;
+  }
   if(firstBad){
     firstBad.focus();
     showToast(firstBad===phoneEl ? (phoneEl.value.trim() ? 'Telefon numarası eksik veya hatalı. Örnek: 0536 123 45 67' : 'Lütfen telefon numaranızı girin') : 'Lütfen ad soyad, telefon ve teslimat adresini girin');
@@ -2415,26 +2534,13 @@ async function sendOrder(){
   const order = {
     id: uid('ord'),
     createdAt: new Date().toISOString(),
-    items: Object.entries(cart).map(([key,c])=>{
-      const li = { itemId: lineItemId(key,c), name:c.name, price:c.price, qty:c.qty };
-      if(isDaily(state.items.find(x=>x.id===li.itemId))) li.daily = true;   // mutfakta "Günün Menüsü" etiketi
-      if(c.options && c.options.customName) li.customName = cleanBoxName(c.options.customName);   // kutu üzerine yazılacak isim
-      if(c.options){
-        li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
-        li.options.kind = c.options.kind || 'bowl';
-        if(c.options.ready) li.options.ready = c.options.ready;   // hazır bowl (olduğu gibi / değiştirildi)
-        if(c.options.base) li.options.base = c.options.base;
-        if((c.options.meze||[]).length) li.options.meze = c.options.meze;
-        if((c.options.sauce||[]).length) li.options.sauce = c.options.sauce;
-        if(c.options.extra){ li.options.extraGarnish = c.options.extraGarnish||0; li.options.extraMeze = c.options.extraMeze||0; li.options.extraSauce = c.options.extraSauce||0; li.options.extra = c.options.extra; }
-      }
-      return li;
-    }),
+    items: orderItemsFrom(cart),
     total,
     customerName: name,
     phone: phone,
     ...(coupon? { subtotal, discount, coupon: { code: coupon.code, type: coupon.type, value: coupon.value } } : {}),
     address: address,
+    payment, source: 'online',
     ...(shareGeo? { geo: { lat: +shareGeo.lat.toFixed(6), lng: +shareGeo.lng.toFixed(6), acc: Math.round(shareGeo.acc||0) } } : {}),
     note: note,
     status: 'yeni'
@@ -2447,7 +2553,7 @@ async function sendOrder(){
   notifyKitchen(order);                                              // mutfak telefonuna (ntfy) sesli bildirim
   askNotifyPermission();                                             // sipariş durumu değişince bu telefona haber verebilmek için
 
-  saveCustomer({name, address, phone});
+  saveCustomer({name, address, phone, pay: payment});
   setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name, ...(coupon? { subtotal, discount, couponCode: coupon.code } : {}) });
   cart = {}; saveCart();
   refreshAllControls(); updateDock();
@@ -2578,6 +2684,7 @@ function renderAdmin(root){
           <div class="admin-tab ${adminTab==='daily'?'active':''}" data-atab="daily">⭐ Günün Menüleri${(()=>{ const n = dailyMenus().length; return n? `<span class="tab-count" style="background:var(--gold);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[]),...(state.options.sauce||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
+          <div class="admin-tab ${adminTab==='kasa'?'active':''}" data-atab="kasa">💰 Kasa / Muhasebe</div>
           <div class="admin-tab ${adminTab==='coupons'?'active':''}" data-atab="coupons">🎟️ Kuponlar</div>
           <div class="admin-tab ${adminTab==='settings'?'active':''}" data-atab="settings">Ayarlar</div>
         </div>
@@ -2609,6 +2716,7 @@ function renderAdmin(root){
   else if(adminTab==='stock') renderAdminStock(body);
   else if(adminTab==='orders') renderAdminOrders(body);
   else if(adminTab==='coupons') renderAdminCoupons(body);
+  else if(adminTab==='kasa') renderAdminKasa(body);
   else renderAdminSettings(body);
 }
 
@@ -3154,6 +3262,326 @@ function openMapPicker(o){
     (navigator.clipboard ? navigator.clipboard.writeText(addr) : Promise.reject()).then(()=>showToast('Adres kopyalandı', 'success')).catch(()=>showToast('Kopyalanamadı'));
   });
 }
+/* ============================= MANUEL / TELEFON SİPARİŞİ =============================
+   Panelden girilen sipariş online siparişle aynı biçimde orders/<id> altına "yeni" olarak yazılır:
+   aynı mutfak sekmeleri, aynı takip, aynı kasa raporu. Bowl / Tavuk Pilav / Hazır Bowl seçimleri
+   müşteri ekranındaki Bowl modalıyla yapılır (ek ücretler aynı hesaplanır). */
+const PAY_LABEL = { nakit:'Nakit', kart:'Kredi Kartı' };
+var manual = null;   // { cart:{}, form:{...}, building:false, saved:null, q:'' }
+function openManualOrder(){
+  if(!manual) manual = { cart:{}, form:{ type:'telefon', pay:'', name:'', phone:'', address:'', note:'', discount:'' }, building:false, saved:null, q:'' };
+  renderManualModal();
+}
+function manualSub(){ return Object.values(manual.cart).reduce((t,c)=>t + c.qty*c.price, 0); }
+function manualDisc(){ const d = Math.max(0, parseFloat(String(manual.form.discount).replace(',','.'))||0); return Math.min(d, manualSub()); }
+/* müşteri ekranındaki ekleme fonksiyonlarını manuel sepetle çalıştırır */
+function withManualCart(fn){
+  const saved = cart; cart = manual.cart; manual.building = true;
+  try{ fn(); } finally { manual.cart = cart; cart = saved; manual.building = false; }
+}
+function manualBuild(fn){                     // Bowl modalı açılır; kapanınca manuel sipariş ekranına dönülür
+  manual.saved = cart; cart = manual.cart; manual.building = true;
+  fn();
+  if(document.getElementById('bowl-root')) modalOnClose = manualBuildDone;
+  else manualBuildDone();
+}
+function manualBuildDone(){
+  if(!manual || !manual.building) return;
+  manual.cart = cart; cart = manual.saved; manual.saved = null; manual.building = false;
+  renderManualModal();
+}
+function manualItemGroups(){
+  const ok = it => it && !(isDaily(it) && it.active===false);
+  const groups = [], used = new Set();
+  const push = (title, list)=>{ list = list.filter(it=>ok(it) && !used.has(it.id)); if(list.length){ list.forEach(it=>used.add(it.id)); groups.push({ title, list }); } };
+  push("🥗 Hazır Bowl'lar", state.items.filter(isReady));
+  push('⭐ Günün Menüleri', dailyMenus());
+  sortedCats().forEach(c=>push(c.name, state.items.filter(it=>it.categoryId===c.id && !isDaily(it))));
+  push('Diğer', state.items.filter(it=>!isDaily(it)));
+  return groups;
+}
+function manualItemRow(it){
+  const id = escapeHtml(it.id), sold = it.available===false, n = Object.entries(manual.cart).reduce((t,[k,c])=>t + (lineItemId(k,c)===it.id ? c.qty : 0), 0);
+  let act;
+  if(sold) act = `<span class="mo-sold">Tükendi</span>`;
+  else if(isReady(it)) act = readyMissing(it)
+      ? `<button type="button" class="btn btn-sm" data-m-edit="${id}">Değiştir ›</button>`
+      : `<button type="button" class="icon-btn" data-m-edit="${id}" title="Malzemeleri değiştir">${ICONS.edit}</button><button type="button" class="btn btn-sm btn-primary" data-m-ready="${id}">${ICONS.plus} Ekle</button>`;
+  else if(hasBuilder(it)) act = `<button type="button" class="btn btn-sm btn-primary" data-m-build="${id}">Seç ›</button>`;
+  else act = `<button type="button" class="btn btn-sm btn-primary" data-m-add="${id}">${ICONS.plus} Ekle</button>`;
+  return `<div class="mo-item ${sold?'sold':''}"><div class="mo-i-txt"><b>${escapeHtml(it.name)}</b>${n? `<span class="mo-n">${n} sepette</span>`:''}
+      <small>${fmtPrice(itemShowPrice(it))}${isBowl(it)&&!isReady(it)? ' · Bowl seçimi' : isPilav(it)? ' · tavuk + sos' : isReady(it)? ' · ' + escapeHtml(readyNames(it).join(', ')) : ''}</small></div>
+    <div class="mo-i-act">${act}</div></div>`;
+}
+function renderManualItems(){
+  const box = document.getElementById('mo-items'); if(!box) return;
+  const q = trLower((manual.q||'').trim());
+  const html = manualItemGroups().map(g=>{
+    const list = q ? g.list.filter(it=>trLower(it.name).includes(q) || (isReady(it) && trLower(readyNames(it).join(' ')).includes(q))) : g.list;
+    return list.length ? `<div class="mo-grp"><div class="mo-gh">${escapeHtml(g.title)}</div>${list.map(manualItemRow).join('')}</div>` : '';
+  }).join('');
+  box.innerHTML = html || `<div class="hint" style="text-align:center;padding:14px;">Ürün bulunamadı.</div>`;
+}
+function renderManualLines(){
+  const box = document.getElementById('mo-lines'); if(!box) return;
+  const lines = Object.entries(manual.cart);
+  box.innerHTML = lines.length ? lines.map(([k,c])=>`
+    <div class="mo-line">
+      <div class="mo-l-txt"><b>${escapeHtml(c.name)}</b>${c.options && c.options.customName? ` <span class="adm-boxname" style="font-size:11px;">📦 ${escapeHtml(boxNameUpper(c.options.customName))}</span>`:''}
+        ${c.options? `<small>${escapeHtml(optsText(c.options))}</small>`:''}<small class="num">${fmtPrice(c.price)} × ${c.qty} = <b>${fmtPrice(c.price*c.qty)}</b></small></div>
+      <div class="stepper sm"><button type="button" data-ml-dec="${escapeHtml(k)}" aria-label="Azalt">${ICONS.minus}</button><span class="q">${c.qty}</span><button type="button" data-ml-inc="${escapeHtml(k)}" aria-label="Arttır">${ICONS.plus}</button></div>
+    </div>`).join('') : `<div class="mo-empty">Henüz ürün eklenmedi — aşağıdan ürün seçin.</div>`;
+  const sub = manualSub(), d = manualDisc();
+  const st = document.getElementById('mo-sum');
+  if(st) st.innerHTML = lines.length ? `<span>Ara toplam <b class="num">${fmtPrice(sub)}</b></span>${d? `<span class="disc">İndirim <b class="num">−${fmtPrice(d)}</b></span>`:''}<span class="tot">Toplam <b class="num">${fmtPrice(sub-d)}</b></span>` : '';
+  const t = document.getElementById('mo-total'); if(t) t.textContent = lines.length ? fmtPrice(sub-d) : '';
+  const items = document.getElementById('mo-items'); if(items) renderManualItems();
+}
+function renderManualModal(){
+  const f = manual.form;
+  const seg = (name, val, opts)=>`<div class="pay-seg">${opts.map(([v,l])=>`<label class="pay-opt"><input type="radio" name="${name}" value="${v}" ${val===v?'checked':''}><span>${l}</span></label>`).join('')}</div>`;
+  const body = `
+    <div class="mo-wrap">
+      <div class="field" id="mo-type-f"><label>Sipariş Türü</label>${seg('mo-type', f.type, [['telefon','📞 Telefon / Paket'],['dukkan','🏪 Dükkan / Gel-Al']])}</div>
+      <div class="field" id="mo-pay-f"><label>Ödeme Şekli <em>*</em></label>${seg('mo-pay', f.pay, [['nakit','💵 Nakit'],['kart','💳 Kredi Kartı']])}</div>
+      <div class="field-row">
+        <div class="field"><label for="mo-name">Müşteri Adı</label><input type="text" id="mo-name" value="${escapeHtml(f.name)}" placeholder="${f.type==='dukkan'?'Opsiyonel':'Ad Soyad'}" autocomplete="off"></div>
+        <div class="field" id="mo-phone-f"><label for="mo-phone">Telefon</label><input type="tel" id="mo-phone" inputmode="tel" maxlength="17" value="${escapeHtml(f.phone)}" placeholder="05XX XXX XX XX" autocomplete="off"></div>
+      </div>
+      <div class="field" id="mo-addr-f" ${f.type==='dukkan'?'hidden':''}><label for="mo-addr">Teslimat Adresi <em>*</em></label><textarea id="mo-addr" rows="2" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(f.address)}</textarea></div>
+      <div class="field"><label for="mo-note">Sipariş Notu</label><input type="text" id="mo-note" value="${escapeHtml(f.note)}" placeholder="Örn. Acısız, zile basmayın…" autocomplete="off"></div>
+
+      <div class="form-title" style="margin-top:6px;">Sipariş İçeriği</div>
+      <div id="mo-lines" class="mo-lines"></div>
+      <div class="mo-sumrow"><div id="mo-sum" class="mo-sum"></div>
+        <label class="mo-disc">İndirim / İkram (₺)<input type="number" id="mo-discount" min="0" step="1" inputmode="decimal" value="${escapeHtml(String(f.discount||''))}" placeholder="0"></label></div>
+
+      <div class="form-title" style="margin-top:14px;">Ürün Ekle</div>
+      <label class="search mo-search">${ICONS.search}<input type="search" id="mo-q" placeholder="Ürün ara… (Bowl, pilav, ayran)" value="${escapeHtml(manual.q||'')}" autocomplete="off"></label>
+      <div id="mo-items" class="mo-items"></div>
+    </div>`;
+  const foot = `<button type="button" class="btn btn-ghost" id="mo-cancel">Vazgeç</button>
+    <button type="button" class="btn btn-primary btn-lg" id="mo-save"><span>✓ Siparişi Kaydet</span><span class="btn-sub num" id="mo-total"></span></button>`;
+  openModal('📞 Manuel / Telefon Siparişi', body, foot, 'manual-dlg');
+  const dlg = document.querySelector('#modal-overlay .dialog');
+  const bindIn = (id, key, fmt)=>{ const el = document.getElementById(id); el.addEventListener('input', ()=>{ if(fmt) fmt(el); manual.form[key] = el.value; el.closest('.field') && el.closest('.field').classList.remove('invalid'); if(key==='discount') renderManualLines(); }); };
+  bindIn('mo-name','name'); bindIn('mo-addr','address'); bindIn('mo-note','note'); bindIn('mo-discount','discount');
+  bindIn('mo-phone','phone', el=>{ let d = el.value.replace(/\D/g,''); if(d[0]==='9' && d.length>=12){ el.value = fmtPhone(d); return; } if(d[0]==='5') d = '0'+d; el.value = d ? fmtPhone(d) : ''; });
+  dlg.querySelectorAll('input[name="mo-type"]').forEach(i=>i.addEventListener('change', ()=>{
+    manual.form.type = i.value; document.getElementById('mo-addr-f').hidden = i.value==='dukkan';
+    document.getElementById('mo-name').placeholder = i.value==='dukkan' ? 'Opsiyonel' : 'Ad Soyad';
+  }));
+  dlg.querySelectorAll('input[name="mo-pay"]').forEach(i=>i.addEventListener('change', ()=>{ manual.form.pay = i.value; document.getElementById('mo-pay-f').classList.remove('invalid'); }));
+  document.getElementById('mo-q').addEventListener('input', e=>{ manual.q = e.target.value; renderManualItems(); });
+  document.getElementById('mo-items').addEventListener('click', e=>{
+    const b = e.target.closest('[data-m-add],[data-m-ready],[data-m-edit],[data-m-build]'); if(!b) return;
+    const it = state.items.find(x=>x.id===(b.dataset.mAdd||b.dataset.mReady||b.dataset.mEdit||b.dataset.mBuild)); if(!it) return;
+    if(b.dataset.mAdd){
+      if(!isOrderable(it)){ showToast('Bu ürün şu an tükendi'); return; }
+      if(!manual.cart[it.id]) manual.cart[it.id] = { qty:0, price:it.price, name:it.name };
+      manual.cart[it.id].qty += 1; renderManualLines(); showToast(it.name + ' eklendi', 'success');
+    }
+    else if(b.dataset.mReady){ withManualCart(()=>addReadyBowl(it.id, 1)); renderManualLines(); }
+    else if(b.dataset.mEdit) manualBuild(()=>openReadyCustomize(it.id, 1));
+    else manualBuild(()=>openBowlModal(it.id, 1, isPilav(it) ? 'pilav' : undefined));
+  });
+  document.getElementById('mo-lines').addEventListener('click', e=>{
+    const b = e.target.closest('[data-ml-inc],[data-ml-dec]'); if(!b) return;
+    const k = b.dataset.mlInc || b.dataset.mlDec, c = manual.cart[k]; if(!c) return;
+    c.qty += b.dataset.mlInc ? 1 : -1; if(c.qty<=0) delete manual.cart[k];
+    renderManualLines();
+  });
+  document.getElementById('mo-cancel').addEventListener('click', ()=>{
+    if(Object.keys(manual.cart).length && !confirm('Girilen sipariş silinsin mi?')) return;
+    manual = null; closeModal();
+  });
+  document.getElementById('mo-save').addEventListener('click', saveManualOrder);
+  renderManualLines();
+}
+function saveManualOrder(){
+  const f = manual.form, lines = Object.keys(manual.cart);
+  if(!lines.length){ showToast('Önce siparişe ürün ekleyin'); document.getElementById('mo-q').focus(); return; }
+  const bad = (id, msg)=>{ const el = document.getElementById(id); el.classList.add('invalid'); el.scrollIntoView({block:'center', behavior:'smooth'}); showToast(msg); };
+  if(!f.pay) return bad('mo-pay-f', 'Lütfen ödeme şeklini seçin (Nakit / Kredi Kartı)');
+  const phoneRaw = (f.phone||'').trim();
+  if(phoneRaw && !validPhone(phoneRaw)) return bad('mo-phone-f', 'Telefon numarası eksik veya hatalı. Örnek: 0536 123 45 67');
+  if(f.type==='telefon' && !f.address.trim()) return bad('mo-addr-f', 'Paket sipariş için teslimat adresini girin');
+  const sub = Math.round(manualSub()*100)/100, d = Math.round(manualDisc()*100)/100;
+  const order = {
+    id: uid('ord'), createdAt: new Date().toISOString(),
+    items: orderItemsFrom(manual.cart),
+    total: Math.round((sub-d)*100)/100,
+    customerName: f.name.trim() || (f.type==='dukkan' ? 'Dükkan Müşterisi' : 'Telefon Müşterisi'),
+    phone: phoneRaw ? fmtPhone(phoneRaw) : '',
+    address: f.type==='dukkan' ? '' : f.address.trim(),
+    note: f.note.trim(),
+    status: 'yeni', source: 'manuel', orderType: f.type, payment: f.pay,
+    ...(d? { subtotal: sub, discount: d } : {})
+  };
+  if(!pushOrder(order)) return;
+  if(!Array.isArray(state.orders)) state.orders = toList(state.orders);
+  if(!state.orders.some(x=>x.id===order.id)) state.orders.push(order);
+  manual = null; closeModal();
+  adminTab = 'orders'; setOrderTab('yeni'); render();
+  showToast('✓ Manuel sipariş kaydedildi — "Yeni" sekmesinde · ' + fmtPrice(order.total), 'success');
+}
+
+/* ============================= KASA / MUHASEBE RAPORU ============================= */
+let kasaDate = '', kasaAll = false;
+function istHour(d){
+  try{ return +new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Istanbul', hour:'2-digit', hourCycle:'h23'}).format(d) % 24; }catch(e){ return d.getHours(); }
+}
+function shiftDate(ymd, n){ const [y,m,d] = ymd.split('-').map(Number); const t = new Date(Date.UTC(y,m-1,d+n,12)); return t.toISOString().slice(0,10); }
+function fmtDayTR(ymd){
+  const [y,m,d] = ymd.split('-').map(Number), dt = new Date(Date.UTC(y,m-1,d,12));
+  return d+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][m-1]+' '+y+', '+wdName(WD_JS[dt.getUTCDay()]);
+}
+function kasaData(){
+  const all = getOrders().filter(o=>o && o.createdAt);
+  const list = kasaAll ? all : all.filter(o=>istDay(new Date(o.createdAt)).date===kasaDate);
+  const valid = list.filter(o=>o.status!=='iptal'), cancelled = list.filter(o=>o.status==='iptal');
+  const sum = arr => Math.round(arr.reduce((t,o)=>t + (Number(o.total)||0), 0)*100)/100;
+  const isMan = o => o.source==='manuel';
+  const done = valid.filter(o=>o.status==='tamamlandi'), open = valid.filter(o=>o.status!=='tamamlandi');
+  const pay = k => valid.filter(o=>(o.payment||'')===k);
+  const items = {};
+  valid.forEach(o=>toList(o.items).forEach(li=>{ const k = li.name||'—'; items[k] = items[k] || { name:k, qty:0, rev:0 }; items[k].qty += Number(li.qty)||0; items[k].rev += (Number(li.price)||0)*(Number(li.qty)||0); }));
+  const hours = Array(24).fill(0).map(()=>({ n:0, rev:0 }));
+  valid.forEach(o=>{ const h = istHour(new Date(o.createdAt)); hours[h].n++; hours[h].rev += Number(o.total)||0; });
+  return {
+    list, valid, cancelled, ciro: sum(valid), count: valid.length,
+    online: { n: valid.filter(o=>!isMan(o)).length, sum: sum(valid.filter(o=>!isMan(o))) },
+    manuel: { n: valid.filter(isMan).length, sum: sum(valid.filter(isMan)) },
+    nakit: { n: pay('nakit').length, sum: sum(pay('nakit')), done: sum(pay('nakit').filter(o=>o.status==='tamamlandi')) },
+    kart: { n: pay('kart').length, sum: sum(pay('kart')), done: sum(pay('kart').filter(o=>o.status==='tamamlandi')) },
+    none: { n: pay('').length, sum: sum(pay('')) },
+    done: { n: done.length, sum: sum(done) }, open: { n: open.length, sum: sum(open) },
+    cancel: { n: cancelled.length, sum: sum(cancelled) },
+    discount: Math.round(valid.reduce((t,o)=>t + (Number(o.discount)||0), 0)*100)/100,
+    top: Object.values(items).sort((a,b)=>b.qty-a.qty || b.rev-a.rev).slice(0,8),
+    hours
+  };
+}
+function renderAdminKasa(root){
+  if(!kasaDate) kasaDate = istDay().date;
+  root.innerHTML = `<div id="kasa-root"></div>`;
+  renderKasaBody(document.getElementById('kasa-root'));
+}
+function renderKasaBody(box){
+  const D = kasaData(), today = istDay().date, pct = (a,b)=> b ? Math.round(a/b*100) : 0;
+  const title = kasaAll ? 'Tüm Zamanlar' : (kasaDate===today ? 'Bugün · ' : kasaDate===shiftDate(today,-1) ? 'Dün · ' : '') + fmtDayTR(kasaDate);
+  const stat = (label, val, sub, cls)=>`<div class="ks-stat ${cls||''}"><span class="ks-l">${label}</span><b class="ks-v num">${val}</b>${sub? `<span class="ks-s">${sub}</span>`:''}</div>`;
+  const bar = (segs, total)=> total ? `<div class="ks-bar" role="img" aria-label="${segs.map(s=>s.label+' '+fmtPrice(s.v)).join(', ')}">${segs.filter(s=>s.v>0).map(s=>`<span class="ks-seg ${s.cls}" style="flex:${s.v}" title="${s.label}: ${fmtPrice(s.v)} (%${pct(s.v,total)})"></span>`).join('')}</div>` : `<div class="ks-bar empty"></div>`;
+  const row = (sw, label, n, v, total, extra)=>`<tr><td><span class="ks-sw ${sw}"></span>${label}</td><td class="num">${n}</td><td class="num"><b>${fmtPrice(v)}</b></td><td class="num ks-muted">%${pct(v,total)}</td>${extra!==undefined? `<td class="num">${extra}</td>`:''}</tr>`;
+  // saatlik yoğunluk (sadece sipariş olan aralık; en az 11–22)
+  const hs = D.hours.map((h,i)=>({ ...h, i })), used = hs.filter(h=>h.n);
+  let h0 = 11, h1 = 22; if(used.length){ h0 = Math.min(h0, used[0].i); h1 = Math.max(h1, used[used.length-1].i); }
+  const maxN = Math.max(1, ...hs.map(h=>h.n));
+  const hourHtml = hs.slice(h0, h1+1).map(h=>`<div class="ks-hcol" title="${String(h.i).padStart(2,'0')}:00 · ${h.n} sipariş · ${fmtPrice(h.rev)}"><span class="ks-hn">${h.n||''}</span><span class="ks-hb" style="height:${h.n? Math.max(6, h.n/maxN*100) : 0}%"></span><span class="ks-hl">${String(h.i).padStart(2,'0')}</span></div>`).join('');
+  const orders = D.list.slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  const stLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', yolda:'Yolda', tamamlandi:'Tamamlandı', iptal:'İptal'};
+  box.innerHTML = `
+    <div class="card ks-head">
+      <div class="ks-nav">
+        <button type="button" class="icon-btn" data-ks="prev" aria-label="Önceki gün" ${kasaAll?'disabled':''}>‹</button>
+        <input type="date" id="ks-date" value="${kasaDate}" max="${today}" ${kasaAll?'disabled':''} aria-label="Rapor günü">
+        <button type="button" class="icon-btn" data-ks="next" aria-label="Sonraki gün" ${kasaAll || kasaDate>=today?'disabled':''}>›</button>
+        <button type="button" class="btn btn-sm ${!kasaAll && kasaDate===today?'btn-primary':''}" data-ks="today">Bugün</button>
+        <button type="button" class="btn btn-sm ${kasaAll?'btn-primary':''}" data-ks="all">Tüm Zamanlar</button>
+      </div>
+      <h3 class="ks-title">💰 Kasa Raporu — ${escapeHtml(title)}</h3>
+      <div class="hint" style="margin:2px 0 0;">İptal edilen siparişler ciroya dahil edilmez. Türkiye saatine göre gün 00:00–23:59.</div>
+    </div>
+
+    <div class="ks-hero">
+      <div class="ks-cash">
+        <span class="ks-l">💵 Kasadaki Nakit <small>(teslim edilen nakit siparişler)</small></span>
+        <b class="num">${fmtPrice(D.nakit.done)}</b>
+        ${D.nakit.sum - D.nakit.done > 0.001 ? `<span class="ks-s">+ ${fmtPrice(D.nakit.sum - D.nakit.done)} henüz yolda / hazırlanıyor</span>` : `<span class="ks-s">Bekleyen nakit tahsilat yok</span>`}
+      </div>
+      <div class="ks-grid">
+        ${stat('Toplam Ciro', fmtPrice(D.ciro), D.discount? 'İndirimler düşüldü: −'+fmtPrice(D.discount) : 'İptaller hariç', 'gold')}
+        ${stat('Sipariş Adedi', D.count, `🌐 Online ${D.online.n} · 📞 Manuel ${D.manuel.n}`)}
+        ${stat('Ortalama Sepet', fmtPrice(D.count? D.ciro/D.count : 0), 'sipariş başına')}
+        ${stat('💳 Kart ile', fmtPrice(D.kart.sum), D.kart.n+' sipariş')}
+        ${stat('✅ Teslim Edilen', fmtPrice(D.done.sum), D.done.n+' sipariş')}
+        ${stat('❌ İptal', D.cancel.n, D.cancel.n? fmtPrice(D.cancel.sum)+' (ciroya dahil değil)' : 'iptal yok', D.cancel.n? 'bad':'')}
+      </div>
+    </div>
+
+    <div class="ks-two">
+      <div class="card">
+        <h3>Ödeme Türüne Göre</h3>
+        ${bar([{v:D.nakit.sum, cls:'nakit', label:'Nakit'},{v:D.kart.sum, cls:'kart', label:'Kredi Kartı'},{v:D.none.sum, cls:'none', label:'Belirtilmemiş'}], D.ciro)}
+        <table class="ks-table"><thead><tr><th>Ödeme</th><th>Adet</th><th>Tutar</th><th>Pay</th><th>Tahsil edilen</th></tr></thead><tbody>
+          ${row('nakit','💵 Nakit', D.nakit.n, D.nakit.sum, D.ciro, fmtPrice(D.nakit.done))}
+          ${row('kart','💳 Kredi Kartı', D.kart.n, D.kart.sum, D.ciro, fmtPrice(D.kart.done))}
+          ${D.none.n? row('none','❔ Belirtilmemiş', D.none.n, D.none.sum, D.ciro, '—') : ''}
+        </tbody></table>
+        ${D.none.n? `<div class="hint" style="margin-top:8px;">"Belirtilmemiş": ödeme şekli eklenmeden önce gelen siparişler. Sipariş kartındaki "Ödeme?" seçicisinden düzeltebilirsiniz.</div>`:''}
+      </div>
+      <div class="card">
+        <h3>Sipariş Kaynağına Göre</h3>
+        ${bar([{v:D.online.sum, cls:'kart', label:'Online'},{v:D.manuel.sum, cls:'nakit', label:'Manuel'}], D.ciro)}
+        <table class="ks-table"><thead><tr><th>Kaynak</th><th>Adet</th><th>Tutar</th><th>Pay</th></tr></thead><tbody>
+          ${row('kart','🌐 Online (QR menü)', D.online.n, D.online.sum, D.ciro)}
+          ${row('nakit','📞 Manuel (telefon / dükkan)', D.manuel.n, D.manuel.sum, D.ciro)}
+        </tbody></table>
+        <div class="ks-status">
+          <span>🟡 Açık (yeni / hazırlanıyor / yolda): <b class="num">${D.open.n} · ${fmtPrice(D.open.sum)}</b></span>
+          <span>✅ Tamamlandı: <b class="num">${D.done.n} · ${fmtPrice(D.done.sum)}</b></span>
+        </div>
+      </div>
+    </div>
+
+    ${kasaAll? '' : `<div class="card">
+      <h3>Saatlik Yoğunluk <small class="ks-muted" style="font-weight:600;font-size:12px;">sipariş adedi</small></h3>
+      ${D.count? `<div class="ks-hours">${hourHtml}</div>` : `<div class="hint">Bu gün için sipariş yok.</div>`}
+    </div>`}
+
+    <div class="card">
+      <h3>En Çok Satanlar</h3>
+      ${D.top.length? `<table class="ks-table"><thead><tr><th>Ürün</th><th>Adet</th><th>Tutar</th></tr></thead><tbody>
+        ${D.top.map(t=>`<tr><td>${escapeHtml(t.name)}</td><td class="num"><b>${t.qty}</b></td><td class="num">${fmtPrice(t.rev)}</td></tr>`).join('')}
+      </tbody></table>` : `<div class="hint">Henüz satış yok.</div>`}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Siparişler (${orders.length})</h3><button type="button" class="btn btn-sm" id="ks-copy">📋 Raporu Kopyala</button></div>
+      ${orders.length? `<div class="ks-scroll"><table class="ks-table ks-orders"><thead><tr><th>Saat</th><th>Müşteri</th><th>Kaynak</th><th>Ödeme</th><th>Tutar</th><th>Durum</th></tr></thead><tbody>
+        ${orders.slice(0, 300).map(o=>`<tr class="${o.status==='iptal'?'ks-cancel':''}">
+          <td class="num">${kasaAll? fmtDateTime(o.createdAt) : new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul', hour:'2-digit', minute:'2-digit'}).format(new Date(o.createdAt))}</td>
+          <td>${escapeHtml(o.customerName||'—')}</td>
+          <td>${o.source==='manuel'? (o.orderType==='dukkan'?'🏪 Dükkan':'📞 Telefon') : '🌐 Online'}</td>
+          <td>${o.payment==='nakit'?'💵 Nakit': o.payment==='kart'?'💳 Kart':'<span class="ks-muted">—</span>'}</td>
+          <td class="num"><b>${fmtPrice(o.total||0)}</b></td>
+          <td><span class="pill ${({yeni:'info',hazirlaniyor:'warn',yolda:'road',tamamlandi:'ok',iptal:'danger'})[o.status]||'info'}">${stLabel[o.status]||'Yeni'}</span></td>
+        </tr>`).join('')}
+      </tbody></table></div>` : `<div class="ord-empty"><span class="ei">🧾</span>Bu gün için sipariş yok.</div>`}
+    </div>`;
+  box.querySelectorAll('[data-ks]').forEach(b=>b.addEventListener('click', ()=>{
+    const a = b.dataset.ks;
+    if(a==='prev') kasaDate = shiftDate(kasaDate, -1);
+    else if(a==='next') kasaDate = kasaDate < today ? shiftDate(kasaDate, 1) : kasaDate;
+    else if(a==='today'){ kasaDate = today; kasaAll = false; }
+    else if(a==='all') kasaAll = !kasaAll;
+    renderKasaBody(box);
+  }));
+  const di = box.querySelector('#ks-date');
+  if(di) di.addEventListener('change', ()=>{ if(/^\d{4}-\d{2}-\d{2}$/.test(di.value)){ kasaDate = di.value > today ? today : di.value; renderKasaBody(box); } });
+  const cp = box.querySelector('#ks-copy');
+  if(cp) cp.addEventListener('click', ()=>{
+    const t = [`${brandName()} · Kasa Raporu`, title, '',
+      `Toplam ciro: ${fmtPrice(D.ciro)} (${D.count} sipariş)`,
+      `Online: ${D.online.n} sipariş · ${fmtPrice(D.online.sum)}`, `Manuel: ${D.manuel.n} sipariş · ${fmtPrice(D.manuel.sum)}`,
+      `Nakit: ${fmtPrice(D.nakit.sum)} (kasada: ${fmtPrice(D.nakit.done)})`, `Kredi kartı: ${fmtPrice(D.kart.sum)}`,
+      D.none.n? `Ödeme belirtilmemiş: ${fmtPrice(D.none.sum)}` : '', D.discount? `İndirimler: −${fmtPrice(D.discount)}` : '',
+      `İptal: ${D.cancel.n}${D.cancel.n? ' ('+fmtPrice(D.cancel.sum)+')' : ''}`,
+      D.top.length? '\nEn çok satanlar:\n' + D.top.slice(0,5).map(x=>`• ${x.name}: ${x.qty} adet`).join('\n') : ''].filter(x=>x!=='').join('\n');
+    (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>showToast('Rapor kopyalandı — WhatsApp\'a yapıştırabilirsiniz', 'success')).catch(()=>showToast('Kopyalanamadı'));
+  });
+}
+
 function renderAdminOrders(root){
   const all = Object.values(state.orders || {}).filter(Boolean);
   const statusLabel = {yeni:'Yeni', hazirlaniyor:'Hazırlanıyor', yolda:'Yolda', tamamlandi:'Tamamlandı', iptal:'İptal'};
@@ -3178,6 +3606,7 @@ function renderAdminOrders(root){
       <button class="btn btn-sm" id="test-sound">Sesi Dene</button>
     </div>
   </div>
+  <button type="button" class="manual-btn" id="manual-order"><span class="mi">＋</span><span><b>Manuel / Telefon Siparişi Ekle</b><small>Telefonla arayan veya dükkandan alan müşteri için — aynı mutfak takibine ve kasaya düşer</small></span></button>
   <div class="otabs" role="tablist">${ORDER_TABS.map(t=>`
     <button type="button" class="otab ${t.id===orderTab?'active':''} ${t.id===bump?'bump':''}" data-otab="${t.id}" role="tab" aria-selected="${t.id===orderTab}">
       <span class="oi">${t.icon}</span><span>${t.label}</span><span class="oc ${t.id==='yeni' && counts.yeni? 'hot':''}">${counts[t.id]}</span>
@@ -3188,6 +3617,7 @@ function renderAdminOrders(root){
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
             return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.daily? ' <span class="adm-tag daily">⭐ GÜNÜN MENÜSÜ</span>':''}${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.ready? `<span class="adm-tag ready ${op.ready}">${op.ready==='degisti'? '✏️ HAZIR BOWL · DEĞİŞTİRİLDİ' : '⚡ HAZIR BOWL'}</span>`:''}${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
+          ${o.source==='manuel'? `<div><span class="src-tag">${o.orderType==='dukkan'? '🏪 DÜKKAN / GEL-AL' : '📞 TELEFON SİPARİŞİ'} · MANUEL</span></div>`:''}
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${(o.phone || o.address || hasGeo(o))? `<div class="ord-contact">${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}${(o.address || hasGeo(o))? `<button type="button" class="tel-link map-link" data-order-map="${o.id}" title="Haritada aç / Yol tarifi">${ICONS.pin}<span>Yol Tarifi</span>${hasGeo(o)? '<i class="map-pin-dot" title="Müşteri konumu var"></i>':''}</button>`:''}</div>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
@@ -3198,6 +3628,11 @@ function renderAdminOrders(root){
             ${Object.keys(statusLabel).map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
           </select>
           ${nx? `<button type="button" class="btn btn-sm ord-act ${nx.cls}" data-order-next="${o.id}" data-to="${nx.to}">${nx.text}</button>`:''}
+          <select data-order-pay="${o.id}" class="pill pay-pill ${o.payment||'none'}" aria-label="Ödeme şekli">
+            <option value="" ${!o.payment?'selected':''}>❔ Ödeme?</option>
+            <option value="nakit" ${o.payment==='nakit'?'selected':''}>💵 Nakit</option>
+            <option value="kart" ${o.payment==='kart'?'selected':''}>💳 Kart</option>
+          </select>
         </div>
       </div>`; }).join('')}</div>
       ${hidden? `<button type="button" class="btn btn-sm btn-block" id="arch-more" style="margin-top:12px;">Daha eski ${hidden} siparişi göster</button>`:''}`
@@ -3210,6 +3645,14 @@ function renderAdminOrders(root){
   root.querySelectorAll('[data-order-next]').forEach(b=>b.addEventListener('click', ()=>{
     b.disabled = true; moveOrder(b.dataset.orderNext, b.dataset.to, b.closest('[data-order-row]'));
   }));
+  root.querySelectorAll('[data-order-pay]').forEach(sel=>sel.addEventListener('change', ()=>{
+    const id = sel.dataset.orderPay, v = sel.value || null, o = getOrders().find(x=>x.id===id);
+    if(o){ if(v) o.payment = v; else delete o.payment; }
+    sel.className = 'pill pay-pill ' + (v||'none');
+    if(fbRef) fbRef.child('orders').child(id).child('payment').set(v).catch(e=>showToast('Kaydetme hatası: '+e.message));
+    showToast('Ödeme şekli: ' + (v? PAY_LABEL[v] : 'belirtilmedi'), 'success');
+  }));
+  const mb = root.querySelector('#manual-order'); if(mb) mb.addEventListener('click', ()=>openManualOrder());
   root.querySelectorAll('[data-order-map]').forEach(b=>b.addEventListener('click', ()=>openMapPicker(getOrders().find(x=>x.id===b.dataset.orderMap))));
   const more = root.querySelector('#arch-more'); if(more) more.addEventListener('click',()=>{ archiveShowAll = true; render(); });
   root.querySelector('#toggle-sound').addEventListener('click',()=>{
