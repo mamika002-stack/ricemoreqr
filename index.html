@@ -221,7 +221,7 @@
   .rb-opts{display:flex;flex-wrap:wrap;gap:6px;}
   .rb-opt{display:inline-flex!important;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;border:1px solid var(--glass-border);background:var(--bg-elev);font-size:13px!important;color:var(--text)!important;cursor:pointer;margin:0!important;}
   .rb-opt input{width:15px;height:15px;accent-color:var(--gold);margin:0;}
-  .rb-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);}
+  .rb-opt.on,.rb-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);}
   .rb-opt i{font-style:normal;color:var(--danger);font-size:11px;}
   .rb-preview{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--bg-elev);border:1px dashed rgba(212,175,55,.45);font-size:12.5px;line-height:1.55;color:var(--text-dim);}
   .rb-preview i{color:var(--gold-2);font-style:normal;font-weight:800;}
@@ -470,8 +470,9 @@
   .opt.sel .opt-mark{border-color:var(--gold);background:var(--gold);}
   .opt.radio.sel .opt-mark::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold-ink);}
   .opt.check.sel .opt-mark::after{content:'';width:9px;height:5px;border:2.5px solid var(--gold-ink);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);}
-  .opt.limit{opacity:.45;cursor:not-allowed;}
-  .opt.sold{cursor:not-allowed;opacity:.5;background:rgba(5,6,8,.25);border-style:dashed;}
+  .opt.limit{cursor:not-allowed;color:var(--text-faint);border-color:rgba(255,255,255,.06);}
+  .opt.limit .opt-name,.opt.sold .opt-name{color:var(--text-faint);}
+  .opt.sold{cursor:not-allowed;color:var(--text-faint);background:rgba(5,6,8,.25);border-style:dashed;}
   .opt.sold .opt-name{text-decoration:line-through;text-decoration-color:var(--danger);color:var(--text-faint);}
   .opt-extra{margin-left:auto;padding:2px 7px;border-radius:99px;font-size:10.5px;font-weight:800;background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.4);white-space:nowrap;}
   .opt.sel .opt-extra{background:var(--gold);color:#1A1405;border-color:var(--gold);}
@@ -619,9 +620,9 @@
   .tel-link:hover{background:rgba(212,175,55,.24);}
   /* ödeme şekli seçimi (müşteri sepeti + manuel sipariş) */
   .pay-seg{display:flex;gap:8px;flex-wrap:wrap;}
-  .pay-opt{flex:1 1 130px;display:flex!important;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--bg-elev);cursor:pointer;font-weight:800!important;font-size:14px!important;color:var(--text)!important;margin:0!important;transition:border-color .2s, background .2s;}
-  .pay-opt input{position:absolute;opacity:0;pointer-events:none;}
-  .pay-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);color:var(--gold-2)!important;box-shadow:0 0 0 3px rgba(212,175,55,.12);}
+  .pay-opt{position:relative;flex:1 1 130px;display:flex!important;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:8px 12px;border-radius:14px;border:1px solid var(--glass-border);background:var(--bg-elev);cursor:pointer;font-weight:800!important;font-size:14px!important;color:var(--text)!important;margin:0!important;transition:border-color .2s, background .2s;}
+  .pay-opt input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;pointer-events:none;}
+  .pay-opt.on,.pay-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);color:var(--gold-2)!important;box-shadow:0 0 0 3px rgba(212,175,55,.12);}
   .pay-opt:has(input:focus-visible){outline:2px solid var(--gold);outline-offset:2px;}
   .field.invalid .pay-opt{border-color:var(--danger);}
   /* mutfak kartı */
@@ -649,10 +650,11 @@
   .mo-disc{display:flex;flex-direction:column;gap:4px;font-size:12px!important;color:var(--text-dim)!important;margin:0!important;}
   .mo-disc input{width:120px;text-align:center;}
   .mo-search{margin-bottom:10px;}
-  .mo-items{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow:auto;padding-right:2px;}
+  .mo-items{display:flex;flex-direction:column;gap:12px;}
   .mo-gh{font-size:12px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);margin:2px 2px 6px;}
   .mo-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px 9px 12px;border-radius:13px;background:rgba(255,255,255,.03);border:1px solid var(--glass-border);margin-bottom:6px;}
-  .mo-item.sold{opacity:.5;}
+  .mo-item.mo-off{background:transparent;border-style:dashed;}
+  .mo-item.mo-off .mo-i-txt b,.mo-item.mo-off .mo-i-txt small{color:var(--text-faint);}
   .mo-i-txt{min-width:0;display:flex;flex-direction:column;}
   .mo-i-txt b{font-size:14px;}
   .mo-i-txt small{font-size:12px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -1433,6 +1435,8 @@ function renderSetupError(msg){
 
 /* ============================= MODAL / SHEET ============================= */
 let modalToken = 0;
+function syncChecks(root){ (root||document).querySelectorAll('.pay-opt, .rb-opt').forEach(l=>{ const i = l.querySelector('input'); if(i) l.classList.toggle('on', i.checked); }); }
+document.addEventListener('change', e=>{ if(e.target && e.target.closest && e.target.closest('.pay-opt, .rb-opt')) syncChecks(); });
 var modalOnClose = null;   // modal kapanınca bir kez çalışır (manuel siparişte Bowl ekranından geri dönüş)
 function openModal(title, bodyHtml, footHtml, cls){
   modalToken++; modalOnClose = null;
@@ -1445,6 +1449,7 @@ function openModal(title, bodyHtml, footHtml, cls){
   document.getElementById('modal-overlay').addEventListener('click', e=>{ if(e.target.id==='modal-overlay') closeModal(); });
   document.getElementById('modal-close').addEventListener('click', closeModal);
   enableSwipeClose(document.querySelector('#modal-overlay .dialog'));
+  syncChecks(root);
   document.removeEventListener('keydown', escHandler);
   document.addEventListener('keydown', escHandler);
 }
@@ -3309,7 +3314,7 @@ function manualItemRow(it){
       : `<button type="button" class="icon-btn" data-m-edit="${id}" title="Malzemeleri değiştir">${ICONS.edit}</button><button type="button" class="btn btn-sm btn-primary" data-m-ready="${id}">${ICONS.plus} Ekle</button>`;
   else if(hasBuilder(it)) act = `<button type="button" class="btn btn-sm btn-primary" data-m-build="${id}">Seç ›</button>`;
   else act = `<button type="button" class="btn btn-sm btn-primary" data-m-add="${id}">${ICONS.plus} Ekle</button>`;
-  return `<div class="mo-item ${sold?'sold':''}"><div class="mo-i-txt"><b>${escapeHtml(it.name)}</b>${n? `<span class="mo-n">${n} sepette</span>`:''}
+  return `<div class="mo-item ${sold?'mo-off':''}"><div class="mo-i-txt"><b>${escapeHtml(it.name)}</b>${n? `<span class="mo-n">${n} sepette</span>`:''}
       <small>${fmtPrice(itemShowPrice(it))}${isBowl(it)&&!isReady(it)? ' · Bowl seçimi' : isPilav(it)? ' · tavuk + sos' : isReady(it)? ' · ' + escapeHtml(readyNames(it).join(', ')) : ''}</small></div>
     <div class="mo-i-act">${act}</div></div>`;
 }
