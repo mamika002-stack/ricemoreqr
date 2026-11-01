@@ -354,6 +354,7 @@
   .coupon-ok .btn{flex:none;}
   #coupon-hint.bad{color:var(--danger);font-weight:600;} #coupon-hint.ok{color:var(--ok);font-weight:600;}
   .cart-sum .disc{color:var(--ok) !important;}
+  .cart-sum .disc[hidden]{display:none !important;}
   .cart-sum .disc span:first-child{display:inline-flex;align-items:center;gap:6px;}
   .tc-row.disc span{color:var(--ok) !important;}
   .adm-coupon{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;
@@ -396,6 +397,29 @@
   .emg-switch .k{width:28px;height:28px;border-radius:50%;background:#5b5f66;transition:background .25s;}
   .emg-switch.on{flex-direction:row-reverse;padding:4px 4px 4px 12px;background:var(--danger);border-color:var(--danger);color:#fff;}
   .emg-switch.on .k{background:#fff;}
+  /* tatil günleri */
+  .info-chip.dayoff{background:rgba(212,175,55,.12);border-color:rgba(212,175,55,.5);color:var(--gold-2);font-weight:800;}
+  .info-chip.dayoff .dot{background:var(--gold);}
+  .info-chip.dayoff span{white-space:normal;}
+  .dayoff-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:12px 16px;border-radius:18px;
+    background:rgba(212,175,55,.06);border:1px solid var(--glass-border);}
+  .dayoff-bar.on{background:linear-gradient(135deg,rgba(212,175,55,.2),rgba(184,134,11,.12));border-color:rgba(212,175,55,.7);box-shadow:0 0 0 3px rgba(212,175,55,.1);}
+  .dayoff-bar .do-txt{flex:1;min-width:190px;}
+  .dayoff-bar .do-txt strong{display:block;font-size:13.8px;color:var(--gold-2);line-height:1.35;}
+  .dayoff-bar .do-txt small{display:block;margin-top:3px;font-size:12px;color:var(--text-dim);line-height:1.4;}
+  .dayoff-bar .do-acts{display:flex;gap:8px;flex-wrap:wrap;}
+  .dayoff-bar .do-close{background:var(--gold-soft);border-color:rgba(212,175,55,.6);color:var(--gold-2);font-weight:800;}
+  .dayoff-bar .do-open{background:var(--ok-soft);border-color:rgba(127,199,154,.6);color:var(--ok);font-weight:800;}
+  .dayoff-list{display:flex;flex-direction:column;gap:8px;}
+  .do-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px 9px 14px;border-radius:14px;background:var(--bg-elev);border:1px solid var(--glass-border);transition:border-color .2s, background .2s;}
+  .do-row.on{border-color:rgba(232,112,93,.55);background:rgba(232,112,93,.08);}
+  .do-day{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:8px;}
+  .do-day em{font-style:normal;font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--gold);color:var(--gold-ink);}
+  .do-dates{margin-top:14px;padding-top:12px;border-top:1px solid var(--glass-border);}
+  .do-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .do-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 11px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--gold-soft);border:1px solid rgba(212,175,55,.5);color:var(--gold-2);}
+  .do-chip button{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:none;background:rgba(255,255,255,.08);color:var(--text);padding:0;}
+  .do-chip button svg{width:12px;height:12px;}
   .notice{margin-top:12px;padding:11px 14px;border-radius:13px;background:var(--warn-soft);color:var(--warn);font-size:12.8px;font-weight:600;line-height:1.45;}
   .btn-sub{font-weight:700;opacity:.8;font-size:14px;}
 
@@ -836,20 +860,78 @@ function toList(v){ return v ? (Array.isArray(v) ? v : Object.values(v)).filter(
 const EMERGENCY_MSG = 'İşletmemiz şu an yoğunluk/hava koşulları nedeniyle geçici olarak sipariş almamaktadır.';
 function isEmergencyClosed(){ return !!(state && state.settings && state.settings.emergencyClosed===true); }
 const HOURS_MSG = 'İşletmemiz şu an kapalıdır. İsterseniz sepetinizi önceden hazırlayabilir, mesai saatlerimiz başladığında onaylayabilirsiniz.';
-/* Sipariş alınmıyor mu? 'emergency' (acil kapatma) | 'hours' (çalışma saati dışı) | '' (açık) */
+/* ---- HAFTALIK / GÜNLÜK TATİL TAKVİMİ ----
+   settings.closedWeekdays = { sun:true, ... }  → her hafta o gün kapalı
+   settings.holidayDates   = { '2026-11-01':true } → sadece o tarih kapalı ("Bugünü Tatil İlan Et")
+   settings.openDates      = { '2026-11-08':true } → haftalık tatil gününde istisna olarak açık */
+const WEEKDAYS = [ {k:'mon',n:'Pazartesi'}, {k:'tue',n:'Salı'}, {k:'wed',n:'Çarşamba'}, {k:'thu',n:'Perşembe'}, {k:'fri',n:'Cuma'}, {k:'sat',n:'Cumartesi'}, {k:'sun',n:'Pazar'} ];
+const WD_JS = ['sun','mon','tue','wed','thu','fri','sat'];
+function istDay(d){              // Türkiye saatine göre { date:'YYYY-MM-DD', wd:'mon'.. } (telefonun saat dilimi farklı olsa bile)
+  d = d || new Date();
+  try{
+    const p = new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Istanbul', year:'numeric', month:'2-digit', day:'2-digit', weekday:'short'}).formatToParts(d);
+    const g = t => (p.find(x=>x.type===t)||{}).value || '';
+    const wd = g('weekday').replace(/[^A-Za-z]/g,'').slice(0,3).toLowerCase();
+    if(g('year') && WD_JS.includes(wd)) return { date: g('year')+'-'+g('month')+'-'+g('day'), wd };
+  }catch(e){}
+  const z = n => String(n).padStart(2,'0');
+  return { date: d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate()), wd: WD_JS[d.getDay()] };
+}
+function wdName(k){ return (WEEKDAYS.find(w=>w.k===k)||{}).n || ''; }
+/* O gün kapalı mı? 'holiday' (tarihe özel tatil) | 'weekly' (haftalık tatil günü) | '' */
+function dayOffReason(d){
+  const s = (state && state.settings) || {}, t = istDay(d);
+  if(s.holidayDates && s.holidayDates[t.date]) return 'holiday';
+  if(s.closedWeekdays && s.closedWeekdays[t.wd] && !(s.openDates && s.openDates[t.date])) return 'weekly';
+  return '';
+}
+/* Bugünden sonraki ilk açık gün: { i:1 → yarın, label:'yarın' | 'Salı' } — 14 gün içinde yoksa null */
+function nextOpenDay(){
+  const now = Date.now();
+  for(let i=1;i<=14;i++){
+    const d = new Date(now + i*86400000);
+    if(!dayOffReason(d)) return { i, label: i===1 ? 'yarın' : wdName(istDay(d).wd), date: istDay(d).date };
+  }
+  return null;
+}
+function istMinutes(){
+  try{ const p = new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Istanbul', hour:'2-digit', minute:'2-digit', hourCycle:'h23'}).formatToParts(new Date());
+    return (+p.find(x=>x.type==='hour').value % 24)*60 + (+p.find(x=>x.type==='minute').value); }
+  catch(e){ const n = new Date(); return n.getHours()*60 + n.getMinutes(); }
+}
+function nextOpenText(){            // "Salı 11:00" / "yarın 11:00"
+  const n = nextOpenDay(), st = state && state.settings ? openStatus(state.settings.hours) : null;
+  if(!n) return '';
+  return n.label + (st ? ' ' + st.openAt : '');
+}
+/* Sipariş alınmıyor mu? 'emergency' (acil kapatma) | 'dayoff' (tatil günü) | 'hours' (çalışma saati dışı) | '' (açık) */
 function closedReason(){
   if(isEmergencyClosed()) return 'emergency';
+  if(dayOffReason()) return 'dayoff';
   const st = (state && state.settings) ? openStatus(state.settings.hours) : null;
   return (st && !st.open) ? 'hours' : '';
 }
+function closedIcon(r){ r = r || closedReason(); return r==='emergency' ? '🚨' : r==='dayoff' ? '🏖️' : '🌙'; }
 function isOrderingClosed(){ return !!closedReason(); }
 function closedMsg(){
   const r = closedReason();
-  if(r==='hours'){ const st = openStatus(state.settings.hours); return HOURS_MSG + (st? ' Açılış saatimiz: '+st.openAt+'.' : ''); }
+  if(r==='dayoff'){
+    const nx = nextOpenText(), why = dayOffReason()==='weekly' ? ' ('+wdName(istDay().wd)+' haftalık tatil günümüzdür)' : '';
+    return 'İşletmemiz bugün kapalı olduğu için siparişler alınmamaktadır' + why + '. Sepetiniz kayıtlı kalır; ' + (nx ? 'bir sonraki mesai günümüzde (' + nx + ') onaylayabilirsiniz.' : 'bir sonraki mesai günümüzde onaylayabilirsiniz.');
+  }
+  if(r==='hours'){
+    const st = openStatus(state.settings.hours);
+    if(st){   // kapanıştan sonra ve yarın tatilse doğru açılış gününü söyle
+      const [ch,cm] = st.closeAt.split(':').map(Number), [oh,om] = st.openAt.split(':').map(Number), cur = istMinutes();
+      const late = (ch*60+cm) > (oh*60+om) && cur >= ch*60+cm, n = late ? nextOpenDay() : null;
+      if(n && n.i>1) return HOURS_MSG.replace('mesai saatlerimiz başladığında', 'bir sonraki mesai günümüzde') + ' Açılışımız: ' + n.label + ' ' + st.openAt + '.';
+    }
+    return HOURS_MSG + (st? ' Açılış saatimiz: '+st.openAt+'.' : '');
+  }
   if(r==='emergency') return EMERGENCY_MSG + ' Sepetiniz kayıtlı kalır; tekrar açıldığımızda onaylayabilirsiniz.';
   return '';
 }
-function closedBtnText(){ return closedReason()==='emergency' ? 'Şu an Sipariş Alamıyoruz' : 'Şu an Kapalıyız · Sipariş Alınmıyor'; }
+function closedBtnText(){ const r = closedReason(); return r==='emergency' ? 'Şu an Sipariş Alamıyoruz' : r==='dayoff' ? 'Bugün Kapalıyız · Sipariş Alınmıyor' : 'Şu an Kapalıyız · Sipariş Alınmıyor'; }
 function showToast(msg, type){
   const root = document.getElementById('toast-root');
   const el = document.createElement('div'); el.className='toast'+(type?' toast-'+type:''); el.textContent=msg;
@@ -1407,9 +1489,10 @@ function updateHero(){
   hero.querySelector('.brand-name').textContent = brandName();
   document.getElementById('hero-title').textContent = brandName();
   document.getElementById('hero-tag').textContent = brandTagline();
-  const emg = isEmergencyClosed();
-  document.getElementById('hero-info').innerHTML = (s.hours||s.location||emg)? `
+  const emg = isEmergencyClosed(), off = !emg && dayOffReason(), offNext = off ? nextOpenText() : '';
+  document.getElementById('hero-info').innerHTML = (s.hours||s.location||emg||off)? `
       ${emg? `<span class="info-chip is-closed emergency" role="status"><i class="dot"></i><span>Hava Muhalefeti / Yoğunluk Nedeniyle Kapalıyız</span></span>`
+        : off? `<span class="info-chip is-closed dayoff" role="status"><i class="dot"></i><span>🏖️ Bugün kapalıyız${offNext? ' · ' + escapeHtml(offNext) + "'da açığız" : ''}</span></span>`
         : st? `<span class="info-chip ${st.open?'is-open':'is-closed'}"><i class="dot"></i><span>${st.open? 'Şu an açık · '+st.closeAt+"'e kadar" : 'Şu an kapalı · '+st.openAt+"'da açılır"}</span></span>`:''}
       ${s.hours? `<span class="info-chip">${ICONS.clock}<span>${escapeHtml(s.hours)}</span></span>`:''}
       ${s.location? `<a class="info-chip link" href="${escapeHtml(mapsLink())}" target="_blank" rel="noopener">${ICONS.pin}<span>${escapeHtml(s.location)}</span></a>`:''}` : '';
@@ -2170,19 +2253,19 @@ function renderCartLines(){
   document.getElementById('cart-send-total').textContent = total;
   const cc = document.getElementById('cart-closed');   // acil kapatma canlı uyarısı
   const closed = isOrderingClosed();
-  if(cc && !cc.dataset.alert) cc.innerHTML = closed ? `<div class="notice soft">${closedReason()==='emergency'?'🚨':'🌙'} Şu an kapalıyız — sepetinizi hazırlayabilirsiniz, onay açılış saatimizde yapılabilir.</div>` : '';
+  if(cc && !cc.dataset.alert) cc.innerHTML = closed ? `<div class="notice soft">${closedIcon()} ${closedReason()==='dayoff' ? 'Bugün kapalıyız — sepetinizi hazırlayabilirsiniz, onay bir sonraki mesai günümüzde yapılabilir.' : 'Şu an kapalıyız — sepetinizi hazırlayabilirsiniz, onay açılış saatimizde yapılabilir.'}</div>` : '';
   if(cc && !closed){ delete cc.dataset.alert; cc.innerHTML = ''; }
   const sb = document.getElementById('cart-send'); if(sb && !sb.dataset.sending) sb.disabled = false;   // kontrol onaya basınca yapılır
 }
 
 /* Onaya basıldığında dükkan kapalıysa: şık uyarı kutusu + bildirim (sepet silinmez) */
 function showClosedAlert(){
-  const msg = closedMsg(), emg = closedReason()==='emergency';
+  const msg = closedMsg(), r = closedReason(), emg = r==='emergency';
   showToast(msg);
   const cc = document.getElementById('cart-closed');
   if(cc){
     cc.dataset.alert = '1';
-    cc.innerHTML = `<div class="closed-alert"><span class="ca-ico">${emg?'🚨':'🌙'}</span><div><strong>${emg?'Geçici olarak kapalıyız':'İşletmemiz şu an kapalı'}</strong><p>${escapeHtml(msg)}</p></div></div>`;
+    cc.innerHTML = `<div class="closed-alert"><span class="ca-ico">${closedIcon(r)}</span><div><strong>${emg?'Geçici olarak kapalıyız': r==='dayoff' ? 'İşletmemiz bugün kapalı' : 'İşletmemiz şu an kapalı'}</strong><p>${escapeHtml(msg)}</p></div></div>`;
     const box = cc.firstElementChild; if(box){ box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
   }
   if(navigator.vibrate) navigator.vibrate(120);
@@ -2400,7 +2483,8 @@ function renderAdmin(root){
           <div class="emg-txt"><strong>🚨 Acil Dükkanını Kapat (Yağmur / Yoğunluk Modu)</strong>
             <small>${on? 'DÜKKAN KAPALI — müşteriler sepet hazırlayabilir ama sipariş onaylayamıyor. Açmak için anahtarı kapatın.' : 'Açarsanız müşteriler menüyü gezip sepet hazırlayabilir ama siparişi onaylayamaz; "Kapalıyız" uyarısı görür.'}</small></div>
           <button type="button" class="emg-switch ${on?'on':''}" id="emg-toggle" role="switch" aria-checked="${on}"><span class="k"></span><span>${on?'KAPALI':'Normal'}</span></button>
-        </div>`; })()}</div>
+        </div>
+        ${dayOffBarHtml()}`; })()}</div>
     </div>`;
   root.querySelector('#emg-toggle').addEventListener('click', ()=>{
     const v = !isEmergencyClosed();
@@ -2409,6 +2493,7 @@ function renderAdmin(root){
     render();
     showToast(v ? '🚨 Dükkan kapatıldı — yeni sipariş alınmıyor' : '✅ Dükkan tekrar açıldı — siparişler alınıyor', v ? '' : 'success');
   });
+  bindDayOffBar(root);
   root.querySelectorAll('[data-atab]').forEach(t=>t.addEventListener('click',()=>{ adminTab=t.dataset.atab; render(); }));
   root.querySelector('#exit-admin').addEventListener('click',()=>{ view='menu'; render(); window.scrollTo(0,0); });
 
@@ -2419,6 +2504,88 @@ function renderAdmin(root){
   else if(adminTab==='orders') renderAdminOrders(body);
   else if(adminTab==='coupons') renderAdminCoupons(body);
   else renderAdminSettings(body);
+}
+
+/* --- Yönetim: Tatil günleri --- */
+function saveDayKey(group, key, val){          // settings/<group>/<key> = true | null  (+ geçmiş tarihleri temizle)
+  const s = state.settings; s[group] = Object.assign({}, s[group]||{});
+  if(val) s[group][key] = true; else delete s[group][key];
+  if(!fbRef) return;
+  const ref = fbRef.child('settings').child(group);
+  ref.child(key).set(val ? true : null).catch(e=>showToast('Kaydetme hatası: '+e.message));
+  if(group!=='closedWeekdays'){
+    const today = istDay().date;
+    Object.keys(s[group]).forEach(k=>{ if(k < today){ delete s[group][k]; ref.child(k).set(null).catch(()=>{}); } });
+  }
+}
+function dayOffBarHtml(){
+  const t = istDay(), r = dayOffReason(), s = state.settings;
+  const opened = !!(s.closedWeekdays && s.closedWeekdays[t.wd] && s.openDates && s.openDates[t.date]);
+  const status = r==='holiday' ? '🏖️ Bugün tatil ilan edildi — kapalı'
+    : r==='weekly' ? '🏖️ Haftalık tatil günü — kapalı'
+    : opened ? '✅ Haftalık tatil günü ama bugün istisna olarak AÇIK' : '✅ Bugün mesai günü — açık';
+  const btn = r==='holiday' ? `<button type="button" class="btn btn-sm do-open" data-dayoff="open-holiday">✅ Bugünü Tekrar Aç</button>`
+    : r==='weekly' ? `<button type="button" class="btn btn-sm do-open" data-dayoff="open-weekly">✅ Bugün İstisna Olarak Aç</button>`
+    : `<button type="button" class="btn btn-sm do-close" data-dayoff="close-today">🏖️ Bugünü Tatil İlan Et / Kapat</button>`;
+  const weekly = WEEKDAYS.filter(w=>s.closedWeekdays && s.closedWeekdays[w.k]).map(w=>w.n);
+  return `<div class="dayoff-bar ${r?'on':''}" id="dayoff-bar">
+    <div class="do-txt"><strong>📅 Bugün: ${wdName(t.wd)} · ${status}</strong>
+      <small>${weekly.length ? 'Haftalık tatil: ' + weekly.join(', ') : 'Haftalık tatil günü seçilmedi'}${r && nextOpenText() ? ' · Sonraki açılış: ' + escapeHtml(nextOpenText()) : ''}</small></div>
+    <div class="do-acts">${btn}<button type="button" class="btn btn-sm" data-dayoff="calendar">📅 Takvim</button></div>
+  </div>`;
+}
+function bindDayOffBar(root){
+  root.querySelectorAll('[data-dayoff]').forEach(b=>b.addEventListener('click', ()=>{
+    const a = b.dataset.dayoff, t = istDay();
+    if(a==='calendar'){ adminTab = 'settings'; render(); const c = document.getElementById('dayoff-card'); if(c) c.scrollIntoView({block:'start', behavior:'smooth'}); return; }
+    if(a==='close-today'){
+      saveDayKey('openDates', t.date, false); saveDayKey('holidayDates', t.date, true);
+      showToast('🏖️ Bugün tatil ilan edildi — müşteriler sepet hazırlayabilir ama sipariş onaylayamaz');
+    } else if(a==='open-holiday'){
+      saveDayKey('holidayDates', t.date, false);
+      showToast(dayOffReason()==='weekly' ? 'Tatil ilanı kaldırıldı (bugün yine de haftalık tatil günü)' : '✅ Bugün tekrar açıldı — siparişler alınıyor', 'success');
+    } else if(a==='open-weekly'){
+      saveDayKey('openDates', t.date, true);
+      showToast('✅ Bugün istisna olarak açıldı — siparişler alınıyor', 'success');
+    }
+    render();
+  }));
+}
+function dayOffCardHtml(){
+  const s = state.settings, t = istDay(), today = t.date;
+  const hol = Object.keys(s.holidayDates||{}).filter(k=>k>=today && s.holidayDates[k]).sort();
+  const fmtD = k => { const [y,m,d] = k.split('-').map(Number); const dt = new Date(Date.UTC(y,m-1,d,12)); return d+' '+['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][m-1]+' '+y+' · '+wdName(WD_JS[dt.getUTCDay()]); };
+  return `<div class="card" id="dayoff-card">
+    <div class="card-head"><div><h3>📅 Kapalı Günler / Haftalık Tatil Takvimi</h3>
+      <div class="hint" style="margin-top:4px;">Anahtarı açtığınız gün her hafta otomatik olarak kapalı çalışılır (Türkiye saatiyle 00:00'da başlar). Müşteriler o gün menüyü gezip sepet hazırlayabilir ama siparişi onaylayamaz.</div></div></div>
+    <div class="dayoff-list">${WEEKDAYS.map(w=>{ const on = !!(s.closedWeekdays && s.closedWeekdays[w.k]); return `
+      <div class="do-row ${on?'on':''}">
+        <span class="do-day">${w.n}${w.k===t.wd? '<em>Bugün</em>':''}</span>
+        <button type="button" class="emg-switch ${on?'on':''}" role="switch" aria-checked="${on}" aria-label="${w.n} kapalı" data-wd="${w.k}"><span class="k"></span><span>${on?'KAPALI':'Açık'}</span></button>
+      </div>`; }).join('')}</div>
+    <div class="do-dates">
+      <label for="do-date" class="hint" style="margin:0;">Belirli bir tarihi tatil ilan et (bayram, izin vb.)</label>
+      <div class="stock-add" style="margin-top:6px;"><input type="date" id="do-date" min="${today}"><button type="button" class="btn btn-sm" id="do-date-add">${ICONS.plus} Ekle</button></div>
+      ${hol.length? `<div class="do-chips">${hol.map(k=>`<span class="do-chip">🏖️ ${fmtD(k)}${k===today?' (bugün)':''}<button type="button" data-hol-del="${k}" aria-label="Kaldır">${ICONS.close}</button></span>`).join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
+function bindDayOffCard(root){
+  root.querySelectorAll('[data-wd]').forEach(b=>b.addEventListener('click', ()=>{
+    const k = b.dataset.wd, v = !(state.settings.closedWeekdays && state.settings.closedWeekdays[k]);
+    saveDayKey('closedWeekdays', k, v);
+    showToast(v ? '🏖️ ' + wdName(k) + ' günleri artık kapalı' : '✅ ' + wdName(k) + ' günleri artık açık', v ? '' : 'success');
+    render();
+  }));
+  const add = root.querySelector('#do-date-add');
+  if(add) add.addEventListener('click', ()=>{
+    const v = (root.querySelector('#do-date').value||'').trim();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ showToast('Lütfen bir tarih seçin'); return; }
+    if(v < istDay().date){ showToast('Geçmiş bir tarih seçilemez'); return; }
+    saveDayKey('openDates', v, false); saveDayKey('holidayDates', v, true);
+    showToast('🏖️ Tatil günü eklendi'); render();
+  });
+  root.querySelectorAll('[data-hol-del]').forEach(b=>b.addEventListener('click', ()=>{ saveDayKey('holidayDates', b.dataset.holDel, false); showToast('Tatil günü kaldırıldı', 'success'); render(); }));
 }
 
 /* --- Yönetim: Menü --- */
@@ -2959,6 +3126,7 @@ function renderAdminCoupons(root){
 function renderAdminSettings(root){
   const s = state.settings;
   root.innerHTML = `
+    ${dayOffCardHtml()}
     <div class="card">
       <h3>İşletme Bilgisi</h3>
       <div class="field"><label>İşletme Adı</label><input type="text" id="s-name" value="${escapeHtml(s.businessName)}"></div>
@@ -3017,6 +3185,7 @@ function renderAdminSettings(root){
       <p class="hint">Bu PIN sadece rastgele ziyaretçilerin panele girmesini engeller; hassas veriler için gerçek bir güvenlik katmanı değildir.</p>
     </div>
   `;
+  bindDayOffCard(root);
   root.querySelector('#save-settings').addEventListener('click',()=>{
     s.businessName = root.querySelector('#s-name').value.trim() || 'RiceMore';
     s.tagline = root.querySelector('#s-tagline').value.trim();
