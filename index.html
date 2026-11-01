@@ -207,6 +207,24 @@
   .pick-btn[disabled]{background:rgba(255,255,255,.06);color:var(--text-faint);box-shadow:none;cursor:not-allowed;transform:none;}
   .pick-btn.closed-btn{height:auto;min-height:38px;padding:6px 10px;font-size:11.5px;line-height:1.2;text-align:center;white-space:normal;max-width:132px;
     background:rgba(232,112,93,.12);color:#FFB3A6;border:1px solid rgba(232,112,93,.4);}
+  .badge.ready{background:linear-gradient(135deg,var(--gold-2),var(--gold));color:var(--gold-ink);}
+  .item-desc.ready-desc{color:var(--text);}
+  button.bowl-tag.ready-edit{background:none;border:0;padding:0;font-family:inherit;cursor:pointer;text-align:left;color:var(--gold-2);text-decoration:underline;text-decoration-color:rgba(212,175,55,.45);text-underline-offset:3px;}
+  .pick-btn.ready-add svg{width:15px;height:15px;}
+  .ready-in{font-weight:800;color:var(--gold-2);}
+  .ready-hint{color:var(--gold-2);font-weight:800;}
+  .ready-custom{margin-top:12px;border-color:rgba(212,175,55,.6)!important;color:var(--gold-2)!important;background:var(--gold-soft)!important;font-weight:800;}
+  .adm-tag.ready{background:linear-gradient(135deg,var(--gold-2),var(--gold));border-color:var(--gold);color:var(--gold-ink);font-weight:900;font-size:11px;letter-spacing:.04em;}
+  .adm-tag.ready.degisti{background:rgba(126,182,230,.16);border-color:rgba(126,182,230,.6);color:#A9D0F2;}
+  .rb-grp{margin-top:10px;}
+  .rb-h{font-size:12px;font-weight:800;color:var(--gold-2);margin-bottom:6px;letter-spacing:.02em;}
+  .rb-opts{display:flex;flex-wrap:wrap;gap:6px;}
+  .rb-opt{display:inline-flex!important;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;border:1px solid var(--glass-border);background:var(--bg-elev);font-size:13px!important;color:var(--text)!important;cursor:pointer;margin:0!important;}
+  .rb-opt input{width:15px;height:15px;accent-color:var(--gold);margin:0;}
+  .rb-opt:has(input:checked){border-color:var(--gold);background:var(--gold-soft);}
+  .rb-opt i{font-style:normal;color:var(--danger);font-size:11px;}
+  .rb-preview{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--bg-elev);border:1px dashed rgba(212,175,55,.45);font-size:12.5px;line-height:1.55;color:var(--text-dim);}
+  .rb-preview i{color:var(--gold-2);font-style:normal;font-weight:800;}
   .bowl-tag{display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--gold);}
   .stepper{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:13px;background:rgba(5,6,8,.5);
     border:1px solid rgba(212,175,55,.35);animation:pop .3s var(--ease);}
@@ -996,6 +1014,33 @@ function dailyMenus(all){ return state.items.filter(it=>isDaily(it) && (all || i
 function isPilav(it){ return !!(it && it.isPilav===true); }   // Soslu / Özel Tavuk Pilav: tavuk + sos seçimi
 function isBowl(it){ if(!it || isPilav(it)) return false; if(typeof it.isBowl==='boolean') return it.isBowl; return /bowl/i.test(it.name||''); }
 function hasBuilder(it){ return isBowl(it) || isPilav(it); }
+/* ---- HAZIR BOWL'LAR: yöneticinin önceden seçtiği malzemelerle tek tıkla sipariş (istenirse değiştirilir) ---- */
+const READY_CAT_NAME = "Hazır Bowl'lar";
+function isReady(it){ return !!(it && it.isReady===true && isBowl(it)); }
+function readyPreset(it){
+  const p = (it && it.preset) || {};
+  return { baseId: p.baseId||'', chickenId: p.chickenId||'', garnish: toList(p.garnish).filter(Boolean), meze: toList(p.meze).filter(Boolean), sauce: toList(p.sauce).filter(Boolean) };
+}
+function readyNames(it){
+  const p = readyPreset(it), n = (g,id)=>{ const o = optById(g,id); return o ? o.name : ''; };
+  return [n('base',p.baseId), n('chicken',p.chickenId), ...p.garnish.map(id=>n('garnish',id)), ...p.meze.map(id=>n('meze',id)), ...p.sauce.map(id=>n('sauce',id))].filter(Boolean);
+}
+function readyDescText(it){ const c = readyNames(it).join(', '); return c + (it.description ? (c? '. ' : '') + it.description : ''); }
+function readyMissing(it){          // tükenen / silinen malzeme varsa adını döndürür
+  const p = readyPreset(it), bad = [];
+  const chk = (g,id,label)=>{ const o = optById(g,id); if(!o) bad.push(label); else if(o.available===false) bad.push(o.name); };
+  if(!p.baseId) bad.push('Taban'); else chk('base', p.baseId, 'Taban');
+  if(!p.chickenId) bad.push('Tavuk'); else chk('chicken', p.chickenId, 'Tavuk');
+  p.garnish.forEach(id=>chk('garnish', id, 'Bir garnitür')); p.meze.forEach(id=>chk('meze', id, 'Bir meze')); p.sauce.forEach(id=>chk('sauce', id, 'Bir sos'));
+  return bad.join(', ');
+}
+function readyPrice(it){ const p = readyPreset(it); return it.price + bowlExtras(p.garnish.length, p.meze.length, p.sauce.length).extra; }
+function itemShowPrice(it){ return isReady(it) ? readyPrice(it) : it.price; }
+function readyCatId(){              // "Hazır Bowl'lar" kategorisi (yoksa en üste oluşturur)
+  let c = state.categories.find(x=>/haz[ıi]r bowl/i.test(x.name||''));
+  if(!c){ c = { id: uid('cat'), name: READY_CAT_NAME, order: state.categories.reduce((m,x)=>Math.min(m, Number(x.order)||0), 0) - 1 }; state.categories.push(c); }
+  return c.id;
+}
 function optsText(o){
   if(!o) return '';
   const g = toList(o.garnish);
@@ -1110,6 +1155,13 @@ function initFirebase(){
             }
             state.settings.pilavCatAdded = true;
             fbRef.child('settings').child('pilavCatAdded').set(true);
+          }
+          if(!settingsMissing && !state.settings.readyCatAdded){   // "Hazır Bowl'lar" kategorisini bir kez, menünün EN ÜSTÜNE oluştur
+            const had = state.categories.length;
+            readyCatId();
+            if(state.categories.length !== had) fbRef.child('categories').set(state.categories);
+            state.settings.readyCatAdded = true;
+            fbRef.child('settings').child('readyCatAdded').set(true);
           }
           startTracking();
         }
@@ -1444,11 +1496,13 @@ function renderCustomerMenu(root){
 }
 
 function onMenuClick(e){
-  const t = e.target.closest('[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-pilav],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand,[data-detail]');
+  const t = e.target.closest('[data-ready-add],[data-ready-edit],[data-cart-add],[data-cart-inc],[data-cart-dec],[data-bowl],[data-pilav],[data-cat],[data-geo-retry],[data-geo-help],#hero-brand,[data-detail]');
   if(!t) return;
   if(t.hasAttribute('data-geo-retry')) return requestLocation(true);
   if(t.hasAttribute('data-geo-help')) return openGeoHelp();
   if(t.id==='hero-brand') return registerSecretTap();
+  if(t.dataset.readyAdd) return addReadyBowl(t.dataset.readyAdd, 1);
+  if(t.dataset.readyEdit) return openReadyCustomize(t.dataset.readyEdit, 1);
   if(t.dataset.bowl) return openBowlModal(t.dataset.bowl);
   if(t.dataset.pilav) return openBowlModal(t.dataset.pilav, 1, 'pilav');
   if(t.dataset.detail && !e.target.closest('button')) return openDetailModal(t.dataset.detail);
@@ -1526,6 +1580,11 @@ function ctlHtml(it){
   if(it.available===false) return hasBuilder(it)
     ? `<button type="button" class="pick-btn" disabled aria-label="Tükendi">Tükendi</button>`
     : `<button type="button" class="add-btn" disabled aria-label="Tükendi">${ICONS.plus}</button>`;
+  if(isReady(it)){
+    const n = qtyInCart(it.id);
+    if(readyMissing(it)) return `<button type="button" class="pick-btn" data-ready-edit="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} malzemelerini değiştir">Değiştir ${ICONS.arrow}</button>`;
+    return `<button type="button" class="pick-btn ready-add" data-ready-add="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} sepete ekle">${n? `<span class="pb-n">${n}</span>`:''}Ekle ${ICONS.plus}</button>`;
+  }
   if(isBowl(it)){
     const n = qtyInCart(it.id);
     return `<button type="button" class="pick-btn" data-bowl="${escapeHtml(it.id)}" aria-label="${escapeHtml(it.name)} seç">${n? `<span class="pb-n">${n}</span>`:''}Seç ${ICONS.arrow}</button>`;
@@ -1541,17 +1600,17 @@ function ctlHtml(it){
 function itemCard(it, i){
   return `<article class="item ${it.available===false?'soldout':''}" style="--i:${i}" data-detail="${escapeHtml(it.id)}" tabindex="0" aria-label="${escapeHtml(it.name)} detayını aç">
     <div class="item-media">
-      ${it.badge && BADGE_LABEL[it.badge]? `<span class="badge ${it.badge}">${BADGE_LABEL[it.badge]}</span>`:''}
+      ${it.badge && BADGE_LABEL[it.badge]? `<span class="badge ${it.badge}">${BADGE_LABEL[it.badge]}</span>` : isReady(it)? `<span class="badge ready">⚡ Hazır</span>` : ''}
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="${escapeHtml(it.name)}" loading="lazy" decoding="async" onload="this.classList.add('ok')">` : `<div class="ph">${ICONS.bowl}</div>`}
       ${it.available===false? '<div class="sold"><span>TÜKENDİ</span></div>':''}
     </div>
     <div class="item-body">
       <h3 class="item-name">${escapeHtml(it.name)}</h3>
-      ${it.description? `<p class="item-desc">${escapeHtml(it.description)}</p>`:''}
-      ${isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, tavuğunu, garnitürünü, mezeni & sosunu seç</span>`:''}
+      ${isReady(it)? `<p class="item-desc ready-desc">${escapeHtml(readyDescText(it))}</p>` : it.description? `<p class="item-desc">${escapeHtml(it.description)}</p>`:''}
+      ${isReady(it) && it.available!==false? `<button type="button" class="bowl-tag ready-edit" data-ready-edit="${escapeHtml(it.id)}">✎ İstersen değiştirebilirsin ›</button>` : isBowl(it) && it.available!==false? `<span class="bowl-tag">✦ Tabanını, tavuğunu, garnitürünü, mezeni & sosunu seç</span>`:''}
       ${isPilav(it) && it.available!==false? `<span class="bowl-tag">✦ Tavuğunu & sosunu seç</span>`:''}
       <div class="item-foot">
-        <span class="price">${fmtPrice(it.price)}</span>
+        <span class="price">${fmtPrice(itemShowPrice(it))}</span>
         <div data-ctl="${escapeHtml(it.id)}">${ctlHtml(it)}</div>
       </div>
     </div>
@@ -1595,7 +1654,7 @@ function updateList(){
   const items = state.items.filter(it=>{
     if(isDaily(it) && (!q || it.active===false)) return false;   // günün menüleri üstteki bölümde; aramada da bulunur
     if(selectedCategoryId && it.categoryId!==selectedCategoryId) return false;
-    if(q && !trLower(it.name).includes(q) && !trLower(it.description).includes(q)) return false;
+    if(q && !trLower(it.name).includes(q) && !trLower(it.description).includes(q) && !(isReady(it) && trLower(readyNames(it).join(' ')).includes(q))) return false;
     return true;
   });
   let i = 0;
@@ -1692,29 +1751,35 @@ function renderDetail(){
     </div>
     <div class="dt-body">
       <h2 class="dt-name">${escapeHtml(it.name)}</h2>
-      <span class="dt-price num">${fmtPrice(it.price)}</span>
-      <p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>
+      <span class="dt-price num">${fmtPrice(itemShowPrice(it))}</span>
+      ${isReady(it)? `<p class="dt-desc"><span class="ready-in">İçinde:</span> ${escapeHtml(readyDescText(it))}. <b class="ready-hint">İstersen değiştirebilirsin.</b></p>`
+        : `<p class="dt-desc ${it.description?'':'empty'}">${it.description? escapeHtml(it.description) : 'Bu ürün için henüz açıklama eklenmedi.'}</p>`}
       ${sold? `<div class="dt-note off">Bu ürün şu an tükendi. Kısa süre içinde tekrar stokta olacak.</div>`
+            : isReady(it)? `${readyMissing(it)? `<div class="dt-note off">${escapeHtml(readyMissing(it))} şu an tükendi — malzemeleri değiştirerek sipariş verebilirsin.</div>` : `<div class="dt-note">⚡ Hazır kombinasyon: "Sepete Ekle" ile tek dokunuşla siparişine ekle. Kendi zevkine göre değiştirmek istersen aşağıdaki butona bas.</div>`}
+               <button type="button" class="btn btn-block ready-custom" id="dt-ready-edit">✏️ Malzemeleri Değiştir / Özelleştir</button>`
             : bowl? `<div class="dt-note">✦ Bu bir Bowl: bir sonraki adımda tabanını, tavuk çeşidini, garnitürlerini (ilk ${numOr(state.options.freeGarnish,3)} ücretsiz), mezeni (ilk ${numOr(state.options.freeMeze,1)} ücretsiz) ve sosunu (ilk ${numOr(state.options.freeSauce,1)} ücretsiz) seçeceksin.</div>`
             : isPilav(it)? `<div class="dt-note">✦ Soslu Tavuk Pilav: bir sonraki adımda tavuk çeşidini ve sosunu (ilk ${numOr(state.options.freeSauce,1)} ücretsiz) seçeceksin.</div>` : ''}
     </div>`;
+  const re = document.getElementById('dt-ready-edit');
+  if(re) re.addEventListener('click', ()=>{ const q = detailSel.qty; closeModal(); detailSel = null; setTimeout(()=>openReadyCustomize(it.id, q), 230); });
   renderDetailFoot();
 }
 function renderDetailFoot(){
   const it = detailSel && state.items.find(x=>x.id===detailSel.itemId); if(!it) return;
   const sold = it.available===false, bowl = isBowl(it);
   const q = document.getElementById('dt-qty'); if(q) q.textContent = detailSel.qty;
-  const off = sold;   // kapalıyken de sepete eklenebilir (ön sipariş); kontrol yalnızca onayda
+  const off = sold || (isReady(it) && !!readyMissing(it));   // kapalıyken de sepete eklenebilir (ön sipariş); kontrol yalnızca onayda
   const st = document.getElementById('dt-stepper'); if(st) st.style.display = off ? 'none' : '';
   const b = document.getElementById('dt-add'), l = document.getElementById('dt-add-label'), t = document.getElementById('dt-total');
   if(b) b.disabled = off;
-  if(l) l.textContent = sold ? 'Tükendi' : bowl ? "Kendi Bowl'unu Oluştur ›" : isPilav(it) ? 'Tavuğunu & Sosunu Seç ›' : 'Sepete Ekle';
-  if(t) t.textContent = off ? '' : fmtPrice(it.price * detailSel.qty);
+  if(l) l.textContent = sold ? 'Tükendi' : isReady(it) ? (off ? 'Önce malzemeyi değiştir' : 'Sepete Ekle') : bowl ? "Kendi Bowl'unu Oluştur ›" : isPilav(it) ? 'Tavuğunu & Sosunu Seç ›' : 'Sepete Ekle';
+  if(t) t.textContent = off ? '' : fmtPrice(itemShowPrice(it) * detailSel.qty);
 }
 function detailAdd(){
   const it = state.items.find(x=>x.id===detailSel.itemId);
   if(!isOrderable(it)){ showToast('Bu ürün şu an tükendi'); renderDetail(); return; }
   const qty = detailSel.qty;
+  if(isReady(it)){ if(addReadyBowl(it.id, qty)){ closeModal(); detailSel = null; } return; }   // hazır bowl → seçili malzemelerle direkt sepete
   if(isBowl(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty), 230); return; }   // Bowl → seçim adımları
   if(isPilav(it)){ closeModal(); setTimeout(()=>openBowlModal(it.id, qty, 'pilav'), 230); return; }   // Tavuk Pilav → tavuk + sos
   if(!cart[it.id]) cart[it.id] = { qty:0, price:it.price, name:it.name };
@@ -1726,11 +1791,23 @@ function detailAdd(){
 
 /* ============================= KENDİ BOWL'UNU OLUŞTUR ============================= */
 let bowlSel = null;   // { itemId, baseId, chickenId, garnish:[ids], qty }
-function openBowlModal(itemId, initQty, mode){
+function openReadyCustomize(itemId, qty){   // hazır bowl'un malzemeleri seçili olarak Bowl ekranı açılır
+  const it = state.items.find(x=>x.id===itemId); if(!it) return;
+  openBowlModal(itemId, qty||1, 'bowl', readyPreset(it));
+}
+function openBowlModal(itemId, initQty, mode, preset){
   const it = state.items.find(x=>x.id===itemId);
   if(!it || it.available===false){ showToast('Bu ürün şu an tükendi'); return; }
   mode = mode || (isPilav(it) ? 'pilav' : 'bowl');
   bowlSel = { itemId, mode, baseId:'', chickenId:'', garnish:[], meze:[], sauce:[], customName:'', qty: Math.max(1, Math.min(20, initQty||1)) };
+  if(preset){                                   // yalnızca hâlâ stokta olan malzemeler seçili gelir
+    const ok = (g,id)=>{ const o = optById(g,id); return o && o.available!==false; };
+    if(ok('base', preset.baseId)) bowlSel.baseId = preset.baseId;
+    if(ok('chicken', preset.chickenId)) bowlSel.chickenId = preset.chickenId;
+    bowlSel.garnish = (preset.garnish||[]).filter(id=>ok('garnish',id)).slice(0, state.options.maxGarnish||4);
+    bowlSel.meze = (preset.meze||[]).filter(id=>ok('meze',id));
+    bowlSel.sauce = (preset.sauce||[]).filter(id=>ok('sauce',id));
+  }
   const foot = `<div class="bowl-foot">
       <div class="stepper"><button type="button" data-bq="-" aria-label="Azalt">${ICONS.minus}</button><span class="q" id="bowl-qty">${bowlSel.qty}</span><button type="button" data-bq="+" aria-label="Arttır">${ICONS.plus}</button></div>
       <button type="button" class="btn btn-primary btn-lg" id="bowl-add"><span id="bowl-add-label">Sepete Ekle</span><span class="btn-sub num" id="bowl-total"></span></button>
@@ -1818,7 +1895,7 @@ function renderBowl(){
   root.innerHTML = `
     <div class="bowl-hero">
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="ph">${ICONS.bowl}</div>`}
-      <div>${it.description? `<p>${escapeHtml(it.description)}</p>`: pilav ? '<p>Tavuk pilavını kendine göre hazırla: tavuk çeşidini ve sosunu seç.</p>' : '<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu, garnitürlerini, mezeni ve sosunu seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
+      <div>${isReady(it)? `<p>${escapeHtml(readyDescText(it))}. <b style="color:var(--gold-2);">İstersen değiştirebilirsin</b> — aşağıdan istediğin malzemeyi ekle veya çıkar.</p>` : it.description? `<p>${escapeHtml(it.description)}</p>`: pilav ? '<p>Tavuk pilavını kendine göre hazırla: tavuk çeşidini ve sosunu seç.</p>' : '<p>Kendi Bowl\'unu oluştur: önce tabanını, sonra tavuğunu, garnitürlerini, mezeni ve sosunu seç.</p>'}<span class="price">${fmtPrice(it.price)}</span></div>
     </div>
     ${pilav? '' : `<div class="opt-step">
       <div class="opt-title"><span class="opt-num">0</span><div><h4>Tabanınızı Seçin</h4><small>Tek seçim</small></div>
@@ -1871,31 +1948,57 @@ function renderBowlFoot(){
   const b = document.getElementById('bowl-add'); if(b) b.disabled = !ready;
   const l = document.getElementById('bowl-add-label'); if(l) l.textContent = ready ? 'Sepete Ekle' : (!pilav && !bowlSel.baseId) ? 'Önce taban seçin' : pilav ? 'Tavuk çeşidi seçin' : 'Şimdi tavuk seçin';
 }
-function addBowlToCart(){
-  const it = state.items.find(x=>x.id===bowlSel.itemId);
-  if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
-  const pilav = bowlSel.mode==='pilav';
-  const bs = pilav ? null : optById('base', bowlSel.baseId);
-  if(!pilav && (!bs || bs.available===false)){ showToast('Lütfen bir taban seçin'); return; }
-  const ch = optById('chicken', bowlSel.chickenId);
-  if(!ch || ch.available===false){ showToast('Lütfen bir tavuk çeşidi seçin'); return; }
-  const gs = pilav ? [] : bowlSel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
-  const ms = pilav ? [] : bowlSel.meze.map(id=>optById('meze', id)).filter(g=>g && g.available!==false);
-  const ss = bowlSel.sauce.map(id=>optById('sauce', id)).filter(g=>g && g.available!==false);
+/* Seçimden sepet satırı seçeneklerini üretir: { options, x } veya { error } */
+function buildBowlOptions(it, sel){
+  const pilav = sel.mode==='pilav';
+  const bs = pilav ? null : optById('base', sel.baseId);
+  if(!pilav && (!bs || bs.available===false)) return { error:'Lütfen bir taban seçin' };
+  const ch = optById('chicken', sel.chickenId);
+  if(!ch || ch.available===false) return { error:'Lütfen bir tavuk çeşidi seçin' };
+  const gs = pilav ? [] : sel.garnish.map(id=>optById('garnish', id)).filter(g=>g && g.available!==false);
+  const ms = pilav ? [] : sel.meze.map(id=>optById('meze', id)).filter(g=>g && g.available!==false);
+  const ss = sel.sauce.map(id=>optById('sauce', id)).filter(g=>g && g.available!==false);
   const x = bowlExtras(gs.length, ms.length, ss.length);
   const options = pilav
     ? { kind:'pilav', chickenId: ch.id, chicken: ch.name, sauceIds: ss.map(g=>g.id), sauce: ss.map(g=>g.name), extraSauce: x.extraSauce, extra: x.extra }
     : { kind:'bowl', baseId: bs.id, base: bs.name, chickenId: ch.id, chicken: ch.name, garnishIds: gs.map(g=>g.id), garnish: gs.map(g=>g.name),
         mezeIds: ms.map(g=>g.id), meze: ms.map(g=>g.name), sauceIds: ss.map(g=>g.id), sauce: ss.map(g=>g.name),
         extraGarnish: x.extraGarnish, extraMeze: x.extraMeze, extraSauce: x.extraSauce, extra: x.extra };
-  const nm = cleanBoxName((document.getElementById('bowl-name')||{}).value || bowlSel.customName);
-  if(nm) options.customName = nm;
-  const key = lineKey(it.id, options);
-  if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price + x.extra, name: it.name, options };
-  cart[key].qty += bowlSel.qty;
+  if(isReady(it) && !pilav){                  // mutfak için: hazır haliyle mi, değiştirilerek mi?
+    const p = readyPreset(it), same = (a,b)=> a.slice().sort().join(',')===b.slice().sort().join(',');
+    options.ready = (bs.id===p.baseId && ch.id===p.chickenId && same(options.garnishIds,p.garnish) && same(options.mezeIds,p.meze) && same(options.sauceIds,p.sauce)) ? 'hazir' : 'degisti';
+  }
+  return { options, x };
+}
+function pushBowlLine(it, r, qty){
+  const key = lineKey(it.id, r.options);
+  if(!cart[key]) cart[key] = { itemId: it.id, qty:0, price: it.price + r.x.extra, name: it.name, options: r.options };
+  cart[key].qty += qty;
   saveCart(); updateItemControl(it.id); updateDock(true);
+}
+function addBowlToCart(){
+  const it = state.items.find(x=>x.id===bowlSel.itemId);
+  if(!it || it.available===false){ closeModal(); showToast('Bu ürün tükendi'); return; }
+  const r = buildBowlOptions(it, bowlSel);
+  if(r.error){ showToast(r.error); return; }
+  const nm = cleanBoxName((document.getElementById('bowl-name')||{}).value || bowlSel.customName);
+  if(nm) r.options.customName = nm;
+  pushBowlLine(it, r, bowlSel.qty);
   closeModal(); bowlSel = null;
   showToast(it.name + (nm? ' (' + nm + ')' : '') + ' sepete eklendi', 'success');
+}
+/* Hazır bowl'u seçili malzemeleriyle direkt sepete ekler (kapalıyken de: ön sipariş) */
+function addReadyBowl(itemId, qty){
+  const it = state.items.find(x=>x.id===itemId);
+  if(!isOrderable(it) || !isReady(it)){ showToast('Bu ürün şu an tükendi'); return false; }
+  const miss = readyMissing(it);
+  if(miss){ showToast(miss + ' şu an tükendi — "Değiştir" ile başka malzeme seçebilirsin'); return false; }
+  const p = readyPreset(it);
+  const r = buildBowlOptions(it, { mode:'bowl', baseId:p.baseId, chickenId:p.chickenId, garnish:p.garnish, meze:p.meze, sauce:p.sauce });
+  if(r.error){ showToast(r.error); return false; }
+  pushBowlLine(it, r, Math.max(1, qty||1));
+  showToast((qty>1? qty+' × ' : '') + it.name + ' sepete eklendi', 'success');
+  return true;
 }
 
 /* ============================= BÖLGE BİLGİSİ & KONUM KONTROLÜ =============================
@@ -2319,6 +2422,7 @@ async function sendOrder(){
       if(c.options){
         li.options = { chicken: c.options.chicken, garnish: c.options.garnish || [] };
         li.options.kind = c.options.kind || 'bowl';
+        if(c.options.ready) li.options.ready = c.options.ready;   // hazır bowl (olduğu gibi / değiştirildi)
         if(c.options.base) li.options.base = c.options.base;
         if((c.options.meze||[]).length) li.options.meze = c.options.meze;
         if((c.options.sauce||[]).length) li.options.sauce = c.options.sauce;
@@ -2470,6 +2574,7 @@ function renderAdmin(root){
         <h2>Yönetim Paneli</h2>
         <div class="admin-tabs">
           <div class="admin-tab ${adminTab==='menu'?'active':''}" data-atab="menu">Menü</div>
+          <div class="admin-tab ${adminTab==='ready'?'active':''}" data-atab="ready">🥗 Hazır Bowl'lar${(()=>{ const n = state.items.filter(isReady).length; return n? `<span class="tab-count" style="background:var(--gold);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='daily'?'active':''}" data-atab="daily">⭐ Günün Menüleri${(()=>{ const n = dailyMenus().length; return n? `<span class="tab-count" style="background:var(--gold);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='stock'?'active':''}" data-atab="stock">Stok Yönetimi${(()=>{ const n = state.items.filter(i=>i.available===false).length + [...(state.options.base||[]),...(state.options.chicken||[]),...(state.options.garnish||[]),...(state.options.meze||[]),...(state.options.sauce||[])].filter(o=>o.available===false).length; return n? `<span class="tab-count" style="background:var(--warn);color:#1A1405;">${n}</span>`:''; })()}</div>
           <div class="admin-tab ${adminTab==='orders'?'active':''}" data-atab="orders">Siparişler${(()=>{ const n = getOrders().filter(o=>o.status==='yeni').length; return n? `<span class="tab-count">${n}</span>`:''; })()}</div>
@@ -2500,6 +2605,7 @@ function renderAdmin(root){
   const body = document.getElementById('admin-body').appendChild(document.createElement('div'));   // acil kapatma şeridinin altına
   if(adminTab==='menu') renderAdminMenu(body);
   else if(adminTab==='daily') renderAdminDaily(body);
+  else if(adminTab==='ready') renderAdminReady(body);
   else if(adminTab==='stock') renderAdminStock(body);
   else if(adminTab==='orders') renderAdminOrders(body);
   else if(adminTab==='coupons') renderAdminCoupons(body);
@@ -2651,6 +2757,61 @@ function renderAdminMenu(root){
     saveState(); render();
   }));
 }
+/* --- Yönetim: Hazır Bowl'lar --- */
+function renderAdminReady(root){
+  const list = state.items.filter(isReady);
+  root.innerHTML = `
+    <div class="card">
+      <div class="card-head"><div><h3>🥗 Hazır Bowl'lar Yönetimi</h3><div class="hint" style="margin-top:4px;">Menünün en üstündeki "${READY_CAT_NAME}" kategorisinde görünür. Müşteri tek dokunuşla bu malzemelerle sepete ekler ya da "İstersen değiştirebilirsin" ile Bowl ekranında değiştirir.</div></div>
+        <button class="btn btn-sm btn-primary" id="add-ready">${ICONS.plus} Yeni Hazır Bowl</button></div>
+      ${list.length? `<div class="kv-list dm-admin">${list.map(it=>{ const on = it.available!==false, miss = readyMissing(it); return `
+        <div class="kv-row ${on?'':'dm-off'}">
+          <div class="dm-a-info">
+            ${it.photoUrl? `<img class="thumb" src="${escapeHtml(it.photoUrl)}" alt="">` : `<div class="thumb" style="display:grid;place-items:center;color:var(--gold);">${ICONS.bowl}</div>`}
+            <div style="min-width:0;">
+              <strong>${escapeHtml(it.name)}</strong> <span class="num" style="color:var(--gold-2);font-weight:800;">${fmtPrice(readyPrice(it))}</span>
+              <div class="hint dm-a-desc" style="white-space:normal;">${escapeHtml(readyNames(it).join(', ') || '—')}</div>
+              ${miss? `<span class="pill danger" style="margin-top:4px;">⚠ ${escapeHtml(miss)} tükendi/yok — müşteri değiştirerek alabilir</span>`:''}
+            </div>
+          </div>
+          <div class="row-actions">
+            <button type="button" class="switch ${on?'on':''}" role="switch" aria-checked="${on}" data-rb-toggle="${it.id}"><span class="sw-knob"></span><span class="sw-label">${on?'Satışta':'Kapalı'}</span></button>
+            <button class="icon-btn" data-rb-edit="${it.id}" aria-label="Düzenle">${ICONS.edit}</button>
+            <button class="icon-btn" data-rb-del="${it.id}" aria-label="Sil">${ICONS.trash}</button>
+          </div>
+        </div>`; }).join('')}</div>`
+      : `<div class="ord-empty"><span class="ei">🥗</span>Henüz hazır bowl yok. "Yeni Hazır Bowl" ile ilk kombinasyonunuzu oluşturun (örn. Pilav + BBQ Tavuk + Mısır + Ranch Sos).</div>`}
+    </div>`;
+  const find = id => state.items.find(x=>x.id===id);
+  root.querySelector('#add-ready').addEventListener('click', ()=>openItemModal(null, 'ready'));
+  root.querySelectorAll('[data-rb-edit]').forEach(b=>b.addEventListener('click', ()=>openItemModal(find(b.dataset.rbEdit), 'ready')));
+  root.querySelectorAll('[data-rb-toggle]').forEach(b=>b.addEventListener('click', ()=>{
+    const it = find(b.dataset.rbToggle); if(!it) return;
+    it.available = it.available===false; saveItemsNow(); render();
+  }));
+  root.querySelectorAll('[data-rb-del]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Bu hazır bowl\'u silmek istiyor musunuz?')) return;
+    state.items = state.items.filter(x=>x.id!==b.dataset.rbDel); saveItemsNow(); render();
+  }));
+}
+function readyPickerHtml(existing){
+  const pre = isReady(existing) ? readyPreset(existing) : { baseId:'', chickenId:'', garnish:[], meze:[], sauce:[] };
+  const o = state.options;
+  const grp = (g, title, type, has)=>`<div class="rb-grp"><div class="rb-h">${title}</div><div class="rb-opts">${(o[g]||[]).map(x=>`
+      <label class="rb-opt"><input type="${type}" name="rb-${g}" value="${escapeHtml(x.id)}" ${has(x.id)?'checked':''}><span>${escapeHtml(x.name)}${x.available===false?' <i>(tükendi)</i>':''}</span></label>`).join('') || '<span class="hint" style="margin:0;">Henüz eklenmemiş</span>'}</div></div>`;
+  return `<div class="field"><label>İçerik — müşteri "Sepete Ekle"ye basınca bu malzemelerle eklenir</label>
+    ${grp('base','Taban (zorunlu)','radio',id=>pre.baseId===id)}
+    ${grp('chicken','Tavuk (zorunlu)','radio',id=>pre.chickenId===id)}
+    ${grp('garnish','Garnitür · en fazla '+(o.maxGarnish||4),'checkbox',id=>pre.garnish.includes(id))}
+    ${grp('meze','Meze','checkbox',id=>pre.meze.includes(id))}
+    ${grp('sauce','Sos','checkbox',id=>pre.sauce.includes(id))}
+    <div class="rb-preview" id="rb-preview"></div></div>`;
+}
+function readPickerSel(){
+  const v = n => [...document.querySelectorAll('input[name="rb-'+n+'"]:checked')].map(i=>i.value);
+  return { baseId: v('base')[0]||'', chickenId: v('chicken')[0]||'', garnish: v('garnish'), meze: v('meze'), sauce: v('sauce') };
+}
+
 /* --- Yönetim: Günün Menüleri --- */
 function renderAdminDaily(root){
   const list = dailyMenus(true);
@@ -2725,15 +2886,17 @@ function openCategoryModal(existing){
 }
 function openItemModal(existing, daily){
   const cats = state.categories;
-  daily = !!daily || isDaily(existing);
+  const ready = daily==='ready' || isReady(existing);
+  daily = !ready && (daily===true || isDaily(existing));
   const body = `
-    <div class="field"><label>${daily?'Menü Adı':'Ürün Adı'}</label><input type="text" id="it-name" value="${existing?escapeHtml(existing.name):''}" ${daily?'placeholder="Örn. Öğle Menüsü"':''}></div>
+    <div class="field"><label>${daily?'Menü Adı': ready?'Hazır Bowl Adı':'Ürün Adı'}</label><input type="text" id="it-name" value="${existing?escapeHtml(existing.name):''}" ${daily?'placeholder="Örn. Öğle Menüsü"': ready?'placeholder="Örn. Klasik BBQ Bowl"':''}></div>
     <div class="field-row">
       <div class="field"><label>Fiyat</label><input type="number" id="it-price" step="0.01" min="0" value="${existing?existing.price:''}"></div>
-      ${daily? '' : `<div class="field"><label>Kategori</label><select id="it-cat">${cats.map(c=>`<option value="${c.id}" ${existing&&existing.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>`}
+      ${daily || ready? '' : `<div class="field"><label>Kategori</label><select id="it-cat">${cats.map(c=>`<option value="${c.id}" ${existing&&existing.categoryId===c.id?'selected':''}>${escapeHtml(c.name)}</option>`).join('')}</select></div>`}
     </div>
-    <div class="field"><label>${daily?'Açıklama / Menü İçeriği':'Açıklama (opsiyonel)'}</label><textarea id="it-desc" rows="2" ${daily?'placeholder="Örn. Tavuk Pilav + Ayran + Sütlaç"':''}>${existing?escapeHtml(existing.description||''):''}</textarea></div>
-    ${daily? `<div class="field"><label class="chk"><input type="checkbox" id="it-active" ${!existing || existing.active!==false?'checked':''}> Aktif — müşteriler ana sayfada görsün</label></div>` : `
+    ${ready? readyPickerHtml(existing) : ''}
+    <div class="field"><label>${daily?'Açıklama / Menü İçeriği': ready?'Ek not (opsiyonel — içerik listesinden sonra yazılır)':'Açıklama (opsiyonel)'}</label><textarea id="it-desc" rows="2" ${daily?'placeholder="Örn. Tavuk Pilav + Ayran + Sütlaç"': ready?'placeholder="Örn. Şefin favorisi, bol soslu"':''}>${existing?escapeHtml(existing.description||''):''}</textarea></div>
+    ${ready? '' : daily? `<div class="field"><label class="chk"><input type="checkbox" id="it-active" ${!existing || existing.active!==false?'checked':''}> Aktif — müşteriler ana sayfada görsün</label></div>` : `
     <div class="field"><label>Etiket</label><select id="it-badge">
       <option value="">Yok</option>
       <option value="yeni" ${existing&&existing.badge==='yeni'?'selected':''}>Yeni</option>
@@ -2756,7 +2919,23 @@ function openItemModal(existing, daily){
     </div>
   `;
   const foot = `<button class="btn btn-ghost" id="it-cancel">Vazgeç</button><button class="btn btn-primary" id="it-save">${existing?'Güncelle':'Kaydet'}</button>`;
-  openModal(daily ? (existing?'Günün Menüsünü Düzenle':'⭐ Yeni Günün Menüsü') : (existing?'Ürünü Düzenle':'Yeni Ürün'), body, foot);
+  openModal(ready ? (existing?'Hazır Bowl\'u Düzenle':'🥗 Yeni Hazır Bowl') : daily ? (existing?'Günün Menüsünü Düzenle':'⭐ Yeni Günün Menüsü') : (existing?'Ürünü Düzenle':'Yeni Ürün'), body, foot);
+  if(ready){                                  // canlı önizleme: içerik + müşterinin ödeyeceği fiyat
+    const pv = ()=>{
+      const sel = readPickerSel(), el = document.getElementById('rb-preview'); if(!el) return;
+      const names = [optById('base',sel.baseId), optById('chicken',sel.chickenId), ...sel.garnish.map(i=>optById('garnish',i)), ...sel.meze.map(i=>optById('meze',i)), ...sel.sauce.map(i=>optById('sauce',i))].filter(Boolean).map(x=>x.name);
+      const price = parseFloat(document.getElementById('it-price').value)||0, x = bowlExtras(sel.garnish.length, sel.meze.length, sel.sauce.length);
+      el.innerHTML = `<b>Müşterinin göreceği açıklama:</b> ${escapeHtml(names.join(', ') || '—')}${document.getElementById('it-desc').value.trim()? '. '+escapeHtml(document.getElementById('it-desc').value.trim()) : ''}. <i>İstersen değiştirebilirsin.</i>
+        <br><b>Müşteri fiyatı:</b> ${fmtPrice(price + x.extra)}${x.extra? ` <span style="color:var(--warn);">(fiyat ${fmtPrice(price)} + ücretsiz kotayı aşan malzemeler ${fmtPrice(x.extra)})</span>` : ''}`;
+    };
+    document.querySelectorAll('input[name^="rb-"]').forEach(i=>i.addEventListener('change', ()=>{
+      const max = state.options.maxGarnish||4;
+      if(i.name==='rb-garnish' && i.checked && document.querySelectorAll('input[name="rb-garnish"]:checked').length > max){ i.checked = false; showToast('En fazla '+max+' garnitür seçebilirsiniz'); }
+      pv();
+    }));
+    ['it-price','it-desc'].forEach(id=>document.getElementById(id).addEventListener('input', pv));
+    pv();
+  }
   let photoData = existing && existing.photoUrl ? existing.photoUrl : null;
   const hadPhoto = !!photoData;
   const showPhoto = ()=>{
@@ -2791,6 +2970,17 @@ function openItemModal(existing, daily){
     const name = document.getElementById('it-name').value.trim();
     const price = parseFloat(document.getElementById('it-price').value);
     if(!name || !price || price<=0){ showToast(daily ? 'Lütfen menü adı ve geçerli fiyat girin' : 'Lütfen ürün adı ve geçerli fiyat girin'); return; }
+    if(ready){
+      const sel = readPickerSel();
+      if(!sel.baseId || !sel.chickenId){ showToast('Lütfen bir taban ve bir tavuk çeşidi seçin'); return; }
+      const data = { name, price, categoryId: (existing && isReady(existing) && state.categories.some(c=>c.id===existing.categoryId)) ? existing.categoryId : readyCatId(),
+        description: document.getElementById('it-desc').value.trim(), badge:null, isBowl:true, isPilav:false, isReady:true, preset: sel, photoUrl: photoData };
+      if(existing) Object.assign(existing, data);
+      else state.items.push({ id:uid('rb'), available:true, ...data });
+      saveState(); closeModal(); render();
+      showToast(existing ? 'Hazır bowl güncellendi' : "🥗 Hazır bowl eklendi — menünün en üstünde görünüyor", 'success');
+      return;
+    }
     if(daily){
       const data = { name, price, categoryId:'', description: document.getElementById('it-desc').value.trim(), badge:null,
         isBowl:false, isPilav:false, isDaily:true, active: document.getElementById('it-active').checked, photoUrl: photoData };
@@ -2997,7 +3187,7 @@ function renderAdminOrders(root){
       <div class="kv-row ${freshOrderIds.has(o.id)?'order-fresh':''}" data-order-row="${o.id}" style="align-items:flex-start;">
         <div>
           <div class="adm-items">${toList(o.items).map(li=>{ const op = li.options, g = op? toList(op.garnish) : [];
-            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.daily? ' <span class="adm-tag daily">⭐ GÜNÜN MENÜSÜ</span>':''}${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
+            return `<div class="adm-item"><strong>${li.qty}x ${escapeHtml(li.name)}</strong>${li.daily? ' <span class="adm-tag daily">⭐ GÜNÜN MENÜSÜ</span>':''}${li.customName? `<div><span class="adm-boxname">📦 KUTU: ${escapeHtml(boxNameUpper(li.customName))}</span></div>`:''}${op? `<div class="adm-opts"><span class="adm-tag kind ${(op.kind||'bowl')}">${(op.kind||'bowl')==='pilav'? '🍚 TAVUK PİLAV' : '🥗 BOWL'}</span>${op.ready? `<span class="adm-tag ready ${op.ready}">${op.ready==='degisti'? '✏️ HAZIR BOWL · DEĞİŞTİRİLDİ' : '⚡ HAZIR BOWL'}</span>`:''}${op.base? `<span class="adm-tag base">${baseIcon(op.base)} Taban: ${escapeHtml(op.base)}</span>`:''}${op.chicken? `<span class="adm-tag sos">🍗 ${escapeHtml(op.chicken)}</span>`:''}${g.map(x=>`<span class="adm-tag">${escapeHtml(x)}</span>`).join('')}${!g.length && (op.kind||'bowl')!=='pilav'? '<span class="adm-tag">Garnitürsüz</span>':''}${Number(op.extraGarnish)? `<span class="adm-tag extra">+${fmtPrice(op.extraGarnish)} Ekstra garnitür</span>`:''}${toList(op.meze).length? `<span class="adm-tag meze">🧆 Meze: ${escapeHtml(toList(op.meze).join(', '))}</span>`:''}${Number(op.extraMeze)? `<span class="adm-tag extra">+${fmtPrice(op.extraMeze)} Ekstra meze</span>`:''}${toList(op.sauce).length? `<span class="adm-tag sauce">🥫 Sos: ${escapeHtml(toList(op.sauce).join(', '))}</span>`:''}${Number(op.extraSauce)? `<span class="adm-tag extra">+${fmtPrice(op.extraSauce)} Ekstra sos</span>`:''}</div>`:''}</div>`; }).join('')}</div>
           <div class="hint">${fmtDateTime(o.createdAt)}${o.customerName?' · '+escapeHtml(o.customerName):''}${o.address ? ' · Adres: ' + escapeHtml(o.address) : ''}${o.note?' · Not: '+escapeHtml(o.note):''}</div>
           ${(o.phone || o.address || hasGeo(o))? `<div class="ord-contact">${o.phone? `<a class="tel-link" href="${escapeHtml(telHref(o.phone))}" title="Müşteriyi ara">📞 ${escapeHtml(fmtPhone(o.phone))}</a>`:''}${(o.address || hasGeo(o))? `<button type="button" class="tel-link map-link" data-order-map="${o.id}" title="Haritada aç / Yol tarifi">${ICONS.pin}<span>Yol Tarifi</span>${hasGeo(o)? '<i class="map-pin-dot" title="Müşteri konumu var"></i>':''}</button>`:''}</div>`:''}
           <div class="num" style="margin-top:4px;">${fmtMoney(o.total, state.settings.currency)}${isWaiting(o)? `<span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>`:''}</div>
