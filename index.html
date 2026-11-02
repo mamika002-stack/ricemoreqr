@@ -759,6 +759,41 @@
   .dm-a-move{display:flex;flex-direction:column;gap:4px;}
   .dm-a-desc{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
   .dm-admin .switch.on .sw-label{color:var(--ok);}
+  /* müşteri: 2'li kompakt ızgara (Menüler + Hazır Bowl'lar) */
+  .cc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  @media (min-width:720px){ .cc-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;} }
+  @media (min-width:1000px){ .cc-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+  .cc-card{position:relative;display:flex;flex-direction:column;min-width:0;border-radius:18px;overflow:hidden;cursor:pointer;
+    background:linear-gradient(160deg, rgba(30,32,40,.66), rgba(22,24,30,.6));border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 var(--glass-hi);
+    animation:rise .5s var(--ease) both;animation-delay:calc(min(var(--i,0),10) * 40ms);transition:transform .3s var(--ease), border-color .25s;}
+  .cc-card.camp{background:linear-gradient(165deg, rgba(212,175,55,.14), rgba(30,32,40,.66) 45%, rgba(22,24,30,.6));border-color:rgba(212,175,55,.4);}
+  .cc-card:active{transform:scale(.985);} .cc-card:hover{border-color:var(--gold);}
+  .cc-media{position:relative;aspect-ratio:16/10;overflow:hidden;background:linear-gradient(145deg,#1E2128,#181A20);}
+  .cc-media img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .45s ease;}
+  .cc-media img.ok{opacity:1;}
+  .cc-media .ph{position:absolute;inset:0;display:grid;place-items:center;color:rgba(212,175,55,.5);}
+  .cc-media .ph svg{width:38%;height:38%;}
+  .cc-media .sold span{padding:4px 10px;border-radius:99px;border:1px solid rgba(212,175,55,.6);background:rgba(11,12,14,.78);color:var(--gold-2);font-weight:800;font-size:10.5px;letter-spacing:.08em;}
+  .cc-card.soldout img{filter:grayscale(.7) brightness(.7);}
+  .cc-rib{position:absolute;left:8px;top:8px;z-index:1;padding:3px 8px;border-radius:99px;font-size:9.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--gold-ink);background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));box-shadow:0 3px 10px rgba(0,0,0,.4);}
+  .cc-rib.rd{background:rgba(11,12,14,.78);color:var(--gold-2);border:1px solid rgba(212,175,55,.6);}
+  .cc-body{display:flex;flex-direction:column;flex:1;gap:3px;padding:9px 10px 10px;min-width:0;}
+  .cc-name{margin:0;font-weight:800;font-size:13.8px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .cc-desc{margin:0;font-size:11.5px;line-height:1.35;color:var(--text-dim);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .cc-edit{align-self:flex-start;margin-top:1px;padding:0;border:0;background:none;font-family:inherit;font-size:10.5px;font-weight:800;color:var(--gold-2);cursor:pointer;text-align:left;}
+  .cc-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin-top:auto;padding-top:7px;}
+  .cc-pr{display:flex;flex-direction:column;min-width:0;line-height:1.1;}
+  .cc-pr s{font-size:11px;font-weight:700;color:var(--text-faint);}
+  .cc-pr .price{font-size:15px;}
+  .cc-btn{position:relative;flex:none;width:36px;height:36px;border-radius:12px;border:0;padding:0;display:grid;place-items:center;cursor:pointer;
+    background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));color:var(--gold-ink);box-shadow:0 6px 16px rgba(212,175,55,.25);transition:transform .15s;}
+  .cc-btn:active{transform:scale(.92);}
+  .cc-btn svg{width:18px;height:18px;}
+  .cc-btn.alt{background:var(--gold-soft);color:var(--gold-2);border:1px solid rgba(212,175,55,.6);box-shadow:none;}
+  .cc-n{position:absolute;top:-7px;right:-7px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:900;
+    background:var(--gold-ink);color:var(--gold-2);border:1.5px solid var(--gold);}
+  .cc-sold{font-size:11px;font-weight:800;color:var(--danger);padding-bottom:6px;}
   /* müşteri: günün menüleri */
   .daily{margin-top:6px;}
   .daily .sec-head{margin-top:20px;}
@@ -1592,7 +1627,7 @@ function renderCustomerMenu(root){
       <div class="c-wrap" id="c-wrap">
         <header class="hero glass" id="hero"></header>
         <section class="region glass" id="region" role="status" aria-live="polite"></section>
-        <section class="daily" id="daily" aria-label="Günün Menüleri" hidden></section>
+        <section class="daily" id="daily" aria-label="Menüler" hidden></section>
         <div class="toolbar glass" id="toolbar">
           <label class="search">${ICONS.search}
             <input type="search" id="search-input" placeholder="Menüde ara…" autocomplete="off" enterkeyhint="search" aria-label="Menüde ara">
@@ -1743,37 +1778,48 @@ function itemCard(it, i){
     </div>
   </article>`;
 }
-function dailyCard(it, i){
-  const id = escapeHtml(it.id), sold = it.available===false;
-  return `<article class="dm-card ${sold?'soldout':''}" style="--i:${i}" data-detail="${id}" tabindex="0" aria-label="${escapeHtml(it.name)} detayını aç">
-    <div class="dm-media">
+/* ---- KOMPAKT 2'Lİ IZGARA KARTI (Menüler + Hazır Bowl'lar) ---- */
+function ctlCompact(it){
+  const id = escapeHtml(it.id), n = qtyInCart(it.id), badge = n? `<span class="cc-n">${n}</span>` : '';
+  if(it.available===false || (isBundle(it) && bundleMissing(it))) return `<span class="cc-sold">Tükendi</span>`;
+  if(isBundle(it)) return `<button type="button" class="cc-btn" data-bundle="${id}" aria-label="${escapeHtml(it.name)} ${bundleHasCustom(it)?'seç':'sepete ekle'}">${badge}${bundleHasCustom(it)? ICONS.arrow : ICONS.plus}</button>`;
+  if(isReady(it)) return readyMissing(it)
+    ? `<button type="button" class="cc-btn alt" data-ready-edit="${id}" aria-label="${escapeHtml(it.name)} malzemelerini değiştir">${badge}${ICONS.edit}</button>`
+    : `<button type="button" class="cc-btn" data-ready-add="${id}" aria-label="${escapeHtml(it.name)} sepete ekle">${badge}${ICONS.plus}</button>`;
+  if(hasBuilder(it)) return `<button type="button" class="cc-btn" data-${isPilav(it)?'pilav':'bowl'}="${id}" aria-label="${escapeHtml(it.name)} seç">${badge}${ICONS.arrow}</button>`;
+  return `<button type="button" class="cc-btn" data-cart-add="${id}" aria-label="${escapeHtml(it.name)} sepete ekle">${badge}${ICONS.plus}</button>`;
+}
+function ccCard(it, i){
+  const id = escapeHtml(it.id), sold = it.available===false, camp = isDaily(it), ready = isReady(it);
+  const desc = isBundle(it) ? bundleNames(it).join(' + ') : ready ? readyDescText(it) : (it.description||'');
+  const old = isBundle(it) && bundleRegular(it) > it.price ? bundleRegular(it) : 0;
+  const editable = (isBundle(it) && bundleHasCustom(it)) || ready;
+  return `<article class="cc-card ${camp?'camp':''} ${sold?'soldout':''}" style="--i:${i}" data-detail="${id}" tabindex="0" aria-label="${escapeHtml(it.name)} detayını aç">
+    <div class="cc-media">
       ${it.photoUrl? `<img src="${escapeHtml(it.photoUrl)}" alt="${escapeHtml(it.name)}" loading="lazy" decoding="async" onload="this.classList.add('ok')">` : `<div class="ph">${ICONS.bowl}</div>`}
-      <span class="dm-ribbon">★ Günün Menüsü</span>
+      <span class="cc-rib ${camp?'':'rd'}">${camp? '★ Kampanya' : '⚡ Hazır'}</span>
       ${sold? '<div class="sold"><span>TÜKENDİ</span></div>':''}
     </div>
-    <div class="dm-body">
-      <h3 class="dm-name">${escapeHtml(it.name)}</h3>
-      ${isBundle(it)? `<p class="dm-desc dm-parts">${escapeHtml(bundleNames(it).join(' + '))}</p>`:''}
-      ${it.description? `<p class="dm-desc">${escapeHtml(it.description)}</p>`:''}
-      ${isBundle(it) && bundleHasCustom(it)? `<span class="dm-custom">✎ İstersen değiştirebilirsin</span>`:''}
-      <div class="item-foot">
-        <span class="dm-pr">${isBundle(it) && bundleRegular(it) > it.price? `<s class="dm-old num">${fmtPrice(bundleRegular(it))}</s>`:''}<span class="price">${fmtPrice(it.price)}</span></span>
-        <div data-ctl="${id}">${ctlHtml(it)}</div>
+    <div class="cc-body">
+      <h3 class="cc-name">${escapeHtml(it.name)}</h3>
+      ${desc? `<p class="cc-desc">${escapeHtml(desc)}</p>`:''}
+      ${editable && !sold? (ready? `<button type="button" class="cc-edit" data-ready-edit="${id}">✎ Değiştirebilirsin</button>` : `<span class="cc-edit">✎ Değiştirebilirsin</span>`) : ''}
+      <div class="cc-foot">
+        <span class="cc-pr">${old? `<s class="num">${fmtPrice(old)}</s>`:''}<b class="price num">${fmtPrice(itemShowPrice(it))}</b></span>
+        <div data-ctl="${id}" data-cc="1">${ctlCompact(it)}</div>
       </div>
     </div>
   </article>`;
 }
-/* Günün Menüleri: yalnızca "Tümü" görünümünde ve arama yokken en üstte, yatay kaydırmalı kartlar */
+/* Menüler: yalnızca "Tümü" görünümünde ve arama yokken en üstte, 2'li ızgara */
 function updateDaily(){
   const box = document.getElementById('daily'); if(!box) return;
   const list = dailyMenus();
   const show = list.length && !selectedCategoryId && !searchQuery.trim();
   if(!show){ box.hidden = true; box.innerHTML = ''; return; }
-  const old = box.querySelector('.dm-track'), sl = old ? old.scrollLeft : 0;
   box.hidden = false;
-  box.innerHTML = `<div class="sec-head"><h2>✦ Günün Menüleri</h2><span>${list.length} menü</span></div>
-    <div class="dm-track ${list.length===1?'single':''}">${list.map((it,i)=>dailyCard(it,i)).join('')}</div>`;
-  if(sl) box.querySelector('.dm-track').scrollLeft = sl;   // canlı güncellemede kaydırma yeri korunur
+  box.innerHTML = `<div class="sec-head"><h2>✦ Menüler</h2><span>${list.length} menü</span></div>
+    <div class="cc-grid">${list.map((it,i)=>ccCard(it,i)).join('')}</div>`;
 }
 function updateList(){
   updateDaily();
@@ -1792,13 +1838,15 @@ function updateList(){
   if(!items.length){ box.innerHTML = empty('Sonuç bulunamadı', q? `"${escapeHtml(searchQuery.trim())}" için ürün yok. Farklı bir arama deneyin.` : 'Bu kategoride henüz ürün yok.'); return; }
   if(selectedCategoryId || q){
     const title = q ? 'Arama sonuçları' : (cats.find(c=>c.id===selectedCategoryId)||{}).name || 'Ürünler';
-    box.innerHTML = `<div class="sec-head"><h2>${escapeHtml(title)}</h2><span>${items.length} ürün</span></div><div class="items">${items.map(it=>itemCard(it, i++)).join('')}</div>`;
+    const grid = !q && items.every(isReady);
+    box.innerHTML = `<div class="sec-head"><h2>${escapeHtml(title)}</h2><span>${items.length} ürün</span></div>${grid? `<div class="cc-grid">${items.map(it=>ccCard(it, i++)).join('')}</div>` : `<div class="items">${items.map(it=>itemCard(it, i++)).join('')}</div>`}`;
     return;
   }
   const sections = cats.map(cat=>{
     const list = items.filter(it=>it.categoryId===cat.id);
     if(!list.length) return '';
-    return `<section><div class="sec-head"><h2>${escapeHtml(cat.name)}</h2><span>${list.length} ürün</span></div><div class="items">${list.map(it=>itemCard(it, i++)).join('')}</div></section>`;
+    const grid = list.every(isReady);
+    return `<section><div class="sec-head"><h2>${escapeHtml(cat.name)}</h2><span>${list.length} ürün</span></div>${grid? `<div class="cc-grid">${list.map(it=>ccCard(it, i++)).join('')}</div>` : `<div class="items">${list.map(it=>itemCard(it, i++)).join('')}</div>`}</section>`;
   });
   const other = items.filter(it=>!isDaily(it) && !cats.some(c=>c.id===it.categoryId));
   if(other.length) sections.push(`<section><div class="sec-head"><h2>Diğer</h2><span>${other.length} ürün</span></div><div class="items">${other.map(it=>itemCard(it, i++)).join('')}</div></section>`);
@@ -1806,10 +1854,10 @@ function updateList(){
 }
 function updateItemControl(id){
   const it = state.items.find(x=>x.id===id); if(!it) return;
-  document.querySelectorAll('[data-ctl]').forEach(el=>{ if(el.dataset.ctl===id) el.innerHTML = ctlHtml(it); });
+  document.querySelectorAll('[data-ctl]').forEach(el=>{ if(el.dataset.ctl===id) el.innerHTML = el.dataset.cc ? ctlCompact(it) : ctlHtml(it); });
 }
 function refreshAllControls(){
-  document.querySelectorAll('[data-ctl]').forEach(el=>{ const it = state.items.find(x=>x.id===el.dataset.ctl); if(it) el.innerHTML = ctlHtml(it); });
+  document.querySelectorAll('[data-ctl]').forEach(el=>{ const it = state.items.find(x=>x.id===el.dataset.ctl); if(it) el.innerHTML = el.dataset.cc ? ctlCompact(it) : ctlHtml(it); });
 }
 function updateDock(bump){
   const dock = document.getElementById('dock'); if(!dock) return;
