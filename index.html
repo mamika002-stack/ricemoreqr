@@ -643,9 +643,17 @@
   .field.invalid .pay-opt{border-color:var(--danger);}
   /* mutfak kartı */
   .src-tag{display:inline-block;margin:6px 0 2px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:900;letter-spacing:.05em;background:rgba(126,182,230,.14);border:1px solid rgba(126,182,230,.55);color:#A9D0F2;}
+  .iban-box{margin-top:10px;padding:12px;border-radius:14px;background:rgba(76,142,218,.1);border:1px solid rgba(76,142,218,.5);display:flex;flex-direction:column;gap:8px;}
+  .ib-h{font-size:13px;font-weight:800;color:#A9D0F2;}
+  .ib-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:11px;background:rgba(5,6,8,.45);border:1px solid var(--glass-border);}
+  .ib-v{min-width:0;display:flex;flex-direction:column;}
+  .ib-v small{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text-faint);}
+  .ib-v b{font-size:14px;color:var(--text);letter-spacing:.02em;word-break:break-word;user-select:all;-webkit-user-select:all;}
+  .ib-copy{flex:none;white-space:nowrap;}
+  .ib-copy.done{background:var(--ok-soft)!important;border-color:rgba(127,199,154,.6)!important;color:var(--ok)!important;}
   .pay-pill{border:1px solid var(--glass-border)!important;background:var(--bg-elev);color:var(--text-dim);font-weight:800;}
   .pay-pill.nakit{background:rgba(168,132,36,.22);border-color:rgba(212,175,55,.6)!important;color:var(--gold-2);}
-  .pay-pill.kart{background:rgba(76,142,218,.2);border-color:rgba(76,142,218,.6)!important;color:#A9D0F2;}
+  .pay-pill.iban{background:rgba(76,142,218,.2);border-color:rgba(76,142,218,.6)!important;color:#A9D0F2;}
   .pay-pill.none{color:var(--warn);border-color:rgba(240,190,74,.45)!important;}
   .manual-btn{width:100%;display:flex;align-items:center;gap:14px;margin:0 0 12px;padding:13px 16px;border-radius:18px;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);
     background:linear-gradient(135deg, rgba(212,175,55,.2), rgba(184,134,11,.1));border:1px dashed rgba(212,175,55,.7);transition:transform .2s var(--ease), border-color .2s;}
@@ -701,7 +709,7 @@
   .ks-bar{display:flex;gap:2px;height:16px;border-radius:6px;overflow:hidden;margin:10px 0 12px;background:var(--bg-elev);}
   .ks-bar.empty{background:repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 6px, transparent 6px 12px);}
   .ks-seg{display:block;min-width:4px;}
-  .ks-seg.nakit,.ks-sw.nakit{background:#A88424;} .ks-seg.kart,.ks-sw.kart{background:#4C8EDA;}
+  .ks-seg.nakit,.ks-sw.nakit{background:#A88424;} .ks-seg.iban,.ks-sw.iban{background:#4C8EDA;}
   .ks-seg.none,.ks-sw.none{background:repeating-linear-gradient(135deg,#5b5f66 0 4px,#43464c 4px 8px);}
   .ks-sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;vertical-align:middle;}
   .ks-table{width:100%;border-collapse:collapse;font-size:13px;}
@@ -2609,11 +2617,11 @@ function openCartModal(){
     <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea>
       ${geoPos? `<label class="chk geo-share"><input type="checkbox" id="cart-geo"> <span>📍 Konumumu kuryeye gönder <small>Kurye adresinizi haritada daha hızlı bulur (isteğe bağlı)</small></span></label>`:''}</div>
     <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>
-    <div class="field pay-field" id="pay-field" style="margin:12px 0 4px;"><label>Ödeme Şekli <em>(kapıda)</em></label>
+    <div class="field pay-field" id="pay-field" style="margin:12px 0 4px;"><label>Ödeme Şekli</label>
       <div class="pay-seg" role="radiogroup" aria-label="Ödeme şekli">
         <label class="pay-opt"><input type="radio" name="cart-pay" value="nakit" ${cust.pay==='nakit'?'checked':''}><span>💵 Nakit</span></label>
-        <label class="pay-opt"><input type="radio" name="cart-pay" value="kart" ${cust.pay==='kart'?'checked':''}><span>💳 Kredi Kartı</span></label>
-      </div><div class="hint" id="pay-hint">Ödemeyi teslimatta kuryeye yaparsınız.</div></div>
+        <label class="pay-opt"><input type="radio" name="cart-pay" value="iban" ${cust.pay==='iban'?'checked':''}><span>🏦 IBAN / Havale</span></label>
+      </div><div class="hint" id="pay-hint">Nakit: teslimatta kuryeye ödenir. IBAN / Havale: hesap bilgilerimiz aşağıda görünür.</div><div id="iban-slot">${cust.pay==='iban'? ibanBoxHtml() : ''}</div></div>
     <div class="field coupon-field" style="margin:12px 0 4px;"><label for="cart-coupon">İndirim Kuponu</label>
       <div id="coupon-box"></div><div class="hint" id="coupon-hint"></div></div>`;
   const foot = `<div class="send-wrap"><div id="cart-closed" role="alert"></div><button type="button" class="btn btn-primary btn-block btn-lg" id="cart-send"><span>Siparişi Onayla</span><span class="btn-sub num" id="cart-send-total"></span></button></div>`;
@@ -2627,7 +2635,10 @@ function openCartModal(){
     renderCartLines();
   });
   ['cart-name','cart-address','cart-phone'].forEach(id=>document.getElementById(id).addEventListener('input', e=>e.target.closest('.field').classList.remove('invalid')));
-  document.querySelectorAll('input[name="cart-pay"]').forEach(i=>i.addEventListener('change', ()=>document.getElementById('pay-field').classList.remove('invalid')));
+  document.querySelectorAll('input[name="cart-pay"]').forEach(i=>i.addEventListener('change', ()=>{
+    document.getElementById('pay-field').classList.remove('invalid');
+    const sl = document.getElementById('iban-slot'); if(sl) sl.innerHTML = i.value==='iban' && i.checked ? ibanBoxHtml() : '';
+  }));
   const ph = document.getElementById('cart-phone');
   ph.addEventListener('input', ()=>{                    // yazarken 05XX XXX XX XX biçimine getir
     let d = ph.value.replace(/\D/g,'');
@@ -2717,7 +2728,7 @@ async function sendOrder(){
   if(ph){ ph.textContent = phoneOk ? 'Siparişinizle ilgili sizi arayabilmemiz için.' : 'Geçerli bir cep telefonu girin: 05XX XXX XX XX (11 hane).'; ph.style.color = phoneOk ? '' : 'var(--danger)'; }
   if(!firstBad && !payment){                          // ödeme şekli seçilmeden sipariş gitmez (kasa raporu için)
     const pf = document.getElementById('pay-field'); pf.classList.add('invalid'); pf.scrollIntoView({block:'center', behavior:'smooth'});
-    showToast('Lütfen ödeme şeklini seçin: Nakit veya Kredi Kartı'); return;
+    showToast('Lütfen ödeme şeklini seçin: Nakit veya IBAN / Havale'); return;
   }
   if(firstBad){
     firstBad.focus();
@@ -2768,7 +2779,7 @@ async function sendOrder(){
   askNotifyPermission();                                             // sipariş durumu değişince bu telefona haber verebilmek için
 
   saveCustomer({name, address, phone, pay: payment});
-  setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name, ...(coupon? { subtotal, discount, couponCode: coupon.code } : {}) });
+  setActiveOrder({ id:order.id, createdAt:order.createdAt, items:order.items, total, address, customerName:name, payment, ...(coupon? { subtotal, discount, couponCode: coupon.code } : {}) });
   cart = {}; saveCart();
   refreshAllControls(); updateDock();
   showToast('Siparişiniz Mutfak Paneline İletildi!', 'success');
@@ -2858,6 +2869,7 @@ function renderTrack(){
         <div class="tc-row disc"><span>🎟️ İndirim (${escapeHtml(a.couponCode||'')})</span><span class="num">−${fmtPrice(a.discount)}</span></div>`:''}
         <div class="tc-row total"><span>Toplam</span><span class="num">${fmtPrice(a.total)}</span></div>
         ${a.address? `<div class="tc-addr">${ICONS.pin}<span>${escapeHtml(a.address)}</span></div>`:''}
+        ${a.payment==='iban'? ibanBoxHtml() : ''}
       </div>
       <div class="track-actions">
         ${final? `<button type="button" class="btn btn-primary btn-block" data-track="new" style="min-height:50px;">Yeni Sipariş Ver</button>`
@@ -3495,7 +3507,37 @@ function openMapPicker(o){
    Panelden girilen sipariş online siparişle aynı biçimde orders/<id> altına "yeni" olarak yazılır:
    aynı mutfak sekmeleri, aynı takip, aynı kasa raporu. Bowl / Tavuk Pilav / Hazır Bowl seçimleri
    müşteri ekranındaki Bowl modalıyla yapılır (ek ücretler aynı hesaplanır). */
-const PAY_LABEL = { nakit:'Nakit', kart:'Kredi Kartı' };
+const PAY_LABEL = { nakit:'Nakit', iban:'IBAN / Havale', kart:'IBAN / Havale' };
+/* IBAN / Havale hesap bilgisi (ayarlarda settings.iban / settings.ibanName varsa onlar kullanılır) */
+const IBAN_DEFAULT = { iban:'TR940006200053900006650437', name:'Nuray Kaya' };
+function ibanInfo(){ const st = (state && state.settings) || {}; return { iban: String(st.iban || IBAN_DEFAULT.iban).replace(/\s+/g,'').toUpperCase(), name: st.ibanName || IBAN_DEFAULT.name }; }
+function fmtIban(v){ return String(v).replace(/(.{4})/g,'$1 ').trim(); }
+function ibanBoxHtml(){
+  const b = ibanInfo();
+  return `<div class="iban-box">
+    <div class="ib-h">🏦 Ödemeyi bu hesaba yapabilirsiniz</div>
+    <div class="ib-row"><div class="ib-v"><small>IBAN</small><b class="num">${escapeHtml(fmtIban(b.iban))}</b></div>
+      <button type="button" class="btn btn-sm ib-copy" data-copy="${escapeHtml(b.iban)}" data-copy-msg="IBAN kopyalandı">📋 Kopyala</button></div>
+    <div class="ib-row"><div class="ib-v"><small>Alıcı Adı</small><b>${escapeHtml(b.name)}</b></div>
+      <button type="button" class="btn btn-sm ib-copy" data-copy="${escapeHtml(b.name)}" data-copy-msg="Alıcı adı kopyalandı">📋 Kopyala</button></div>
+  </div>`;
+}
+/* Kopyalama: Instagram / uygulama içi tarayıcılarda clipboard izni yoksa eski yöntemle */
+function copyText(t){
+  const fallback = ()=>{ try{ const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly',''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, t.length); const ok = document.execCommand('copy'); ta.remove(); return ok; }catch(e){ return false; } };
+  if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(()=>true).catch(()=>fallback());
+  return Promise.resolve(fallback());
+}
+document.addEventListener('click', e=>{
+  const b = e.target.closest && e.target.closest('[data-copy]'); if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  copyText(b.dataset.copy).then(ok=>{
+    if(ok){ showToast('✓ ' + (b.dataset.copyMsg || 'Kopyalandı'), 'success'); const o = b.textContent; b.textContent = '✓ Kopyalandı'; b.classList.add('done'); setTimeout(()=>{ b.textContent = o; b.classList.remove('done'); }, 1600); }
+    else showToast('Kopyalanamadı — yazıya basılı tutup kopyalayabilirsiniz');
+  });
+});
+function payKey(o){ const v = o && o.payment; return v==='kart' ? 'iban' : (v||''); }   // eski "kart" kayıtları IBAN sayılır
 var manual = null;   // { cart:{}, form:{...}, building:false, saved:null, q:'' }
 function openManualOrder(){
   if(!manual) manual = { cart:{}, form:{ type:'telefon', pay:'', name:'', phone:'', address:'', note:'', discount:'' }, building:false, saved:null, q:'' };
@@ -3573,7 +3615,7 @@ function renderManualModal(){
   const body = `
     <div class="mo-wrap">
       <div class="field" id="mo-type-f"><label>Sipariş Türü</label>${seg('mo-type', f.type, [['telefon','📞 Telefon / Paket'],['dukkan','🏪 Dükkan / Gel-Al']])}</div>
-      <div class="field" id="mo-pay-f"><label>Ödeme Şekli <em>*</em></label>${seg('mo-pay', f.pay, [['nakit','💵 Nakit'],['kart','💳 Kredi Kartı']])}</div>
+      <div class="field" id="mo-pay-f"><label>Ödeme Şekli <em>*</em></label>${seg('mo-pay', f.pay, [['nakit','💵 Nakit'],['iban','🏦 IBAN / Havale']])}</div>
       <div class="field-row">
         <div class="field"><label for="mo-name">Müşteri Adı</label><input type="text" id="mo-name" value="${escapeHtml(f.name)}" placeholder="${f.type==='dukkan'?'Opsiyonel':'Ad Soyad'}" autocomplete="off"></div>
         <div class="field" id="mo-phone-f"><label for="mo-phone">Telefon</label><input type="tel" id="mo-phone" inputmode="tel" maxlength="17" value="${escapeHtml(f.phone)}" placeholder="05XX XXX XX XX" autocomplete="off"></div>
@@ -3637,7 +3679,7 @@ function saveManualOrder(){
   const f = manual.form, lines = Object.keys(manual.cart);
   if(!lines.length){ showToast('Önce siparişe ürün ekleyin'); document.getElementById('mo-q').focus(); return; }
   const bad = (id, msg)=>{ const el = document.getElementById(id); el.classList.add('invalid'); el.scrollIntoView({block:'center', behavior:'smooth'}); showToast(msg); };
-  if(!f.pay) return bad('mo-pay-f', 'Lütfen ödeme şeklini seçin (Nakit / Kredi Kartı)');
+  if(!f.pay) return bad('mo-pay-f', 'Lütfen ödeme şeklini seçin (Nakit / IBAN)');
   const phoneRaw = (f.phone||'').trim();
   if(phoneRaw && !validPhone(phoneRaw)) return bad('mo-phone-f', 'Telefon numarası eksik veya hatalı. Örnek: 0536 123 45 67');
   if(f.type==='telefon' && !f.address.trim()) return bad('mo-addr-f', 'Paket sipariş için teslimat adresini girin');
@@ -3678,7 +3720,7 @@ function kasaData(){
   const sum = arr => Math.round(arr.reduce((t,o)=>t + (Number(o.total)||0), 0)*100)/100;
   const isMan = o => o.source==='manuel';
   const done = valid.filter(o=>o.status==='tamamlandi'), open = valid.filter(o=>o.status!=='tamamlandi');
-  const pay = k => valid.filter(o=>(o.payment||'')===k);
+  const pay = k => valid.filter(o=>payKey(o)===k);
   const items = {};
   valid.forEach(o=>toList(o.items).forEach(li=>{ const k = li.name||'—'; items[k] = items[k] || { name:k, qty:0, rev:0 }; items[k].qty += Number(li.qty)||0; items[k].rev += (Number(li.price)||0)*(Number(li.qty)||0); }));
   const hours = Array(24).fill(0).map(()=>({ n:0, rev:0 }));
@@ -3688,7 +3730,7 @@ function kasaData(){
     online: { n: valid.filter(o=>!isMan(o)).length, sum: sum(valid.filter(o=>!isMan(o))) },
     manuel: { n: valid.filter(isMan).length, sum: sum(valid.filter(isMan)) },
     nakit: { n: pay('nakit').length, sum: sum(pay('nakit')), done: sum(pay('nakit').filter(o=>o.status==='tamamlandi')) },
-    kart: { n: pay('kart').length, sum: sum(pay('kart')), done: sum(pay('kart').filter(o=>o.status==='tamamlandi')) },
+    iban: { n: pay('iban').length, sum: sum(pay('iban')), done: sum(pay('iban').filter(o=>o.status==='tamamlandi')) },
     none: { n: pay('').length, sum: sum(pay('')) },
     done: { n: done.length, sum: sum(done) }, open: { n: open.length, sum: sum(open) },
     cancel: { n: cancelled.length, sum: sum(cancelled) },
@@ -3738,7 +3780,7 @@ function renderKasaBody(box){
         ${stat('Toplam Ciro', fmtPrice(D.ciro), D.discount? 'İndirimler düşüldü: −'+fmtPrice(D.discount) : 'İptaller hariç', 'gold')}
         ${stat('Sipariş Adedi', D.count, `🌐 Online ${D.online.n} · 📞 Manuel ${D.manuel.n}`)}
         ${stat('Ortalama Sepet', fmtPrice(D.count? D.ciro/D.count : 0), 'sipariş başına')}
-        ${stat('💳 Kart ile', fmtPrice(D.kart.sum), D.kart.n+' sipariş')}
+        ${stat('🏦 Gün Sonu IBAN', fmtPrice(D.iban.sum), D.iban.n+' sipariş · teslim edilen '+fmtPrice(D.iban.done))}
         ${stat('✅ Teslim Edilen', fmtPrice(D.done.sum), D.done.n+' sipariş')}
         ${stat('❌ İptal', D.cancel.n, D.cancel.n? fmtPrice(D.cancel.sum)+' (ciroya dahil değil)' : 'iptal yok', D.cancel.n? 'bad':'')}
       </div>
@@ -3747,19 +3789,19 @@ function renderKasaBody(box){
     <div class="ks-two">
       <div class="card">
         <h3>Ödeme Türüne Göre</h3>
-        ${bar([{v:D.nakit.sum, cls:'nakit', label:'Nakit'},{v:D.kart.sum, cls:'kart', label:'Kredi Kartı'},{v:D.none.sum, cls:'none', label:'Belirtilmemiş'}], D.ciro)}
+        ${bar([{v:D.nakit.sum, cls:'nakit', label:'Nakit'},{v:D.iban.sum, cls:'iban', label:'IBAN / Havale'},{v:D.none.sum, cls:'none', label:'Belirtilmemiş'}], D.ciro)}
         <table class="ks-table"><thead><tr><th>Ödeme</th><th>Adet</th><th>Tutar</th><th>Pay</th><th>Tahsil edilen</th></tr></thead><tbody>
           ${row('nakit','💵 Nakit', D.nakit.n, D.nakit.sum, D.ciro, fmtPrice(D.nakit.done))}
-          ${row('kart','💳 Kredi Kartı', D.kart.n, D.kart.sum, D.ciro, fmtPrice(D.kart.done))}
+          ${row('iban','🏦 IBAN / Havale', D.iban.n, D.iban.sum, D.ciro, fmtPrice(D.iban.done))}
           ${D.none.n? row('none','❔ Belirtilmemiş', D.none.n, D.none.sum, D.ciro, '—') : ''}
         </tbody></table>
         ${D.none.n? `<div class="hint" style="margin-top:8px;">"Belirtilmemiş": ödeme şekli eklenmeden önce gelen siparişler. Sipariş kartındaki "Ödeme?" seçicisinden düzeltebilirsiniz.</div>`:''}
       </div>
       <div class="card">
         <h3>Sipariş Kaynağına Göre</h3>
-        ${bar([{v:D.online.sum, cls:'kart', label:'Online'},{v:D.manuel.sum, cls:'nakit', label:'Manuel'}], D.ciro)}
+        ${bar([{v:D.online.sum, cls:'iban', label:'Online'},{v:D.manuel.sum, cls:'nakit', label:'Manuel'}], D.ciro)}
         <table class="ks-table"><thead><tr><th>Kaynak</th><th>Adet</th><th>Tutar</th><th>Pay</th></tr></thead><tbody>
-          ${row('kart','🌐 Online (QR menü)', D.online.n, D.online.sum, D.ciro)}
+          ${row('iban','🌐 Online (QR menü)', D.online.n, D.online.sum, D.ciro)}
           ${row('nakit','📞 Manuel (telefon / dükkan)', D.manuel.n, D.manuel.sum, D.ciro)}
         </tbody></table>
         <div class="ks-status">
@@ -3788,7 +3830,7 @@ function renderKasaBody(box){
           <td class="num">${kasaAll? fmtDateTime(o.createdAt) : new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul', hour:'2-digit', minute:'2-digit'}).format(new Date(o.createdAt))}</td>
           <td>${escapeHtml(o.customerName||'—')}</td>
           <td>${o.source==='manuel'? (o.orderType==='dukkan'?'🏪 Dükkan':'📞 Telefon') : '🌐 Online'}</td>
-          <td>${o.payment==='nakit'?'💵 Nakit': o.payment==='kart'?'💳 Kart':'<span class="ks-muted">—</span>'}</td>
+          <td>${payKey(o)==='nakit'?'💵 Nakit': payKey(o)==='iban'?'🏦 IBAN':'<span class="ks-muted">—</span>'}</td>
           <td class="num"><b>${fmtPrice(o.total||0)}</b></td>
           <td><span class="pill ${({yeni:'info',hazirlaniyor:'warn',yolda:'road',tamamlandi:'ok',iptal:'danger'})[o.status]||'info'}">${stLabel[o.status]||'Yeni'}</span></td>
         </tr>`).join('')}
@@ -3809,7 +3851,7 @@ function renderKasaBody(box){
     const t = [`${brandName()} · Kasa Raporu`, title, '',
       `Toplam ciro: ${fmtPrice(D.ciro)} (${D.count} sipariş)`,
       `Online: ${D.online.n} sipariş · ${fmtPrice(D.online.sum)}`, `Manuel: ${D.manuel.n} sipariş · ${fmtPrice(D.manuel.sum)}`,
-      `Nakit: ${fmtPrice(D.nakit.sum)} (kasada: ${fmtPrice(D.nakit.done)})`, `Kredi kartı: ${fmtPrice(D.kart.sum)}`,
+      `Gün sonu Nakit: ${fmtPrice(D.nakit.sum)} (kasada: ${fmtPrice(D.nakit.done)})`, `Gün sonu IBAN: ${fmtPrice(D.iban.sum)} (teslim edilen: ${fmtPrice(D.iban.done)})`,
       D.none.n? `Ödeme belirtilmemiş: ${fmtPrice(D.none.sum)}` : '', D.discount? `İndirimler: −${fmtPrice(D.discount)}` : '',
       `İptal: ${D.cancel.n}${D.cancel.n? ' ('+fmtPrice(D.cancel.sum)+')' : ''}`,
       D.top.length? '\nEn çok satanlar:\n' + D.top.slice(0,5).map(x=>`• ${x.name}: ${x.qty} adet`).join('\n') : ''].filter(x=>x!=='').join('\n');
@@ -3868,10 +3910,10 @@ function renderAdminOrders(root){
             ${Object.keys(statusLabel).map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${statusLabel[s]}</option>`).join('')}
           </select>
           ${nx? `<button type="button" class="btn btn-sm ord-act ${nx.cls}" data-order-next="${o.id}" data-to="${nx.to}">${nx.text}</button>`:''}
-          <select data-order-pay="${o.id}" class="pill pay-pill ${o.payment||'none'}" aria-label="Ödeme şekli">
-            <option value="" ${!o.payment?'selected':''}>❔ Ödeme?</option>
-            <option value="nakit" ${o.payment==='nakit'?'selected':''}>💵 Nakit</option>
-            <option value="kart" ${o.payment==='kart'?'selected':''}>💳 Kart</option>
+          <select data-order-pay="${o.id}" class="pill pay-pill ${payKey(o)||'none'}" aria-label="Ödeme şekli">
+            <option value="" ${!payKey(o)?'selected':''}>❔ Ödeme?</option>
+            <option value="nakit" ${payKey(o)==='nakit'?'selected':''}>💵 Nakit</option>
+            <option value="iban" ${payKey(o)==='iban'?'selected':''}>🏦 IBAN</option>
           </select>
         </div>
       </div>`; }).join('')}</div>
