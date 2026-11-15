@@ -924,6 +924,45 @@
   .live-dot.off::before{background:var(--text-faint);animation:none;}
   @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(127,199,154,.55);}70%{box-shadow:0 0 0 7px rgba(127,199,154,0);}100%{box-shadow:0 0 0 0 rgba(127,199,154,0);}}
   .wait-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:700;margin-left:8px;font-family:var(--font-body);}
+  /* kurye paneli */
+  .cr-wrap{max-width:720px;margin:0 auto;padding:calc(12px + var(--safe-t)) 14px calc(40px + var(--safe-b));}
+  .cr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:20px;margin-bottom:14px;}
+  .cr-brand{display:flex;align-items:center;gap:10px;min-width:0;}
+  .cr-brand img{height:38px;width:auto;}
+  .cr-brand h2{margin:0;font-family:var(--font-display);font-size:20px;}
+  .cr-hbtns{display:flex;gap:6px;align-items:center;}
+  .otabs.cr-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+  .cr-list{display:flex;flex-direction:column;gap:12px;}
+  .cr-card{padding:14px;border-radius:20px;background:linear-gradient(160deg, rgba(30,32,40,.66), rgba(22,24,30,.6));border:1px solid var(--glass-border);
+    display:flex;flex-direction:column;gap:9px;transition:transform .28s var(--ease),opacity .28s ease,max-height .3s ease,margin .3s ease,padding .3s ease;}
+  .cr-card.order-fresh{border-color:var(--gold);animation:orderflash 1.2s ease 3;}
+  .cr-card.leaving{transform:translateX(40px);opacity:0;max-height:0!important;padding-top:0;padding-bottom:0;margin-top:-12px;overflow:hidden;}
+  .cr-top{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .cr-who{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+  .cr-who b{font-size:17px;}
+  .cr-who .src-tag{margin:0;}
+  .cr-addr{display:flex;gap:8px;align-items:flex-start;font-size:15px;line-height:1.45;color:var(--text);font-weight:600;}
+  .cr-addr svg{flex:none;width:17px;height:17px;color:var(--gold);margin-top:2px;}
+  .cr-addr.muted{color:var(--text-dim);}
+  .cr-items{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;background:var(--bg-elev);border:1px solid var(--glass-border);}
+  .cr-li{display:flex;flex-direction:column;gap:2px;font-size:14px;}
+  .cr-li small{font-size:12px;color:var(--text-dim);line-height:1.4;}
+  .cr-note{font-size:13px;color:var(--warn);background:var(--warn-soft);padding:8px 10px;border-radius:12px;}
+  .cr-sum{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .cr-total{font-size:22px;font-weight:900;color:var(--gold-2);}
+  .cr-pay{padding:5px 11px;border-radius:99px;font-size:12.5px;font-weight:800;border:1px solid var(--glass-border);}
+  .cr-pay.nakit{background:rgba(168,132,36,.22);border-color:rgba(212,175,55,.6);color:var(--gold-2);}
+  .cr-pay.iban{background:rgba(76,142,218,.2);border-color:rgba(76,142,218,.6);color:#A9D0F2;}
+  .cr-pay.none{color:var(--warn);border-color:rgba(240,190,74,.45);}
+  .cr-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .cr-btn{display:flex;align-items:center;justify-content:center;gap:7px;min-height:48px;padding:8px 10px;border-radius:14px;font-family:inherit;font-weight:800;font-size:14px;
+    text-decoration:none;cursor:pointer;border:1px solid var(--glass-border);background:var(--bg-elev);color:var(--text);}
+  .cr-btn svg{width:17px;height:17px;}
+  .cr-btn.map{background:rgba(126,182,230,.12);border-color:rgba(126,182,230,.5);color:#A9D0F2;}
+  .cr-btn.call{background:var(--gold-soft);border-color:rgba(212,175,55,.5);color:var(--gold-2);}
+  .cr-btn.next{grid-column:1 / -1;min-height:52px;font-size:15.5px;background:linear-gradient(135deg,var(--gold-2),var(--gold) 60%,var(--gold-3));color:var(--gold-ink);border:0;}
+  .cr-btn.next.done{background:linear-gradient(135deg,#8FD6A8,var(--ok));color:#0D2416;}
+  .cr-btn:disabled{opacity:.6;}
   .wait-badge.wait-ok{background:var(--ok-soft);color:var(--ok);}
   .wait-badge.wait-warn{background:var(--warn-soft);color:var(--warn);}
   .wait-badge.wait-late{background:var(--danger-soft);color:var(--danger);}
@@ -1206,7 +1245,7 @@ function lineItemId(key, c){ return (c && c.itemId) || String(key).split('|')[0]
 function qtyInCart(itemId){ return Object.entries(cart).reduce((s,[k,c])=> s + (lineItemId(k,c)===itemId ? c.qty : 0), 0); }
 let state = defaultData();
 let dataLoaded = false;
-let view = 'menu'; // menu | admin
+let view = 'menu'; // menu | admin | courier
 let adminTab = 'menu';
 let selectedCategoryId = '';
 let searchQuery = '';
@@ -1313,7 +1352,7 @@ function initFirebase(){
           startTracking();
         }
         render();
-        if(first) setTimeout(()=> location.hash==='#mutfak' ? openAdminLogin() : startWelcomeFlow(), 400);
+        if(first) setTimeout(()=> isCourierUrl() ? openCourier() : location.hash==='#mutfak' ? openAdminLogin() : startWelcomeFlow(), isCourierUrl() ? 0 : 400);
       }, err=>{ renderSetupError('Bağlantı hatası: '+err.message); });
     });
   }catch(e){ renderSetupError('Config geçersiz görünüyor: '+e.message); }
@@ -1454,6 +1493,7 @@ setInterval(()=>{
 
 /* Siparişler sekmesi: sadece "Siparişler" açıksa tam yeniden çiz (Ayarlar formunda yazılanlar silinmesin) */
 function refreshAdminOrdersUI(){
+  if(view==='courier'){ if(!document.getElementById('modal-overlay')) renderCourierBody(); return; }
   if(view==='admin' && adminTab==='kasa' && !document.getElementById('modal-overlay')){ const b = document.getElementById('kasa-root'); if(b) renderKasaBody(b); }
   if(view!=='admin') return;
   if(adminTab==='orders'){ render(); return; }
@@ -1617,6 +1657,7 @@ function render(){
   if(!dataLoaded) return;
   const root = document.getElementById('app-root');
   if(view==='admin'){ renderAdmin(root); }
+  else if(view==='courier'){ if(root.dataset.view==='courier' && document.getElementById('cr-body')) renderCourierBody(); else renderCourier(root); }
   else { renderCustomerMenu(root); }
   if(document.getElementById('bowl-root')) renderBowl();        // açık Bowl ekranı anında güncellenir
   if(document.getElementById('detail-root')) renderDetail();    // açık ürün detayı anında güncellenir
@@ -2469,7 +2510,7 @@ function localNotify(title, body, tag, url){
   if(swReg && swReg.showNotification) swReg.showNotification(title, opts).catch(()=>{});
   else { try{ new Notification(title, opts); }catch(e){} }
 }
-window.addEventListener('hashchange', ()=>{ if(location.hash==='#mutfak' && view!=='admin' && dataLoaded) openAdminLogin(); });
+window.addEventListener('hashchange', ()=>{ if(!dataLoaded) return; if(location.hash==='#mutfak' && view!=='admin') openAdminLogin(); else if(/^#kurye/i.test(location.hash) && view!=='courier') openCourier(); });
 
 /* ============================= TELEFON ============================= */
 function normPhone(v){
@@ -3451,6 +3492,141 @@ const NEXT_STEP = {
   hazirlaniyor: { to:'yolda',        text:'🛵 Yola Çıkar',          cls:'road' },
   yolda:        { to:'tamamlandi',   text:'✅ Teslim Edildi',        cls:'done' }
 };
+/* ============================= KURYE PANELİ =============================
+   ricemore.online/#kurye (veya /kurye) → kurye şifresiyle giriş. Sekmeler: Yeni · Hazırlanıyor · Yolda.
+   Arşiv yok: "Teslim Edildi" yapılan sipariş kuryenin ekranından düşer (mutfakta Tamamlandı'ya geçer). */
+const COURIER_DEFAULT_PASS = 'Kurye123';
+const COURIER_TABS = ORDER_TABS.filter(t=>t.id!=='arsiv');
+let courierTab = (()=>{ try{ return sessionStorage.getItem('rm_courier_tab') || 'yeni'; }catch(e){ return 'yeni'; } })();
+function courierPass(){ return String((state.settings && state.settings.courierPin) || COURIER_DEFAULT_PASS); }
+function courierToken(p){ return cyrb53('rm-kurye|' + p, 7).toString(36); }
+function isCourierUrl(){ return /\/kurye\/?$/i.test(location.pathname) || /^#kurye/i.test(location.hash) || /[?&]kurye\b/i.test(location.search); }
+function courierSaved(){ try{ return localStorage.getItem('rm_courier_ok') === courierToken(courierPass()); }catch(e){ return false; } }
+function enterCourier(){
+  unlockAudio(); startOrdersListener(); askNotifyPermission();
+  try{ localStorage.setItem('rm_courier_ok', courierToken(courierPass())); }catch(e){}
+  view = 'courier'; render(); window.scrollTo(0,0);
+}
+function openCourier(){
+  if(courierSaved()){ enterCourier(); return; }
+  view = 'courier'; render();
+  const body = `<div class="field"><label for="courier-pass">Kurye Şifresi</label><input type="password" id="courier-pass" autocomplete="current-password" placeholder="••••••••"></div>
+    <label class="chk"><input type="checkbox" id="courier-show"> Şifreyi göster</label>`;
+  const foot = `<button class="btn btn-primary btn-block btn-lg" id="courier-submit">🛵 Giriş Yap</button>`;
+  openModal('🛵 Kurye Girişi', body, foot);
+  const inp = document.getElementById('courier-pass');
+  document.getElementById('courier-show').addEventListener('change', e=>{ inp.type = e.target.checked ? 'text' : 'password'; });
+  const submit = ()=>{
+    if(inp.value.trim() === courierPass()){ closeModal(); setTimeout(enterCourier, 230); }
+    else { showToast('Şifre hatalı'); inp.select(); }
+  };
+  document.getElementById('courier-submit').addEventListener('click', submit);
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter') submit(); });
+  setTimeout(()=>inp.focus(), 300);
+}
+function courierLogout(){
+  try{ localStorage.removeItem('rm_courier_ok'); }catch(e){}
+  openCourier();
+}
+function openCourierPassChange(){
+  const body = `<div class="field"><label for="cp-old">Mevcut Şifre</label><input type="password" id="cp-old" autocomplete="current-password"></div>
+    <div class="field"><label for="cp-new">Yeni Şifre</label><input type="password" id="cp-new" autocomplete="new-password" placeholder="En az 4 karakter"></div>
+    <div class="field"><label for="cp-new2">Yeni Şifre (tekrar)</label><input type="password" id="cp-new2" autocomplete="new-password"></div>`;
+  const foot = `<button class="btn btn-ghost" id="cpw-cancel">Vazgeç</button><button class="btn btn-primary" id="cpw-save">Şifreyi Değiştir</button>`;
+  openModal('🔑 Kurye Şifresini Değiştir', body, foot);
+  document.getElementById('cpw-cancel').addEventListener('click', closeModal);
+  document.getElementById('cpw-save').addEventListener('click', ()=>{
+    const o = document.getElementById('cp-old').value.trim(), n = document.getElementById('cp-new').value.trim(), n2 = document.getElementById('cp-new2').value.trim();
+    if(o !== courierPass()){ showToast('Mevcut şifre yanlış'); return; }
+    if(n.length < 4){ showToast('Yeni şifre en az 4 karakter olmalı'); return; }
+    if(n !== n2){ showToast('Yeni şifreler aynı değil'); return; }
+    setCourierPass(n); closeModal();
+  });
+}
+function setCourierPass(n){
+  if(view==='courier'){ try{ localStorage.setItem('rm_courier_ok', courierToken(n)); }catch(e){} }   // önce bu cihazın girişini yenile
+  state.settings.courierPin = n;
+  if(fbRef) fbRef.child('settings').child('courierPin').set(n).catch(e=>showToast('Kaydetme hatası: '+e.message));
+  if(view==='courier') renderCourierBody();
+  showToast('🔑 Kurye şifresi güncellendi', 'success');
+}
+function courierItemsHtml(o){
+  return toList(o.items).map(li=>{
+    const sub = [];
+    if(li.customName) sub.push('📦 ' + boxNameUpper(li.customName));
+    if(li.options) sub.push(optsText(li.options));
+    const bundle = toList(li.bundle).map(pp=>'↳ ' + pp.name + (pp.options? ' · ' + optsText(pp.options) : '') + (pp.customName? ' · 📦 ' + boxNameUpper(pp.customName) : ''));
+    return `<div class="cr-li"><b>${li.qty}× ${escapeHtml(li.name||'')}</b>${sub.length? `<small>${escapeHtml(sub.join(' · '))}</small>`:''}${bundle.map(x=>`<small>${escapeHtml(x)}</small>`).join('')}</div>`;
+  }).join('');
+}
+function courierCard(o){
+  const nx = NEXT_STEP[o.status||'yeni'], pk = payKey(o);
+  const pay = pk==='nakit' ? `<span class="cr-pay nakit">💵 Nakit tahsil edilecek</span>` : pk==='iban' ? `<span class="cr-pay iban">🏦 IBAN / Havale</span>` : `<span class="cr-pay none">❔ Ödeme belirtilmedi</span>`;
+  return `<article class="cr-card ${freshOrderIds.has(o.id)?'order-fresh':''}" data-cr-row="${o.id}">
+    <div class="cr-top">
+      <div class="cr-who"><b>${escapeHtml(o.customerName||'Müşteri')}</b>${o.source==='manuel'? `<span class="src-tag">${o.orderType==='dukkan'?'🏪 DÜKKAN':'📞 TELEFON'}</span>`:''}</div>
+      <span class="wait-badge ${waitClass(o.createdAt)}" data-since="${o.createdAt}">⏱ ${waitText(o.createdAt)}</span>
+    </div>
+    ${o.address? `<div class="cr-addr">${ICONS.pin}<span>${escapeHtml(o.address)}</span></div>` : o.orderType==='dukkan'? `<div class="cr-addr muted">🏪 Dükkandan teslim (gel-al)</div>` : ''}
+    <div class="cr-items">${courierItemsHtml(o)}</div>
+    ${o.note? `<div class="cr-note">📝 ${escapeHtml(o.note)}</div>`:''}
+    <div class="cr-sum"><span class="cr-total num">${fmtPrice(o.total||0)}</span>${pay}</div>
+    <div class="cr-acts">
+      ${(o.address || hasGeo(o))? `<button type="button" class="cr-btn map" data-cr-map="${o.id}">${ICONS.pin}<span>Haritada Aç</span></button>` : ''}
+      ${o.phone? `<a class="cr-btn call" href="${escapeHtml(telHref(o.phone))}">📞<span>Müşteriyi Ara</span></a>` : ''}
+      ${nx? `<button type="button" class="cr-btn next ${nx.cls}" data-cr-next="${o.id}" data-to="${nx.to}">${nx.text}</button>` : ''}
+    </div>
+  </article>`;
+}
+function renderCourier(root){
+  root.dataset.view = 'courier';
+  root.innerHTML = `<div class="cr-wrap">
+    <header class="cr-head glass">
+      <div class="cr-brand"><img src="logo.png" alt="" onerror="this.remove()"><div><h2>Kurye Paneli</h2><span class="live-dot ${fbRef?'':'off'}">${fbRef?'Canlı':'Bağlantı yok'}</span></div></div>
+      <div class="cr-hbtns">
+        <button type="button" class="icon-btn" id="cr-sound" title="Ses">${soundEnabled?'🔔':'🔕'}</button>
+        <button type="button" class="icon-btn" id="cr-pass" title="Şifre değiştir">🔑</button>
+        <button type="button" class="btn btn-sm" id="cr-logout">Çıkış</button>
+      </div>
+    </header>
+    <div id="cr-body"></div>
+  </div>`;
+  root.querySelector('#cr-sound').addEventListener('click', ()=>{ soundEnabled = !soundEnabled; try{ localStorage.setItem('qrmenu_sound_v1', soundEnabled?'on':'off'); }catch(e){} render(); showToast(soundEnabled?'🔔 Ses açık':'🔕 Ses kapalı'); });
+  root.querySelector('#cr-pass').addEventListener('click', openCourierPassChange);
+  root.querySelector('#cr-logout').addEventListener('click', courierLogout);
+  renderCourierBody();
+}
+function renderCourierBody(){
+  const box = document.getElementById('cr-body'); if(!box) return;
+  if(!courierSaved()){ box.innerHTML = `<div class="ord-empty"><span class="ei">🔒</span>Giriş yapın.</div>`; return; }
+  const all = getOrders();
+  if(!COURIER_TABS.some(t=>t.id===courierTab)) courierTab = 'yeni';
+  const counts = Object.fromEntries(COURIER_TABS.map(t=>[t.id, all.filter(t.match).length]));
+  const tab = COURIER_TABS.find(t=>t.id===courierTab);
+  const list = all.filter(tab.match).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+  const empty = { yeni:['🍽️','Yeni sipariş yok.'], hazirlaniyor:['👨‍🍳','Hazırlanan sipariş yok.'], yolda:['🛵','Yolda olan sipariş yok.'] }[tab.id];
+  box.innerHTML = `
+    <div class="otabs cr-tabs" role="tablist">${COURIER_TABS.map(t=>`
+      <button type="button" class="otab ${t.id===courierTab?'active':''}" data-cr-tab="${t.id}" role="tab" aria-selected="${t.id===courierTab}">
+        <span class="oi">${t.icon}</span><span>${t.label}</span><span class="oc ${t.id==='yeni' && counts.yeni? 'hot':''}">${counts[t.id]}</span>
+      </button>`).join('')}</div>
+    <div class="cr-list">${list.length? list.map(courierCard).join('') : `<div class="ord-empty"><span class="ei">${empty[0]}</span>${empty[1]}</div>`}</div>`;
+  box.querySelectorAll('[data-cr-tab]').forEach(b=>b.addEventListener('click', ()=>{ courierTab = b.dataset.crTab; try{ sessionStorage.setItem('rm_courier_tab', courierTab); }catch(e){} renderCourierBody(); }));
+  box.querySelectorAll('[data-cr-map]').forEach(b=>b.addEventListener('click', ()=>openMapPicker(getOrders().find(x=>x.id===b.dataset.crMap))));
+  box.querySelectorAll('[data-cr-next]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.crNext, to = b.dataset.to, row = b.closest('[data-cr-row]');
+    if(to==='tamamlandi' && !confirm('Sipariş teslim edildi olarak işaretlensin mi?')) return;
+    b.disabled = true;
+    const apply = ()=>{
+      updateOrderStatus(id, to);
+      const t = COURIER_TABS.find(x=>x.match({status:to}));
+      showToast(to==='tamamlandi' ? '✅ Teslim edildi — listeden kaldırıldı' : `Sipariş "${t? t.label : to}" sekmesine taşındı`, 'success');
+      renderCourierBody();
+    };
+    if(row){ row.style.maxHeight = row.scrollHeight + 'px'; void row.offsetHeight; row.classList.add('leaving'); setTimeout(apply, 280); } else apply();
+  }));
+}
+
 function moveOrder(id, status, rowEl){
   const o = getOrders().find(x=>x.id===id); if(!o || o.status===status) return;
   const from = orderTabOf(o.status), to = orderTabOf(status);
@@ -4091,6 +4267,15 @@ function renderAdminSettings(root){
       </div>
     </div>
     <div class="card">
+      <h3>🛵 Kurye Şifresi</h3>
+      <p class="hint" style="margin-top:-4px;">Kurye paneli: <b>${escapeHtml(location.host||'ricemore.online')}/#kurye</b> · Şifre değişince kuryeler yeni şifreyle tekrar giriş yapar.</p>
+      <div class="field-row">
+        <div class="field"><label>Mevcut kurye şifresi</label><input type="text" id="s-cpass-cur" value="${escapeHtml(courierPass())}" readonly></div>
+        <div class="field"><label>Yeni kurye şifresi</label><input type="text" id="s-cpass-new" placeholder="En az 4 karakter" autocomplete="off"></div>
+      </div>
+      <button class="btn btn-sm" id="save-cpass">Kurye Şifresini Güncelle</button>
+    </div>
+    <div class="card">
       <h3>Yönetici PIN'ini Değiştir</h3>
       <div class="field-row">
         <div class="field"><label>Mevcut PIN</label><input type="password" id="s-pin-old"></div>
@@ -4144,6 +4329,11 @@ function renderAdminSettings(root){
   root.querySelector('#cp-reset').addEventListener('click',()=>{
     root.querySelector('#cp-enabled').checked = true; root.querySelector('#cp-title').value = CAMPAIGN_DEFAULT.title;
     root.querySelector('#cp-text').value = CAMPAIGN_DEFAULT.text; root.querySelector('#cp-btn').value = CAMPAIGN_DEFAULT.button;
+  });
+  root.querySelector('#save-cpass').addEventListener('click',()=>{
+    const n = root.querySelector('#s-cpass-new').value.trim();
+    if(n.length < 4){ showToast('Kurye şifresi en az 4 karakter olmalı'); return; }
+    setCourierPass(n); root.querySelector('#s-cpass-cur').value = n; root.querySelector('#s-cpass-new').value = '';
   });
   root.querySelector('#save-pin').addEventListener('click',()=>{
     const oldPin = root.querySelector('#s-pin-old').value;
