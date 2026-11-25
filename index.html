@@ -12,28 +12,27 @@
 <title>RiceMore · Menü & Sipariş</title>
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="manifest" href="manifest.webmanifest" id="app-manifest">
 <script>
-/* KURYE KISAYOLU: #kurye adresinde sayfa başlığı ve "Ana Ekrana Ekle" bilgileri kurye moduna geçer,
-   böylece kısayol tekrar /#kurye olarak açılır. Hiçbir kod #kurye kısmını adresten silmez. */
+/* KURYE KISAYOLU: kurye adresinde (#kurye, ?kurye, /kurye) sayfa yalnızca kurye manifest'ini görür,
+   böylece "Ana Ekrana Ekle" kısayolu "RiceMore Kurye" adıyla ricemore.online/?kurye olarak açılır.
+   Hiçbir kod #kurye / ?kurye kısmını adresten silmez. */
 (function(){
-  try{
+  try{   // Android: ana ekran kısayolu kurye adresi olmadan açıldıysa ve bu telefonda kurye giriş yapmışsa kurye moduna dön
     var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
     var flag = false; try{ flag = localStorage.getItem('rm_courier_app') === '1'; }catch(e){}
-    // ana ekrandaki kısayol #kurye olmadan açıldıysa ve bu telefonda kurye giriş yapmışsa: kurye moduna dön
-    if(standalone && flag && !location.hash && !/\/kurye\/?$/i.test(location.pathname)) history.replaceState(null, '', location.pathname + location.search + '#kurye');
-    if(!(/^#kurye/i.test(location.hash) || /\/kurye\/?$/i.test(location.pathname) || /[?&]kurye\b/i.test(location.search))) return;
-    window.__courierMode = true;
-    document.title = 'RiceMore Kurye';
-    var t = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(t) t.setAttribute('content', 'RiceMore Kurye');
-    var base = location.origin + '/';
-    var m = { name:'RiceMore Kurye', short_name:'RiceMore Kurye', description:'RiceMore kurye paneli', start_url: base + '#kurye', scope: base, id: base + '#kurye',
-      display:'standalone', background_color:'#0B0C0E', theme_color:'#0B0C0E', lang:'tr',
-      icons:[{ src: base + 'icon-192.png', sizes:'192x192', type:'image/png', purpose:'any' }, { src: base + 'icon-512.png', sizes:'512x512', type:'image/png', purpose:'any maskable' }] };
-    document.getElementById('app-manifest').setAttribute('href', 'data:application/manifest+json;charset=utf-8,' + encodeURIComponent(JSON.stringify(m)));
+    if(standalone && flag && !location.hash && !location.search && !/\/kurye\/?$/i.test(location.pathname)) history.replaceState(null, '', location.pathname + '?kurye#kurye');
   }catch(e){}
+  var k = /^#kurye/i.test(location.hash) || /\/kurye\/?$/i.test(location.pathname) || /[?&]kurye\b/i.test(location.search);
+  document.write('<link rel="manifest" id="app-manifest" href="' + (k ? 'kurye.webmanifest' : 'manifest.webmanifest') + '">');
+  if(!k) return;
+  window.__courierMode = true;
+  document.title = 'RiceMore Kurye';
+  var t = document.querySelector('meta[name="apple-mobile-web-app-title"]'); if(t) t.setAttribute('content', 'RiceMore Kurye');
+  // adres çubuğunda ?kurye da dursun: iPhone "Ana Ekrana Ekle" bu adresi kaydeder (# kısmını atsa bile ?kurye kalır)
+  try{ if(!/[?&]kurye\b/i.test(location.search)) history.replaceState(null, '', location.pathname + (location.search ? location.search + '&kurye' : '?kurye') + '#kurye'); }catch(e){}
 })();
 </script>
+<noscript><link rel="manifest" href="manifest.webmanifest"></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=Manrope:wght@400..800&display=swap" rel="stylesheet">
@@ -3526,7 +3525,7 @@ function courierSaved(){ try{ return localStorage.getItem('rm_courier_ok') === c
 function enterCourier(){
   unlockAudio(); startOrdersListener(); askNotifyPermission();
   try{ localStorage.setItem('rm_courier_ok', courierToken(courierPass())); localStorage.setItem('rm_courier_app', '1'); }catch(e){}
-  if(!/^#kurye/i.test(location.hash) && !/\/kurye\/?$/i.test(location.pathname)) history.replaceState(null, '', location.pathname + location.search + '#kurye');   // adres #kurye olarak kalsın
+  if(!/[?&]kurye\b/i.test(location.search) && !/\/kurye\/?$/i.test(location.pathname)) history.replaceState(null, '', location.pathname + (location.search ? location.search + '&kurye' : '?kurye') + '#kurye');   // adres kurye olarak kalsın
   view = 'courier'; render(); window.scrollTo(0,0);
 }
 function openCourier(){
