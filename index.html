@@ -618,6 +618,10 @@
   .nt-status.ok{background:var(--ok-soft);color:var(--ok);} .nt-status.bad{background:var(--danger-soft);color:var(--danger);}
 
   /* ============================= BÖLGE BİLGİSİ ============================= */
+  .geo-ask{width:100%;display:flex!important;gap:10px;text-align:left;font-family:inherit;color:var(--text);cursor:pointer;}
+  .geo-ask > span:first-child{font-size:18px;line-height:1.2;}
+  .geo-ask b{display:block;font-size:13.5px;}
+  .geo-ask:disabled{opacity:.7;}
   .region{display:flex;gap:12px;align-items:flex-start;margin-top:12px;padding:13px 14px;border-radius:20px;animation:rise .6s .05s var(--ease) both;}
   .rg-ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:19px;
     background:var(--gold-soft);border:1px solid rgba(212,175,55,.4);}
@@ -1695,7 +1699,6 @@ function renderCustomerMenu(root){
     root.innerHTML = `
       <div class="c-wrap" id="c-wrap">
         <header class="hero glass" id="hero"></header>
-        <section class="region glass" id="region" role="status" aria-live="polite"></section>
         <section class="daily" id="daily" aria-label="Menüler" hidden></section>
         <div class="toolbar glass" id="toolbar">
           <label class="search">${ICONS.search}
@@ -2404,6 +2407,25 @@ function updateRegion(){
     <div class="rg-txt"><b>Teslimat Hizmetimiz Sadece Bergama Merkez Sınırları İçerisindedir.</b><span class="rg-st ${geoState}">${st}</span></div>`;
 }
 let geoTries = 0;
+/* Sepette isteğe bağlı: müşteri dokunursa konumu alınır ve siparişle kuryeye gider (açılışta izin istenmez) */
+function geoShareHtml(){
+  if(geoPos) return `<label class="chk geo-share"><input type="checkbox" id="cart-geo" checked> <span>📍 Konumumu kuryeye gönder <small>Konumunuz alındı ✓ — kurye adresinizi haritada daha hızlı bulur</small></span></label>`;
+  if(!('geolocation' in navigator)) return '';
+  return `<button type="button" class="geo-share geo-ask" id="geo-ask"><span>📍</span><span><b>Konumumu kuryeye gönder</b><small>İsteğe bağlı · kurye adresinizi haritada daha hızlı bulur</small></span></button>`;
+}
+function askSharePos(){
+  const btn = document.getElementById('geo-ask'); if(!btn) return;
+  btn.disabled = true; btn.querySelector('small').textContent = 'Konumunuz alınıyor…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    geoPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+    const sl = document.getElementById('geo-share-slot'); if(sl) sl.innerHTML = geoShareHtml();
+    showToast('📍 Konumunuz siparişe eklenecek', 'success');
+  }, err=>{
+    btn.disabled = false;
+    btn.querySelector('small').textContent = (err && err.code===1) ? 'Konum izni verilmedi — adresiniz yeterli, sorun değil.' : 'Konum alınamadı — adresiniz yeterli, sorun değil.';
+  }, { enableHighAccuracy:true, timeout:12000, maximumAge:60000 });
+}
+document.addEventListener('click', e=>{ if(e.target.closest && e.target.closest('#geo-ask')) askSharePos(); });
 function requestLocation(manual){
   if(!('geolocation' in navigator)){ geoState = 'unsupported'; updateRegion(); return; }
   if(geoState==='checking' && geoTries>0 && !manual) return;
@@ -2486,8 +2508,7 @@ function showCampaign(preview){
 }
 function startWelcomeFlow(){
   if(view!=='menu') return;
-  requestLocation();                 // 1) konum izni + bölge bilgisi
-  setTimeout(()=>showCampaign(), 1800);   // 2) hemen ardından kampanya
+  setTimeout(()=>showCampaign(), 700);   // açılışta konum izni istenmez; doğrudan kampanya
 }
 
 /* ============================= MUTFAK BİLDİRİMLERİ (ntfy) + SERVICE WORKER =============================
@@ -2670,13 +2691,12 @@ function openCartModal(){
       <div class="disc" id="cart-disc-row" hidden><span id="cart-disc-label">🎟️ İndirim</span><span class="num" id="cart-disc"></span></div>
       <div class="total"><span>Toplam</span><span class="num" id="cart-total"></span></div>
     </div>
-    ${geoState==='outside'? `<div class="notice">📍 Konumunuz Bergama Merkez dışında görünüyor. Teslimatı yalnızca Bergama Merkez sınırları içinde yapabiliyoruz.</div>`:''}
     <div class="form-title">Teslimat Bilgileri</div>
     <div class="field"><label for="cart-name">Ad Soyad <em>*</em></label><input type="text" id="cart-name" autocomplete="name" value="${escapeHtml(cust.name||'')}" placeholder="Adınız ve soyadınız"></div>
     <div class="field"><label for="cart-phone">Telefon Numaranız <em>(Zorunlu)</em></label><input type="tel" id="cart-phone" inputmode="tel" autocomplete="tel" maxlength="17" value="${escapeHtml(cust.phone? fmtPhone(cust.phone):'')}" placeholder="05XX XXX XX XX">
       <div class="hint" id="phone-hint">Siparişinizle ilgili sizi arayabilmemiz için.</div></div>
     <div class="field"><label for="cart-address">Teslimat Adresi <em>*</em></label><textarea id="cart-address" rows="2" autocomplete="street-address" placeholder="Mahalle, Sokak, Bina No, Daire No...">${escapeHtml(cust.address||'')}</textarea>
-      ${geoPos? `<label class="chk geo-share"><input type="checkbox" id="cart-geo"> <span>📍 Konumumu kuryeye gönder <small>Kurye adresinizi haritada daha hızlı bulur (isteğe bağlı)</small></span></label>`:''}</div>
+      <div id="geo-share-slot">${geoShareHtml()}</div>
     <div class="field" style="margin-bottom:4px;"><label for="cart-note">Sipariş Notu</label><textarea id="cart-note" rows="2" placeholder="Örn. Acısız olsun, zili çalmayın..."></textarea></div>
     <div class="field pay-field" id="pay-field" style="margin:12px 0 4px;"><label>Ödeme Şekli</label>
       <div class="pay-seg" role="radiogroup" aria-label="Ödeme şekli">
